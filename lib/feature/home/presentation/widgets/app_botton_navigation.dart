@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
+import 'package:vehicle_rental_system/app/theme/app_size.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -68,11 +69,10 @@ class AppBottomNavigation extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        height: 82,
+        height: AppSize.h(context, 7.5),
 
         decoration: BoxDecoration(
           color: backgroundColor,
-
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(18),
             topRight: Radius.circular(18),
