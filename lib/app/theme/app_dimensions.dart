@@ -61,7 +61,7 @@ class AppDimensions {
   // ============================================================
 
   static const double cardRadius = 12.0;
-  static const double cardPadding = 16.0;
+  static const double cardPadding = 18.0;
 
   static const EdgeInsets cardContentPadding = EdgeInsets.all(cardPadding);
 

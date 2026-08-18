@@ -5,19 +5,19 @@ import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/app_size.dart';
 import 'package:vehicle_rental_system/core/widgets/app_app_bar.dart';
-import 'package:vehicle_rental_system/core/widgets/app_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
+import 'package:vehicle_rental_system/feature/home/presentation/view/main_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onExploreTap;
+  const HomeScreen({super.key, required this.onExploreTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final searchController = TextEditingController();
     return Scaffold(
       appBar: AppAppBar(
-        title: "LUXIE RIDE",
+        title: "AutoRentPremium",
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
@@ -29,7 +29,7 @@ class HomeScreen extends StatelessWidget {
         actions: [
           Padding(
             padding: EdgeInsetsGeometry.all(AppDimensions.space12),
-            child: Icon(Icons.menu_outlined),
+            child: Icon(Icons.notifications_rounded),
           ),
         ],
       ),
@@ -40,7 +40,7 @@ class HomeScreen extends StatelessWidget {
             Column(
               crossAxisAlignment: .start,
               children: [
-                Text("Hello, Visal 👋", style: theme.textTheme.headlineSmall),
+                Text("Hello, Visal 👋", style: theme.textTheme.titleLarge),
                 Text(
                   "Ready for your next journey?",
                   style: theme.textTheme.bodySmall,
@@ -48,83 +48,137 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Search field
-                AppTextField(
-                  controller: searchController,
-                  hint: "Search",
-                  prefixIcon: Icons.search,
-                  keyboardType: TextInputType.text,
-                  onChanged: (value) {
-                    log("Search : ${searchController.text}");
-                  },
+                InkWell(
+                  // onTap: () {
+                  //   // Navigator.push(
+                  //   //   context,
+                  //   //   MaterialPageRoute(builder: (context) => ExploreScreen()),
+                  //   // );
+                  //   // setState(() {
+                  //   //   MainScreen(index: 1);
+                  //   // });
+
+                  // },
+                  onTap: onExploreTap,
+                  child: AppTextField(
+                    enabled: false,
+
+                    hint: "Search cars or brands..",
+                    prefixIcon: Icons.search,
+                    keyboardType: TextInputType.text,
+                  ),
                 ),
+
                 const SizedBox(height: 24),
 
                 // Banner
                 AspectRatio(
-                  aspectRatio: AppDimensions.aspectRatioWide,
+                  aspectRatio: AppDimensions.aspectRatioStandard,
                   child: Container(
+                    clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(
                         AppDimensions.cardRadius,
                       ),
                     ),
-                    child: Padding(
-                      padding: AppDimensions.cardContentPadding,
-                      child: Column(
-                        crossAxisAlignment: .start,
-                        mainAxisAlignment: .spaceBetween,
-                        children: [
-                          Row(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          "https://i.pinimg.com/736x/66/64/0f/66640f4531df98d4d01085182e54aeac.jpg",
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
+                        ),
+                        Container(color: Colors.black.withValues(alpha: 0.35)),
+                        Padding(
+                          padding: AppDimensions.cardContentPadding,
+                          child: Column(
+                            crossAxisAlignment: .start,
+                            mainAxisAlignment: .spaceBetween,
                             children: [
-                              Container(
-                                padding: AppDimensions.buttonPadding.copyWith(
-                                  top: 5,
-                                  bottom: 5,
-                                ),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: AppDimensions.buttonPadding
+                                        .copyWith(top: 5, bottom: 5),
 
-                                decoration: BoxDecoration(
-                                  color: AppColors.secondary,
-                                  borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusCircular,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusCircular,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "Special Offer".toUpperCase(),
+                                        style: theme.textTheme.titleMedium!
+                                            .copyWith(
+                                              color: AppColors.background,
+                                            ),
+                                      ),
+                                    ),
                                   ),
+                                ],
+                              ),
+
+                              Text(
+                                "Weekend Special:\nUp to 20% OFF",
+                                style: theme.textTheme.headlineMedium!.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: .bold,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    "SUMMER SPECIAL",
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(color: AppColors.background),
+                              ),
+                              Text(
+                                "Premium vehicles for your perfect weekend getaway. Valid until Sunday.",
+                                // style: theme.textTheme.bodyLarge!.copyWith(
+                                //   color: Colors.white.withOpacity(0.5),
+                                // ),
+                                style: theme.textTheme.titleMedium!.copyWith(
+                                  color: Colors.white,
+                                ),
+                              ),
+                              InkWell(
+                                onTap: () {
+                                  log("Explore Now");
+                                },
+                                child: Container(
+                                  width: AppSize.w(context, 50),
+                                  height: AppSize.h(context, 5),
+
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimensions.radius8,
+                                    ),
+                                  ),
+
+                                  child: Center(
+                                    child: Row(
+                                      mainAxisAlignment: .center,
+                                      children: [
+                                        Text(
+                                          "Explore Now",
+                                          style: theme.textTheme.titleMedium!
+                                              .copyWith(
+                                                color: AppColors.white,
+                                                fontWeight: .bold,
+                                              ),
+                                        ),
+                                        Icon(
+                                          Icons.arrow_right_alt_outlined,
+                                          size: AppDimensions.iconLarge,
+                                          color: AppColors.white,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          Text(
-                            "20% off summer\nrentals",
-                            style: theme.textTheme.titleLarge!.copyWith(
-                              color: Colors.white,
-                              fontWeight: .bold,
-                            ),
-                          ),
-                          Text(
-                            "Book now, drive later.",
-                            style: theme.textTheme.bodyLarge!.copyWith(
-                              color: Colors.white.withOpacity(0.5),
-                            ),
-                          ),
-                          AppButton(
-                            width: AppSize.w(context, 50),
-                            height: AppSize.h(context, 5),
-                            text: "Claim Offer",
-                            borderRadius: AppDimensions.radius16,
-                            backgroundColor: AppColors.background,
-                            foregroundColor: AppColors.primary,
-                            onPressed: () {
-                              log("Claim Offer");
-                            },
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -136,116 +190,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
-
-/*
-return Scaffold(
-      appBar: AppAppBar(
-        title: "Vehicle Rental System",
-        leading: Padding(
-          padding: const EdgeInsets.all(12),
-          child: AppBackButton(),
-        ),
-      ),
-      body: Padding(
-        padding: AppDimensions.screenPadding,
-        child: ListView(
-          children: [
-            Column(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    AppDialog.showInfo(
-                      context: context,
-                      title: "Information",
-                      message: "Confirm",
-                    );
-                  },
-                  child: Text("showInfo"),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    AppDialog.showConfirmation(
-                      context: context,
-                      title: "Information",
-                      message: "Confirm",
-                    );
-                  },
-                  child: Text("showConfirmation"),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    AppDialog.showDeleteConfirmation(
-                      context: context,
-                      itemName: "sss",
-                    );
-                  },
-                  child: Text("showDeleteConfirmation"),
-                ),
-
-                const SizedBox(height: 24),
-                AppTextField(
-                  controller: emailController,
-                  label: "Email",
-                  hint: "Enter your email",
-                  prefixIcon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Email is required";
-                    }
-
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                AppTextField(
-                  controller: passwordController,
-                  label: "Password",
-                  hint: "Enter your password",
-                  prefixIcon: Icons.password_outlined,
-                  obscureText: true,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.done,
-
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Psssword is required";
-                    }
-
-                    if (value.length < 6) {
-                      return "Password must bee atleast 6 character";
-                    }
-
-                    return null;
-                  },
-                ),
-                //AppLoading(message: "Loading.."),
-                AppError(),
-                Center(
-                  child: AppButton(
-                    text: "Click Me",
-                    onPressed: () {
-                      log("Button Clicked");
-                    },
-                  ),
-                ),
-                AppEmpty(
-                  title: "No Vehicles Available",
-                  message: "You have not added any vehicles to your favorites.",
-                  actionText: "Browse Vehicle",
-                  onAction: () {
-                    log("Browse Vehicle");
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-
-*/

@@ -33,22 +33,15 @@ class AppBackButton extends StatelessWidget {
         aspectRatio: AppDimensions.aspectRatioSquare,
         child: ElevatedButton(
           onPressed: onPressed ?? () => Navigator.of(context).pop(),
-
           style: ElevatedButton.styleFrom(
             backgroundColor: backgroundColor ?? theme.colorScheme.surface,
-
             foregroundColor: foregroundColor ?? theme.colorScheme.onSurface,
-
             elevation: elevation,
-
             shadowColor: shadowColor ?? theme.shadowColor,
-
             padding: EdgeInsets.zero,
-
             // Makes the button circular
             shape: const CircleBorder(),
           ),
-
           child: Icon(icon, size: iconSize),
         ),
       ),

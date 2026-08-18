@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 
 class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -27,7 +28,13 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     // create an obj for theme
     final theme = Theme.of(context);
     return AppBar(
-      title: Text(title, style: theme.textTheme.headlineSmall),
+      title: Text(
+        title,
+        style: theme.textTheme.titleLarge!.copyWith(
+          fontWeight: .w900,
+          color: AppColors.primary,
+        ),
+      ),
       centerTitle: centerTitle,
       elevation: elevation,
       // backgroundColor: backgroundColor ?? theme.scaffoldBackgroundColor,

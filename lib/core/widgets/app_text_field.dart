@@ -102,8 +102,7 @@ class _AppTextFieldState extends State<AppTextField> {
 
       focusNode: widget.focusNode,
 
-      style: theme.textTheme.bodyMedium,
-
+      //style: theme.textTheme.bodyMedium,
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,

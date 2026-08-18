@@ -15,7 +15,7 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.main,
         name: RouterNames.main,
-        builder: (context, state) => const MainScreen(),
+        builder: (context, state) => const MainScreen(index: 0),
       ),
       GoRoute(
         path: AppRoutes.home,

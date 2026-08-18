@@ -67,7 +67,7 @@ class AppTheme {
       backgroundColor: AppColors.background,
       foregroundColor: AppColors.textPrimary,
       elevation: 0,
-      centerTitle: false,
+      centerTitle: true,
       titleTextStyle: AppTextStyles.titleLarge,
       iconTheme: const IconThemeData(color: AppColors.textPrimary),
     ),
@@ -124,16 +124,15 @@ class AppTheme {
     // ==========================================================
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.neutral100,
 
+      fillColor: AppColors.neutral100,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
 
-      hintStyle: AppTextStyles.bodyMedium,
+      hintStyle: AppTextStyles.bodyLarge,
       labelStyle: AppTextStyles.labelMedium,
 
-      prefixIconColor: AppColors.textSecondary,
-      suffixIconColor: AppColors.textSecondary,
-
+      prefixIconColor: AppColors.textPrimary,
+      suffixIconColor: AppColors.textPrimary,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: AppColors.border),
@@ -389,7 +388,7 @@ class AppTheme {
 
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
 
-      hintStyle: AppTextStyles.bodyMedium.copyWith(
+      hintStyle: AppTextStyles.titleMedium.copyWith(
         color: AppColors.darkTextSecondary,
       ),
 
@@ -469,6 +468,9 @@ class AppTheme {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: AppColors.darkPrimary,
       foregroundColor: AppColors.white,
+      elevation: 0,
+      // focusColor: AppColors.white,
+      // extendedTextStyle:
     ),
 
     // ==========================================================
