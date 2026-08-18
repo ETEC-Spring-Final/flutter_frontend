@@ -1,0 +1,11 @@
+{
+  "appName": "Vehicle Rental System",
+  "login": "Login",
+  "logout": "Logout",
+  "welcome": "Welcome",
+  "vehicle": "Vehicle",
+  "category": "Category",
+  "profile": "Profile",
+  "settings": "Settings",
+  "language": "Language"
+}
