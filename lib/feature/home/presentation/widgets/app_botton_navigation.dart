@@ -69,7 +69,7 @@ class AppBottomNavigation extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        height: AppSize.h(context, 7.5),
+        height: AppSize.h(context, 8),
 
         decoration: BoxDecoration(
           color: backgroundColor,

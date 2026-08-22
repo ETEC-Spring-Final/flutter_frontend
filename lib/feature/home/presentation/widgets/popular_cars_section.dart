@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
-import 'package:vehicle_rental_system/feature/home/presentation/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/vehicle_card.dart';
 
 class PopularCarsSection extends StatelessWidget {

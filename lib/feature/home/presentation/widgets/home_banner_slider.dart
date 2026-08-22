@@ -119,6 +119,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
                 child: _BannerCard(
                   banner: banner,
                   onExploreTap: widget.onExploreTap,
+                  index: index,
                 ),
               );
             },
@@ -143,8 +144,13 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
 class _BannerCard extends StatelessWidget {
   final _BannerData banner;
   final VoidCallback? onExploreTap;
+  final int? index;
 
-  const _BannerCard({required this.banner, required this.onExploreTap});
+  const _BannerCard({
+    required this.banner,
+    required this.onExploreTap,
+    this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +170,6 @@ class _BannerCard extends StatelessWidget {
 
       child: Stack(
         fit: StackFit.expand,
-
         children: [
           // ======================================================
           // IMAGE
@@ -329,55 +334,63 @@ class _BannerCard extends StatelessWidget {
                 // ==================================================
                 // BUTTON
                 // ==================================================
-                FractionallySizedBox(
-                  widthFactor: 0.45,
+                //FractionallySizedBox(
+                //  widthFactor: 0.45,
+                if (index == 0)
+                  Row(
+                    mainAxisAlignment: .end,
+                    children: [
+                      SizedBox(
+                        width: 150,
+                        height: 40,
+                        child: AspectRatio(
+                          aspectRatio: 5,
 
-                  child: AspectRatio(
-                    aspectRatio: 5,
+                          child: Material(
+                            color: AppColors.primary,
 
-                    child: Material(
-                      color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusCircular,
+                            ),
 
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radius8,
-                      ),
+                            child: InkWell(
+                              onTap: onExploreTap,
 
-                      child: InkWell(
-                        onTap: onExploreTap,
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radius8,
+                              ),
 
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radius8,
-                        ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
 
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Explore Now',
 
-                          children: [
-                            Text(
-                              'Explore Now',
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                      color: AppColors.white,
 
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                color: AppColors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
 
-                                fontWeight: FontWeight.w700,
+                                  const SizedBox(width: 4),
+
+                                  Icon(
+                                    Icons.arrow_forward_rounded,
+
+                                    size: AppDimensions.iconMedium,
+
+                                    color: AppColors.white,
+                                  ),
+                                ],
                               ),
                             ),
-
-                            const SizedBox(width: 4),
-
-                            Icon(
-                              Icons.arrow_forward_rounded,
-
-                              size: AppDimensions.iconMedium,
-
-                              color: AppColors.white,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ),
               ],
             ),
           ),

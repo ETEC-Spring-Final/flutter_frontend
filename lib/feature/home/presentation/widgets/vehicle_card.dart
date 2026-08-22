@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/app_size.dart';
-import 'package:vehicle_rental_system/feature/home/presentation/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 
 class VehicleCard extends StatelessWidget {
   final Vehicle vehicle;
@@ -68,7 +68,7 @@ class VehicleCard extends StatelessWidget {
                       height: AppSize.h(context, 14),
                       color: AppColors.secondary,
                       child: Image.network(
-                        vehicle.image,
+                        vehicle.images.first,
 
                         fit: BoxFit.cover,
 
@@ -165,35 +165,11 @@ class VehicleCard extends StatelessWidget {
                     // FAVORITE
                     // ------------------------------------------------
                     Positioned(
-                      top: 10,
-                      right: 10,
-
-                      child: Material(
-                        color: Colors.black.withValues(alpha: 0.35),
-
-                        shape: const CircleBorder(),
-
-                        child: InkWell(
-                          onTap: onFavoriteTap,
-
-                          customBorder: const CircleBorder(),
-
-                          child: Padding(
-                            padding: const EdgeInsets.all(9),
-
-                            child: Icon(
-                              vehicle.isFavorite
-                                  ? Icons.favorite_rounded
-                                  : Icons.favorite_border_rounded,
-
-                              size: 20,
-
-                              color: vehicle.isFavorite
-                                  ? Colors.red
-                                  : Colors.white,
-                            ),
-                          ),
-                        ),
+                      top: 12,
+                      right: 12,
+                      child: favoriteToggle(
+                        onFavoriteTap: onFavoriteTap,
+                        vehicle: vehicle,
                       ),
                     ),
                   ],
@@ -374,6 +350,44 @@ class VehicleCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class favoriteToggle extends StatelessWidget {
+  const favoriteToggle({
+    super.key,
+    required this.onFavoriteTap,
+    required this.vehicle,
+  });
+
+  final VoidCallback? onFavoriteTap;
+  final Vehicle vehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 12,
+      right: 12,
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        elevation: 2,
+        child: InkWell(
+          onTap: onFavoriteTap,
+          customBorder: const CircleBorder(),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Icon(
+              vehicle.isFavorite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              size: 25,
+              color: vehicle.isFavorite ? Colors.red : Colors.black87,
+            ),
           ),
         ),
       ),

@@ -2,16 +2,15 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:vehicle_rental_system/app/router/router_names.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/app_size.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
-import 'package:vehicle_rental_system/feature/home/presentation/domain/entity/vehicle.dart';
-import 'package:vehicle_rental_system/feature/home/presentation/domain/entity/vehicle_category.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_category.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/animated_greeting.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/home_banner_slider.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/popular_cars_section.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onExploreTap;
@@ -239,17 +238,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       onSeeAll: widget.onExploreTap,
 
                       onVehicleTap: (vehicle) {
-                        debugPrint(
-                          'Vehicle: ${vehicle.brand} ${vehicle.model}',
+                        log('Vehicle: ${vehicle.brand} ${vehicle.model}');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                VehicleDetailScreen(vehicle: vehicle),
+                          ),
                         );
                       },
 
                       onFavoriteTap: (vehicle) {
-                        debugPrint('Favorite: ${vehicle.brand}');
+                        log('Favorite: ${vehicle.brand}');
                       },
 
                       onRentTap: (vehicle) {
-                        debugPrint('Rent: ${vehicle.brand} ${vehicle.model}');
+                        log('Rent: ${vehicle.brand} ${vehicle.model}');
                       },
                     ),
                   ],
