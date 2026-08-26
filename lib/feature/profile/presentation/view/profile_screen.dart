@@ -25,8 +25,237 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
+    final theme = Theme.of(context);
     return Scaffold(
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+
+        slivers: [
+          // =====================================================
+          // App Bar
+          // =====================================================
+          SliverAppBar(
+            automaticallyImplyLeading: false,
+
+            // Hide when scrolling down
+            floating: true,
+
+            // Show immediately when scrolling up
+            snap: true,
+
+            // Don't stay pinned
+            pinned: false,
+
+            elevation: 0,
+            scrolledUnderElevation: 0,
+
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
+            surfaceTintColor: Colors.transparent,
+
+            titleSpacing: 16,
+            centerTitle: false,
+
+            title: Text(
+              l10n.profile,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+
+          // =====================================================
+          // Profile Content
+          // =====================================================
+          SliverPadding(
+            padding: const EdgeInsets.all(AppDimensions.chipHorizontalPadding),
+
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
+                children: [
+                  // =================================================
+                  // Profile Header
+                  // =================================================
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+
+                      child: Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 32,
+
+                            backgroundImage: NetworkImage(
+                              "https://scontent.fpnh2-2.fna.fbcdn.net/v/t39.30808-6/491968431_1333977137906097_3745547215927394055_n.jpg",
+                            ),
+                          ),
+
+                          const SizedBox(width: 16),
+
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+
+                              children: [
+                                Text(
+                                  'Sorn Visal',
+
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  'visal@example.com',
+
+                                  style: theme.textTheme.bodyMedium,
+
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // =================================================
+                  // Settings
+                  // =================================================
+                  Text(
+                    l10n.settings,
+
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // =================================================
+                  // Language
+                  // =================================================
+                  BlocBuilder<LocaleBloc, LocaleState>(
+                    builder: (context, state) {
+                      final currentLocale = state.locale.languageCode;
+
+                      return Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.language),
+
+                          title: Text(l10n.language),
+
+                          subtitle: Text(
+                            currentLocale == 'km' ? 'ខ្មែរ' : 'English',
+                          ),
+
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                          ),
+
+                          onTap: () {
+                            _showLanguageDialog(context, currentLocale);
+                          },
+                        ),
+                      );
+                    },
+                  ),
+
+                  // =================================================
+                  // Dark Mode
+                  // =================================================
+                  BlocBuilder<ThemeBloc, ThemeState>(
+                    builder: (context, state) {
+                      return Card(
+                        child: SwitchListTile(
+                          secondary: Icon(
+                            state.isDarkMode
+                                ? Icons.dark_mode
+                                : Icons.light_mode,
+                          ),
+
+                          title: const Text('Dark Mode'),
+
+                          subtitle: Text(
+                            state.isDarkMode ? 'Dark theme' : 'Light theme',
+                          ),
+
+                          value: state.isDarkMode,
+
+                          onChanged: (_) {
+                            context.read<ThemeBloc>().add(ToggleThemeEvent());
+                          },
+                        ),
+                      );
+                    },
+                  ),
+
+                  // =================================================
+                  // Extra content
+                  // =================================================
+                  const SizedBox(height: 24),
+
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.book_online),
+
+                      title: const Text('My Bookings'),
+
+                      subtitle: const Text('View your bookings'),
+
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+
+                      onTap: onBookingsTap,
+                    ),
+                  ),
+
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.favorite),
+
+                      title: const Text('Favorites'),
+
+                      subtitle: const Text('View your favorite vehicles'),
+
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+
+                      onTap: onFavoritesTap,
+                    ),
+                  ),
+
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.explore),
+
+                      title: const Text('Explore Vehicles'),
+
+                      subtitle: const Text('Find your next vehicle'),
+
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+
+                      onTap: onExploreTap,
+                    ),
+                  ),
+
+                  // =================================================
+                  // Bottom spacing
+                  // =================================================
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      /*
       appBar: AppAppBar(centerTitle: false, title: l10n.profile),
 
       body: Padding(
@@ -143,7 +372,10 @@ class ProfileScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      ), 
+
+
+      */
     );
   }
 

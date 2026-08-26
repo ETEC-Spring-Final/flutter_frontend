@@ -18,25 +18,21 @@ class VehicleDetailScreen extends StatefulWidget {
 }
 
 class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
+  // ===========================================================================
+  // STATE
+  // ===========================================================================
+
   late bool isFavorite;
-  late PageController _pageController;
 
   int currentImageIndex = 0;
 
-  //final getLocationName = GetIt.instance<GetLocationName>();
+  bool _isDescriptionExpanded = false;
 
   @override
   void initState() {
     super.initState();
 
     isFavorite = widget.vehicle.isFavorite;
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 
   @override
@@ -45,254 +41,232 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     final colorScheme = theme.colorScheme;
     final vehicle = widget.vehicle;
 
+    final topPadding = MediaQuery.paddingOf(context).top;
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
 
-      // =====================================================================
+      // =========================================================================
       // BODY
-      // =====================================================================
-      body: CustomScrollView(
-        slivers: [
-          // ===================================================================
-          // HERO IMAGE
-          // ===================================================================
-          SliverToBoxAdapter(child: _buildHero(context, vehicle)),
+      // =========================================================================
+      body: Stack(
+        children: [
+          // =======================================================================
+          // SCROLLABLE CONTENT
+          // =======================================================================
+          CustomScrollView(
+            slivers: [
+              // ===================================================================
+              // HERO IMAGE
+              // ===================================================================
+              SliverToBoxAdapter(child: _buildHero(context, vehicle)),
 
-          // ===================================================================
-          // CONTENT
-          // ===================================================================
-          SliverPadding(
-            padding: AppDimensions.screenPadding,
+              // ===================================================================
+              // CONTENT
+              // ===================================================================
+              SliverPadding(
+                padding: AppDimensions.screenPadding,
 
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: 20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: 20),
 
-                // ===========================================================
-                // TITLE + PRICE
-                // ===========================================================
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${vehicle.brand} ${vehicle.model}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    RichText(
-                      textAlign: TextAlign.right,
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '\$${vehicle.pricePerDay.toStringAsFixed(0)}',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: AppColors.primary,
+                    // ===========================================================
+                    // TITLE + PRICE
+                    // ===========================================================
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${vehicle.brand} ${vehicle.model}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          TextSpan(
-                            text: ' / day',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        RichText(
+                          textAlign: TextAlign.right,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text:
+                                    '\$${vehicle.pricePerDay.toStringAsFixed(0)}',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' / day',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
-                // ===========================================================
-                // RATING + TYPE
-                // ===========================================================
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star_rounded,
-                      size: 20,
-                      color: colorScheme.primary,
+                        ),
+                      ],
                     ),
 
-                    const SizedBox(width: 6),
+                    const SizedBox(height: 10),
 
-                    Text(
-                      '4.5',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    // ===========================================================
+                    // RATING + TYPE
+                    // ===========================================================
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          size: 20,
+                          color: colorScheme.primary,
+                        ),
 
-                    const SizedBox(width: 4),
+                        const SizedBox(width: 6),
 
-                    Text(
-                      '(124 Reviews)',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: colorScheme.onSurfaceVariant,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    Text(
-                      vehicle.type,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 28),
-
-                // ===========================================================
-                // SPECIFICATIONS
-                // ===========================================================
-                Text(
-                  'Specifications',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-
-                _buildSpecifications(context, vehicle),
-
-                const SizedBox(height: 28),
-
-                // ===========================================================
-                // DESCRIPTION
-                // ===========================================================
-                Text(
-                  'Description',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                Text(
-                  vehicle.description,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    height: 1.6,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // ===========================================================
-                // FEATURES
-                // ===========================================================
-                Text(
-                  'Features',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                _buildFeatures(context, vehicle),
-
-                const SizedBox(height: 28),
-
-                // ===========================================================
-                // PICKUP LOCATION
-                // ===========================================================
-                Text(
-                  'Location',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-
-                /*
-
-                const SizedBox(height: 12),
-
-                
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.location_on_rounded,
-                      color: AppColors.primary,
-                      size: 22,
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pickup Location',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                        Text(
+                          '4.5',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
+                        ),
 
-                          const SizedBox(height: 3),
+                        const SizedBox(width: 4),
 
-                          Text(
-                            '${vehicle.latitude.toStringAsFixed(4)}, '
-                            '${vehicle.longitude.toStringAsFixed(4)}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                        Text(
+                          '(124 Reviews)',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                           ),
-                        ],
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: colorScheme.onSurfaceVariant,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        Text(
+                          vehicle.type,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ===========================================================
+                    // SPECIFICATIONS
+                    // ===========================================================
+                    Text(
+                      'Specifications',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
 
-                    
-                  ],
+                    const SizedBox(height: 14),
+
+                    _buildSpecifications(context, vehicle),
+
+                    const SizedBox(height: 28),
+
+                    // ===========================================================
+                    // DESCRIPTION
+                    // ===========================================================
+                    _buildDescription(context, vehicle),
+
+                    const SizedBox(height: 28),
+
+                    // ===========================================================
+                    // FEATURES
+                    // ===========================================================
+                    Text(
+                      'Features',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    _buildFeatures(context, vehicle),
+
+                    const SizedBox(height: 28),
+
+                    // ===========================================================
+                    // LOCATION
+                    // ===========================================================
+                    Text(
+                      'Location',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // ===========================================================
+                    // MAP
+                    // ===========================================================
+                    _buildMapPreview(
+                      context,
+                      vehicle.latitude,
+                      vehicle.longitude,
+                    ),
+
+                    // ===========================================================
+                    // BOTTOM SPACE
+                    // ===========================================================
+                    const SizedBox(height: 100),
+                  ]),
                 ),
+              ),
+            ],
+          ),
 
-                */
-                const SizedBox(height: 14),
-
-                // ===========================================================
-                // MAP
-                // ===========================================================
-                _buildMapPreview(context, vehicle.latitude, vehicle.longitude),
-
-                // ===========================================================
-                // BOTTOM SPACE
-                // ===========================================================
-                const SizedBox(height: 80),
-              ]),
+          // =====================================================================
+          // FIXED BACK BUTTON
+          // =====================================================================
+          Positioned(
+            top: topPadding + 8,
+            left: 16,
+            child: _circleButton(
+              icon: Icons.arrow_back_rounded,
+              onTap: () {
+                Navigator.pop(context);
+              },
             ),
+          ),
+
+          // =====================================================================
+          // FIXED FAVORITE BUTTON
+          // =====================================================================
+          Positioned(
+            top: topPadding + 8,
+            right: 16,
+            child: FavoriteToggle(onFavoriteTap: () {}, vehicle: vehicle),
           ),
         ],
       ),
 
-      // =====================================================================
-      // BOTTOM BOOKING BAR
-      // =====================================================================
+      // =========================================================================
+      // FIXED BOTTOM BOOKING BAR
+      // =========================================================================
       bottomNavigationBar: _buildBottomBar(context, vehicle),
     );
   }
@@ -325,9 +299,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         fit: StackFit.expand,
 
         children: [
-          // ================================================================
+          // =====================================================================
           // IMAGE SLIDER
-          // ================================================================
+          // =====================================================================
           CarouselSlider.builder(
             itemCount: vehicle.images.length,
 
@@ -402,9 +376,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             },
           ),
 
-          // ================================================================
+          // =====================================================================
           // GRADIENT
-          // ================================================================
+          // =====================================================================
           Positioned.fill(
             child: IgnorePointer(
               child: DecoratedBox(
@@ -412,7 +386,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-
                     colors: [
                       Colors.black.withValues(alpha: 0.45),
                       Colors.transparent,
@@ -424,73 +397,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             ),
           ),
 
-          // ================================================================
-          // BACK
-          // ================================================================
-          Positioned(
-            top: 42,
-            left: 16,
-
-            child: _circleButton(
-              icon: Icons.arrow_back_rounded,
-
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ),
-
-          // ================================================================
-          // SHARE
-          // ================================================================
-          /*
-          Positioned(
-            top: 42,
-            right: 68,
-
-            child: _circleButton(
-              icon: Icons.share_rounded,
-
-              onTap: () {
-                // TODO: Share vehicle.
-              },
-            ),
-          ),
-          */
-
-          // ================================================================
-          // FAVORITE
-          // ================================================================
-          Positioned(
-            top: 42,
-            right: 16,
-            child: FavoriteToggle(onFavoriteTap: () {}, vehicle: vehicle),
-          ),
-          /*
-          Positioned(
-            top: 42,
-            right: 16,
-
-            child: _circleButton(
-              icon: isFavorite
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-
-              iconColor: isFavorite ? Colors.red : Colors.white,
-
-              onTap: () {
-                setState(() {
-                  isFavorite = !isFavorite;
-                });
-              },
-            ),
-          ),
-
-          */
-
-          // ================================================================
+          // =====================================================================
           // IMAGE COUNTER
-          // ================================================================
+          // =====================================================================
           Positioned(
             right: 16,
             bottom: 18,
@@ -516,9 +425,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             ),
           ),
 
-          // ================================================================
+          // =====================================================================
           // PAGINATION
-          // ================================================================
+          // =====================================================================
           Positioned(
             bottom: 21,
             left: 0,
@@ -552,6 +461,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 3),
 
           width: isSelected ? 22 : 7,
+
           height: 7,
 
           decoration: BoxDecoration(
@@ -567,11 +477,113 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   // ===========================================================================
+  // DESCRIPTION
+  // ===========================================================================
+
+  Widget _buildDescription(BuildContext context, Vehicle vehicle) {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
+    final bool showButton = vehicle.description.length > 150;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+
+      children: [
+        // =====================================================================
+        // TITLE
+        // =====================================================================
+        Text(
+          'Description',
+
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        // =====================================================================
+        // DESCRIPTION
+        // =====================================================================
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+
+          curve: Curves.easeInOut,
+
+          child: Text(
+            vehicle.description,
+
+            maxLines: _isDescriptionExpanded ? null : 3,
+
+            overflow: _isDescriptionExpanded
+                ? TextOverflow.visible
+                : TextOverflow.ellipsis,
+
+            style: theme.textTheme.bodyMedium?.copyWith(
+              height: 1.6,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+
+        // =====================================================================
+        // SHOW MORE / SHOW LESS
+        // =====================================================================
+        if (showButton) ...[
+          const SizedBox(height: 6),
+
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isDescriptionExpanded = !_isDescriptionExpanded;
+              });
+            },
+
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+
+              children: [
+                Text(
+                  _isDescriptionExpanded ? 'Show less' : 'Show more',
+
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+
+                const SizedBox(width: 4),
+
+                AnimatedRotation(
+                  turns: _isDescriptionExpanded ? 0.5 : 0,
+
+                  duration: const Duration(milliseconds: 250),
+
+                  child: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+
+                    size: 20,
+
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ===========================================================================
   // SPECIFICATIONS
   // ===========================================================================
 
   Widget _buildSpecifications(BuildContext context, Vehicle vehicle) {
     final theme = Theme.of(context);
+
     final colorScheme = theme.colorScheme;
 
     final specifications = [
@@ -580,118 +592,101 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         label: 'Transmission',
         value: vehicle.transmission,
       ),
-
       (
         icon: Icons.local_gas_station_rounded,
         label: 'Fuel',
         value: vehicle.fuelType,
       ),
-
       (
         icon: Icons.airline_seat_recline_normal_rounded,
         label: 'Seats',
         value: '${vehicle.seats}',
       ),
-
-      //(icon: Icons.category_rounded, label: 'Type', value: vehicle.type),
       (
         icon: Icons.door_front_door_rounded,
         label: 'Doors',
         value: '${vehicle.doors}',
       ),
-
       (
         icon: Icons.luggage_rounded,
         label: 'Luggage',
         value: '${vehicle.luggage}',
       ),
-
       (
         icon: Icons.speed_rounded,
         label: 'Kilometer',
         value: '${vehicle.kilometer.toStringAsFixed(0)} km',
       ),
-
-      // (
-      //   icon: Icons.directions_car_rounded,
-      //   label: 'Brand',
-      //   value: vehicle.brand,
-      // ),
     ];
 
-    return Container(
-      //color: Colors.amber,
-      child: GridView.builder(
-        shrinkWrap: true,
+    return GridView.builder(
+      shrinkWrap: true,
 
-        physics: const NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
 
-        itemCount: specifications.length,
+      itemCount: specifications.length,
 
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
 
-          crossAxisSpacing: 12,
+        crossAxisSpacing: 12,
 
-          mainAxisSpacing: 12,
+        mainAxisSpacing: 12,
 
-          childAspectRatio: 1.1,
+        childAspectRatio: 1.1,
+      ),
 
-          //childAspectRatio: AppDimensions.aspectRatioSquare,
-        ),
+      itemBuilder: (context, index) {
+        final item = specifications[index];
 
-        itemBuilder: (context, index) {
-          final item = specifications[index];
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
 
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+            border: Border.all(color: colorScheme.outline),
+          ),
 
-              border: Border.all(color: colorScheme.outline),
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
 
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(item.icon, size: 25, color: AppColors.primary),
 
-              children: [
-                Icon(item.icon, size: 25, color: AppColors.primary),
+              const SizedBox(height: 8),
 
-                const SizedBox(height: 8),
+              Text(
+                item.label,
 
-                Text(
-                  item.label,
+                textAlign: TextAlign.center,
+
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+
+              const SizedBox(height: 3),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+
+                child: Text(
+                  item.value,
+
+                  maxLines: 1,
+
+                  overflow: TextOverflow.ellipsis,
 
                   textAlign: TextAlign.center,
 
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-
-                const SizedBox(height: 3),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-
-                  child: Text(
-                    item.value,
-
-                    maxLines: 1,
-
-                    overflow: TextOverflow.ellipsis,
-
-                    textAlign: TextAlign.center,
-
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -701,74 +696,74 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   Widget _buildFeatures(BuildContext context, Vehicle vehicle) {
     final theme = Theme.of(context);
+
     final colorScheme = theme.colorScheme;
 
     if (vehicle.feature.isEmpty) {
       return Text(
         'No features available.',
+
         style: theme.textTheme.bodyMedium?.copyWith(
           color: colorScheme.onSurfaceVariant,
         ),
       );
     }
 
-    return Container(
-      //color: Colors.amber,
-      child: GridView.builder(
-        shrinkWrap: true,
+    return GridView.builder(
+      shrinkWrap: true,
 
-        physics: const NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
 
-        itemCount: vehicle.feature.length,
+      itemCount: vehicle.feature.length,
 
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
 
-          crossAxisSpacing: 12,
+        crossAxisSpacing: 12,
 
-          mainAxisSpacing: 8,
+        mainAxisSpacing: 8,
 
-          childAspectRatio: 3.5,
-        ),
+        childAspectRatio: 3.5,
+      ),
 
-        itemBuilder: (context, index) {
-          return Row(
-            children: [
-              const Icon(
-                Icons.check_circle_rounded,
+      itemBuilder: (context, index) {
+        return Row(
+          children: [
+            const Icon(
+              Icons.check_circle_rounded,
 
-                color: AppColors.primary,
+              color: AppColors.primary,
 
-                size: AppDimensions.iconMedium,
-              ),
+              size: AppDimensions.iconMedium,
+            ),
 
-              const SizedBox(width: 8),
+            const SizedBox(width: 8),
 
-              Expanded(
-                child: Text(
-                  vehicle.feature[index],
+            Expanded(
+              child: Text(
+                vehicle.feature[index],
 
-                  maxLines: 1,
+                maxLines: 1,
 
-                  overflow: TextOverflow.ellipsis,
+                overflow: TextOverflow.ellipsis,
 
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface,
 
-                    fontWeight: FontWeight.w500,
-                  ),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 
   // ===========================================================================
   // MAP PREVIEW
   // ===========================================================================
+
   Widget _buildMapPreview(
     BuildContext context,
     double latitude,
@@ -777,18 +772,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     final location = LatLng(latitude, longitude);
 
     return FutureBuilder<String>(
-      //future: getLocationName(latitude: latitude, longitude: longitude),
       future: MapService.getLocationName(latitude, longitude),
 
       builder: (context, snapshot) {
         final locationName = snapshot.data ?? 'Loading location...';
 
         final theme = Theme.of(context);
+
         final colorScheme = theme.colorScheme;
 
         return Container(
           decoration: BoxDecoration(
             border: Border.all(color: colorScheme.outline),
+
             borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
           ),
 
@@ -800,9 +796,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
               child: Stack(
                 children: [
+                  // =============================================================
+                  // MAP
+                  // =============================================================
                   FlutterMap(
                     options: MapOptions(
                       initialCenter: location,
+
                       initialZoom: 15,
 
                       interactionOptions: const InteractionOptions(
@@ -825,6 +825,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                             point: location,
 
                             width: 40,
+
                             height: 40,
 
                             child: Container(
@@ -845,9 +846,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     ],
                   ),
 
-                  // =========================================================
+                  // =============================================================
                   // LOCATION NAME
-                  // =========================================================
+                  // =============================================================
                   Positioned(
                     left: 12,
                     right: 12,
@@ -871,7 +872,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                         children: [
                           const Icon(
                             Icons.location_on_rounded,
+
                             color: AppColors.primary,
+
                             size: 20,
                           ),
 
@@ -896,10 +899,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     ),
                   ),
 
+                  // =============================================================
+                  // OPEN GOOGLE MAPS
+                  // =============================================================
                   GestureDetector(
                     onTap: () {
                       MapService.openGoogleMaps(latitude, longitude);
                     },
+
                     child: Container(color: Colors.transparent),
                   ),
                 ],
@@ -917,9 +924,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   Widget _circleButton({
     required IconData icon,
-
     required VoidCallback onTap,
-
     Color iconColor = Colors.white,
   }) {
     return Material(
@@ -942,11 +947,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   // ===========================================================================
-  // BOTTOM BAR
+  // BOTTOM BOOKING BAR
   // ===========================================================================
 
   Widget _buildBottomBar(BuildContext context, Vehicle vehicle) {
     final theme = Theme.of(context);
+
     final colorScheme = theme.colorScheme;
 
     return Container(
@@ -963,9 +969,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
         child: Row(
           children: [
-            // ================================================================
+            // =================================================================
             // PRICE
-            // ================================================================
+            // =================================================================
             Column(
               mainAxisSize: MainAxisSize.min,
 
@@ -990,7 +996,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
                         style: theme.textTheme.titleLarge?.copyWith(
                           color: AppColors.primary,
-
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -1010,9 +1015,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
             const SizedBox(width: 20),
 
-            // ================================================================
+            // =================================================================
             // BOOK NOW
-            // ================================================================
+            // =================================================================
             Expanded(
               child: SizedBox(
                 height: 52,

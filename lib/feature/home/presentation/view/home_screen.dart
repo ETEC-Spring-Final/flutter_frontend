@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/app_size.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
@@ -13,7 +14,7 @@ import 'package:vehicle_rental_system/feature/home/presentation/widgets/popular_
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final VoidCallback? onExploreTap;
+  final void Function(bool)? onExploreTap;
   final VoidCallback? onBookingTap;
   final VoidCallback? onFavoriteTap;
   final VoidCallback? onProfileTap;
@@ -147,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // Search field
                     InkWell(
-                      onTap: widget.onExploreTap,
+                      onTap: () => widget.onExploreTap?.call(true),
                       child: AppTextField(
                         enabled: false,
 
@@ -160,7 +161,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: AppDimensions.space12),
 
                     // Banner
-                    HomeBannerSlider(onExploreTap: widget.onExploreTap),
+                    HomeBannerSlider(
+                      onExploreTap: () => widget.onExploreTap?.call(false),
+                    ),
 
                     //const SizedBox(height: AppDimensions.space12),
                     Row(
@@ -173,10 +176,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         InkWell(
-                          onTap: widget.onExploreTap,
+                          onTap: () => widget.onExploreTap?.call(false),
                           child: Text(
                             "View All",
-                            style: theme.textTheme.labelLarge,
+                            style: theme.textTheme.labelLarge!.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                       ],
@@ -224,10 +229,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         InkWell(
-                          onTap: widget.onExploreTap,
+                          onTap: () => widget.onExploreTap?.call(false),
                           child: Text(
                             "View All",
-                            style: theme.textTheme.labelLarge,
+                            style: theme.textTheme.labelLarge!.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                       ],
@@ -235,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     PopularCarsSection(
                       vehicles: vehicles,
 
-                      onSeeAll: widget.onExploreTap,
+                      onSeeAll: () => widget.onExploreTap,
 
                       onVehicleTap: (vehicle) {
                         log('Vehicle: ${vehicle.brand} ${vehicle.model}');

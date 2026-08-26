@@ -3,6 +3,11 @@ class Vehicle {
   final List<String> images;
   final String brand;
   final String model;
+  final int year;
+  final String licensePlate;
+  final String color;
+
+  // Basic Information
   final String type;
   final double pricePerDay;
   final String description;
@@ -26,11 +31,17 @@ class Vehicle {
   // User-specific
   final bool isFavorite;
 
+  // Vehicle Status
+  final String status;
+
   const Vehicle({
     required this.id,
     required this.images,
     required this.brand,
     required this.model,
+    required this.year,
+    required this.licensePlate,
+    required this.color,
     required this.type,
     required this.pricePerDay,
     required this.description,
@@ -45,6 +56,7 @@ class Vehicle {
     required this.luggage,
     required this.kilometer,
     required this.isFavorite,
+    required this.status,
   });
 
   Vehicle copyWith({
@@ -52,6 +64,9 @@ class Vehicle {
     List<String>? images,
     String? brand,
     String? model,
+    int? year,
+    String? licensePlate,
+    String? color,
     String? type,
     double? pricePerDay,
     String? description,
@@ -66,12 +81,16 @@ class Vehicle {
     int? luggage,
     double? kilometer,
     bool? isFavorite,
+    String? status,
   }) {
     return Vehicle(
       id: id ?? this.id,
       images: images ?? this.images,
       brand: brand ?? this.brand,
       model: model ?? this.model,
+      year: year ?? this.year,
+      licensePlate: licensePlate ?? this.licensePlate,
+      color: color ?? this.color,
       type: type ?? this.type,
       pricePerDay: pricePerDay ?? this.pricePerDay,
       description: description ?? this.description,
@@ -86,11 +105,15 @@ class Vehicle {
       luggage: luggage ?? this.luggage,
       kilometer: kilometer ?? this.kilometer,
       isFavorite: isFavorite ?? this.isFavorite,
+      status: status ?? this.status,
     );
   }
 }
 
 final List<Vehicle> vehicles = [
+  // ============================================================
+  // BMW 5 SERIES
+  // ============================================================
   Vehicle(
     id: 1,
     images: const [
@@ -100,6 +123,9 @@ final List<Vehicle> vehicles = [
     ],
     brand: 'BMW',
     model: '5 Series',
+    year: 2024,
+    licensePlate: '2B-5588',
+    color: 'Black',
     type: 'Sedan',
     pricePerDay: 85,
     description:
@@ -115,11 +141,9 @@ final List<Vehicle> vehicles = [
       'Dual Zone Climate Control',
       'Keyless Entry',
     ],
-
     // Phnom Penh Center
     latitude: 11.5564,
     longitude: 104.9282,
-
     transmission: 'Automatic',
     fuelType: 'Petrol',
     seats: 5,
@@ -127,8 +151,12 @@ final List<Vehicle> vehicles = [
     luggage: 3,
     kilometer: 12000,
     isFavorite: false,
+    status: 'Available',
   ),
 
+  // ============================================================
+  // PORSCHE 911
+  // ============================================================
   Vehicle(
     id: 2,
     images: const [
@@ -138,6 +166,9 @@ final List<Vehicle> vehicles = [
     ],
     brand: 'Porsche',
     model: '911 Carrera',
+    year: 2023,
+    licensePlate: '2C-9119',
+    color: 'White',
     type: 'Sports',
     pricePerDay: 150,
     description:
@@ -153,11 +184,9 @@ final List<Vehicle> vehicles = [
       'Keyless Entry',
       'Performance Brakes',
     ],
-
     // BKK1
     latitude: 11.5480,
     longitude: 104.9235,
-
     transmission: 'Automatic',
     fuelType: 'Petrol',
     seats: 2,
@@ -165,8 +194,12 @@ final List<Vehicle> vehicles = [
     luggage: 2,
     kilometer: 8500,
     isFavorite: false,
+    status: 'Available',
   ),
 
+  // ============================================================
+  // TOYOTA LAND CRUISER
+  // ============================================================
   Vehicle(
     id: 3,
     images: const [
@@ -176,6 +209,9 @@ final List<Vehicle> vehicles = [
     ],
     brand: 'Toyota',
     model: 'Land Cruiser',
+    year: 2022,
+    licensePlate: '2A-7788',
+    color: 'White',
     type: 'SUV',
     pricePerDay: 120,
     description:
@@ -191,11 +227,9 @@ final List<Vehicle> vehicles = [
       'Large Luggage Space',
       'Dual Zone Climate Control',
     ],
-
     // Toul Kork
     latitude: 11.5850,
     longitude: 104.9000,
-
     transmission: 'Automatic',
     fuelType: 'Diesel',
     seats: 7,
@@ -203,8 +237,12 @@ final List<Vehicle> vehicles = [
     luggage: 5,
     kilometer: 25000,
     isFavorite: false,
+    status: 'Available',
   ),
 
+  // ============================================================
+  // TESLA MODEL 3
+  // ============================================================
   Vehicle(
     id: 4,
     images: const [
@@ -214,6 +252,9 @@ final List<Vehicle> vehicles = [
     ],
     brand: 'Tesla',
     model: 'Model 3',
+    year: 2024,
+    licensePlate: '2E-3333',
+    color: 'Red',
     type: 'Electric',
     pricePerDay: 95,
     description:
@@ -229,11 +270,9 @@ final List<Vehicle> vehicles = [
       'Keyless Entry',
       'Wireless Phone Charging',
     ],
-
     // Chroy Changvar
     latitude: 11.5905,
     longitude: 104.9250,
-
     transmission: 'Automatic',
     fuelType: 'Electric',
     seats: 5,
@@ -241,5 +280,6 @@ final List<Vehicle> vehicles = [
     luggage: 3,
     kilometer: 10000,
     isFavorite: false,
+    status: 'Available',
   ),
 ];

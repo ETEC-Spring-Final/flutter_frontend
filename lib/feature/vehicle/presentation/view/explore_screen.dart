@@ -4,8 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
-import 'package:vehicle_rental_system/feature/explore/widget/explore_category_filter.dart';
-import 'package:vehicle_rental_system/feature/explore/widget/vehicle_card_explore.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/explore_category_filter.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card_explore.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detail_screen.dart';
 
@@ -13,14 +13,29 @@ class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
 
   @override
-  State<ExploreScreen> createState() => _ExploreScreenState();
+  State<ExploreScreen> createState() => ExploreScreenState();
 }
 
-class _ExploreScreenState extends State<ExploreScreen> {
+class ExploreScreenState extends State<ExploreScreen> {
   final TextEditingController searchController = TextEditingController();
-
   final FocusNode searchFocusNode = FocusNode();
+
   int selectedCategory = 0;
+
+  void focusSearch() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      searchFocusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    searchFocusNode.dispose();
+    super.dispose();
+  }
 
   Future<void> refreshData() async {
     /*
@@ -32,21 +47,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
   */
   }
 
-  @override
-  void initState() {
-    super.initState();
+  // @override
+  // void initState() {
+  //   super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      searchFocusNode.requestFocus();
-    });
-  }
-
-  @override
-  void dispose() {
-    searchController.dispose();
-    searchFocusNode.dispose();
-    super.dispose();
-  }
+  //   if (widget.autoFocus) {
+  //     WidgetsBinding.instance.addPostFrameCallback((_) {
+  //       if (mounted) {
+  //         searchFocusNode.requestFocus();
+  //       }
+  //     });
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +164,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
 
           SliverPadding(
-            padding: AppDimensions.screenPadding,
+            padding: EdgeInsetsGeometry.all(
+              AppDimensions.chipHorizontalPadding,
+            ),
             sliver: SliverList.builder(
               itemCount: vehicles.length,
               itemBuilder: (context, index) {
