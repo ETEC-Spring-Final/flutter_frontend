@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ExploreCategoryFilter extends StatelessWidget {
   final int selectedIndex;
@@ -11,19 +12,50 @@ class ExploreCategoryFilter extends StatelessWidget {
   });
 
   static const List<_CategoryItem> categories = [
-    _CategoryItem(title: 'All', icon: null),
-    _CategoryItem(title: 'Luxury', icon: Icons.workspace_premium_outlined),
-    _CategoryItem(title: 'Electric', icon: Icons.electric_car_outlined),
-    _CategoryItem(title: 'Sport', icon: Icons.directions_car_filled_outlined),
-    _CategoryItem(title: 'SUV', icon: Icons.directions_car_outlined),
+    _CategoryItem(title: 'All', icon: null, types: null),
+    _CategoryItem(
+      title: 'SUV',
+      icon: Icons.directions_car_outlined,
+      types: ['SUV'],
+    ),
+    _CategoryItem(
+      title: 'Sedan',
+      icon: Icons.directions_car_filled_outlined,
+      types: ['Sedan'],
+    ),
+    _CategoryItem(
+      title: 'Luxury',
+      icon: Icons.workspace_premium_outlined,
+      types: ['Luxury'],
+    ),
+    _CategoryItem(
+      title: 'Pickup',
+      icon: Icons.local_shipping_outlined,
+      types: ['Pickup'],
+    ),
+    _CategoryItem(
+      title: 'Van',
+      icon: Icons.airport_shuttle_outlined,
+      types: ['Van'],
+    ),
+    _CategoryItem(
+      title: 'Electric',
+      icon: Icons.electric_car_outlined,
+      types: ['Electric'],
+    ),
   ];
+
+  static List<String>? typesForIndex(int index) {
+    if (index < 0 || index >= categories.length) return null;
+    return categories[index].types;
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return SizedBox(
-      height: 50,
+      height: 30.h,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -42,7 +74,7 @@ class ExploreCategoryFilter extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(
-                  horizontal: category.icon == null ? 21 : 18,
+                  horizontal: category.icon == null ? 21.r : 18.r,
                 ),
                 decoration: BoxDecoration(
                   color: isSelected ? colorScheme.primary : colorScheme.surface,
@@ -59,7 +91,7 @@ class ExploreCategoryFilter extends StatelessWidget {
                     if (category.icon != null) ...[
                       Icon(
                         category.icon,
-                        size: 20,
+                        size: 20.r,
                         color: isSelected
                             ? colorScheme.onPrimary
                             : colorScheme.onSurface,
@@ -72,9 +104,9 @@ class ExploreCategoryFilter extends StatelessWidget {
                         color: isSelected
                             ? colorScheme.onPrimary
                             : colorScheme.onSurface,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
+                        // fontWeight: isSelected
+                        //     ? FontWeight.w700
+                        //     : FontWeight.w500,
                       ),
                     ),
                   ],
@@ -91,6 +123,7 @@ class ExploreCategoryFilter extends StatelessWidget {
 class _CategoryItem {
   final String title;
   final IconData? icon;
+  final List<String>? types;
 
-  const _CategoryItem({required this.title, required this.icon});
+  const _CategoryItem({required this.title, this.icon, this.types});
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
-import 'package:vehicle_rental_system/feature/home/presentation/widgets/vehicle_card.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card.dart';
 
 class PopularCarsSection extends StatelessWidget {
   final List<Vehicle> vehicles;
@@ -22,8 +23,6 @@ class PopularCarsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     // Don't show the section when there are no vehicles.
     if (vehicles.isEmpty) {
       return const SizedBox.shrink();
@@ -34,29 +33,25 @@ class PopularCarsSection extends StatelessWidget {
       children: [
         const SizedBox(height: 12),
 
-        // ==========================================================
-        // SECTION HEADER
-        // ==========================================================
-        const SizedBox(height: 12),
-
-        // ==========================================================
-        // HORIZONTAL LIST
-        // ==========================================================
+        // ================================================================
+        // HORIZONTAL VEHICLE LIST
+        // ================================================================
         SizedBox(
-          height: 375,
+          height: 300.h,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            //padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: vehicles.length,
-            separatorBuilder: (_, __) {
-              return SizedBox(width: AppDimensions.space16);
+
+            separatorBuilder: (_, _) {
+              return SizedBox(width: 14.w);
             },
+
             itemBuilder: (context, index) {
               final vehicle = vehicles[index];
 
               return SizedBox(
-                width: 330,
+                width: 280.w,
                 child: VehicleCard(
                   vehicle: vehicle,
 

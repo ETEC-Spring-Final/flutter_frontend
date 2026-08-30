@@ -2,19 +2,20 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/booking.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detail_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/booking_card.dart';
 
-class BookngScreen extends StatefulWidget {
-  const BookngScreen({super.key});
+class BookingScreen extends StatefulWidget {
+  const BookingScreen({super.key});
 
   @override
-  State<BookngScreen> createState() => _BookngScreenState();
+  State<BookingScreen> createState() => _BookingScreenState();
 }
 
-class _BookngScreenState extends State<BookngScreen> {
+class _BookingScreenState extends State<BookingScreen> {
   int selectedCategory = 0;
   static const List<String> bookingCategories = [
     "Upcoming",
@@ -103,13 +104,13 @@ class _BookngScreenState extends State<BookngScreen> {
 
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 40,
+              height: 30.h,
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 physics: const BouncingScrollPhysics(),
                 scrollDirection: Axis.horizontal,
                 itemCount: bookingCategories.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 32),
+                separatorBuilder: (_, __) => const SizedBox(width: 32),
                 itemBuilder: (context, index) {
                   final isSelected = selectedCategory == index;
 
@@ -124,14 +125,14 @@ class _BookngScreenState extends State<BookngScreen> {
                       },
                       child: IntrinsicWidth(
                         child: SizedBox(
-                          height: 40,
+                          height: 30.h,
                           child: Column(
                             mainAxisSize: .min,
                             children: [
                               AnimatedDefaultTextStyle(
                                 duration: Duration(milliseconds: 200),
                                 curve: Curves.easeInOut,
-                                style: theme.textTheme.titleMedium!.copyWith(
+                                style: theme.textTheme.titleSmall!.copyWith(
                                   fontWeight: isSelected
                                       ? FontWeight.w700
                                       : FontWeight.w500,

@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vehicle_rental_system/app/locale/bloc/locale_bloc.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/bloc/theme_bloc.dart';
-import 'package:vehicle_rental_system/core/widgets/app_app_bar.dart';
 import 'package:vehicle_rental_system/l10n/app_localizations.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -68,7 +67,7 @@ class ProfileScreen extends StatelessWidget {
           // Profile Content
           // =====================================================
           SliverPadding(
-            padding: const EdgeInsets.all(AppDimensions.chipHorizontalPadding),
+            padding: EdgeInsets.all(AppDimensions.chipHorizontalPadding),
 
             sliver: SliverToBoxAdapter(
               child: Column(
@@ -88,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
                             radius: 32,
 
                             backgroundImage: NetworkImage(
-                              "https://scontent.fpnh2-2.fna.fbcdn.net/v/t39.30808-6/491968431_1333977137906097_3745547215927394055_n.jpg",
+                              "https://i.pinimg.com/236x/0f/21/77/0f21770c1e42550d64e8c210266141d2.jpg",
                             ),
                           ),
 
@@ -100,7 +99,7 @@ class ProfileScreen extends StatelessWidget {
 
                               children: [
                                 Text(
-                                  'Sorn Visal',
+                                  'Kim Kim Ourn',
 
                                   style: theme.textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -110,7 +109,7 @@ class ProfileScreen extends StatelessWidget {
                                 const SizedBox(height: 4),
 
                                 Text(
-                                  'visal@example.com',
+                                  'kimkim@example.com',
 
                                   style: theme.textTheme.bodyMedium,
 

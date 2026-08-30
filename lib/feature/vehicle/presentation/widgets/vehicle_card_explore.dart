@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
+import 'package:vehicle_rental_system/core/widgets/app_badge.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
-import 'package:vehicle_rental_system/feature/shared/widgets/favorite_toggle.dart';
+import 'package:vehicle_rental_system/core/widgets/favorite_toggle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/service/map_service.dart';
 
 class VehicleCardExplore extends StatelessWidget {
@@ -25,7 +27,7 @@ class VehicleCardExplore extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
@@ -45,7 +47,8 @@ class VehicleCardExplore extends StatelessWidget {
                 // IMAGE
                 // ============================================================
                 AspectRatio(
-                  aspectRatio: 1.87,
+                  //aspectRatio: 1.87,
+                  aspectRatio: AppDimensions.vehicleCardAspectRatio,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -75,7 +78,7 @@ class VehicleCardExplore extends StatelessWidget {
                             color: colorScheme.surfaceContainerHighest,
                             child: Icon(
                               Icons.directions_car_outlined,
-                              size: 50,
+                              size: 50.r,
                               color: colorScheme.onSurfaceVariant,
                             ),
                           );
@@ -85,6 +88,8 @@ class VehicleCardExplore extends StatelessWidget {
                       // ------------------------------------------------------
                       // ELECTRIC BADGE
                       // ------------------------------------------------------
+
+                      /*
                       Positioned(
                         top: 14,
                         left: 14,
@@ -131,6 +136,36 @@ class VehicleCardExplore extends StatelessWidget {
                           vehicle: vehicle,
                         ),
                       ),
+
+                      */
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        right: 8,
+                        child: Row(
+                          mainAxisAlignment: .spaceBetween,
+                          children: [
+                            // ------------------------------------------------
+                            // TYPE
+                            // ------------------------------------------------
+                            AppBadge(
+                              label: vehicle.fuelType,
+                              icon: Icons.bolt_rounded,
+                              backgroundColor: const Color(0xFF009B4D),
+                              textColor: AppColors.white,
+                              iconColor: AppColors.white,
+                            ),
+
+                            // ------------------------------------------------
+                            // FAVORITE
+                            // ------------------------------------------------
+                            FavoriteToggle(
+                              onFavoriteTap: onFavoriteTap,
+                              vehicle: vehicle,
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -139,7 +174,7 @@ class VehicleCardExplore extends StatelessWidget {
                 // CONTENT
                 // ============================================================
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(6, 14, 6, 4),
+                  padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
                   child: Column(
                     children: [
                       // ------------------------------------------------------
@@ -153,7 +188,7 @@ class VehicleCardExplore extends StatelessWidget {
                               '${vehicle.brand} ${vehicle.model}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleLarge?.copyWith(
+                              style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: colorScheme.onSurface,
                               ),

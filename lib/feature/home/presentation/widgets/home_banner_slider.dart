@@ -42,7 +42,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
 
     _BannerData(
       image:
-          'https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&w=1200&q=80',
+          'https://i.pinimg.com/736x/d9/5c/d0/d95cd04d85043401df2b957eeba934cd.jpg',
       badge: 'Luxury Cars',
       title: 'Drive in Luxury\nWith Confidence',
       description:
@@ -51,7 +51,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
 
     _BannerData(
       image:
-          'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80',
+          'https://i.pinimg.com/1200x/e4/7e/44/e47e447d37b47b856e9b8fab3d746e39.jpg',
       badge: 'New Arrival',
       title: 'Discover Your\nPerfect Ride',
       description:
@@ -60,7 +60,7 @@ class _HomeBannerSliderState extends State<HomeBannerSlider> {
 
     _BannerData(
       image:
-          'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1200&q=80',
+          'https://i.pinimg.com/736x/6b/ef/8e/6bef8ee3040585880dbf7a93159627e2.jpg',
       badge: 'Easy Rental',
       title: 'Rent Your Car\nIn Just Minutes',
       description:
@@ -232,9 +232,9 @@ class _BannerCard extends StatelessWidget {
                 end: Alignment.bottomCenter,
 
                 colors: [
-                  Colors.black.withValues(alpha: 0.15),
+                  Colors.black.withValues(alpha: 0.10),
 
-                  Colors.black.withValues(alpha: 0.75),
+                  Colors.black.withValues(alpha: 0.30),
                 ],
               ),
             ),
@@ -249,8 +249,7 @@ class _BannerCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
 
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
+              //mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // ==================================================
                 // BADGE
@@ -276,13 +275,15 @@ class _BannerCard extends StatelessWidget {
 
                     overflow: TextOverflow.ellipsis,
 
-                    style: theme.textTheme.labelLarge?.copyWith(
+                    style: theme.textTheme.labelSmall?.copyWith(
                       color: AppColors.white,
 
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 8),
 
                 // ==================================================
                 // TEXT
@@ -301,11 +302,10 @@ class _BannerCard extends StatelessWidget {
 
                       overflow: TextOverflow.ellipsis,
 
-                      style: theme.textTheme.headlineMedium?.copyWith(
+                      style: theme.textTheme.headlineSmall?.copyWith(
                         color: AppColors.white,
 
-                        fontWeight: FontWeight.w800,
-
+                        //fontWeight: FontWeight.w800,
                         height: 1.1,
                       ),
                     ),
@@ -322,7 +322,7 @@ class _BannerCard extends StatelessWidget {
 
                       overflow: TextOverflow.ellipsis,
 
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.white.withValues(alpha: 0.9),
 
                         height: 1.3,
@@ -336,13 +336,16 @@ class _BannerCard extends StatelessWidget {
                 // ==================================================
                 //FractionallySizedBox(
                 //  widthFactor: 0.45,
+
+                /*
+
                 if (index == 0)
                   Row(
                     mainAxisAlignment: .end,
                     children: [
                       SizedBox(
                         width: 150,
-                        height: 40,
+                        height: 30,
                         child: AspectRatio(
                           aspectRatio: 5,
 
@@ -391,6 +394,8 @@ class _BannerCard extends StatelessWidget {
                       ),
                     ],
                   ),
+
+                  */
               ],
             ),
           ),

@@ -1,11 +1,12 @@
 /*
-A reusable text field that supports
+A reusable responsive text field that supports
 validation, password visibility,
 prefix/suffix icons, keyboard type,
 controllers, focus, and custom styling.
 */
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppTextField extends StatefulWidget {
   // ============================================================
@@ -73,7 +74,11 @@ class AppTextField extends StatefulWidget {
 
   final bool filled;
   final Color? fillColor;
+
+  /// Base radius from the design.
+  /// ScreenUtil scales it automatically.
   final double borderRadius;
+
   final EdgeInsetsGeometry? contentPadding;
 
   // ============================================================
@@ -145,7 +150,11 @@ class _AppTextFieldState extends State<AppTextField> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final borderColor = colorScheme.outline.withValues(alpha: 0.25);
+    final borderColor = colorScheme.outline.withValues(alpha: 0.5);
+
+    final textStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: colorScheme.onSurface,
+    );
 
     return TextFormField(
       // ==========================================================
@@ -197,43 +206,70 @@ class _AppTextFieldState extends State<AppTextField> {
       focusNode: widget.focusNode,
 
       // ==========================================================
+      // TEXT STYLE
+      // ==========================================================
+      style: textStyle,
+
+      //TextStyle(fontSize: 16.sp, color: colorScheme.onSurface),
+
+      // ==========================================================
       // DECORATION
       // ==========================================================
       decoration: InputDecoration(
-        // Text
+        isDense: true,
+
+        constraints: BoxConstraints(minHeight: 42.h, maxHeight: 42.h),
+        // ========================================================
+        // TEXT
+        // ========================================================
         labelText: widget.label,
         hintText: widget.hint,
         helperText: widget.helperText,
 
-        // Fill
+        hintStyle: textStyle,
+
+        // ========================================================
+        // FILL
+        // ========================================================
         filled: widget.filled,
+
         fillColor:
             widget.fillColor ??
             colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
 
-        // Prefix
+        // ========================================================
+        // PREFIX
+        // ========================================================
         prefixIcon: widget.prefixIcon != null
             ? Icon(
                 widget.prefixIcon,
+                size: 22.r,
                 color: widget.prefixIconColor ?? colorScheme.onSurfaceVariant,
               )
             : null,
 
         prefixText: widget.prefixText,
 
-        // Suffix
+        // ========================================================
+        // SUFFIX
+        // ========================================================
         suffixIcon: widget.obscureText
             ? IconButton(
                 tooltip: _obscureText ? 'Show password' : 'Hide password',
+
                 onPressed: () {
                   setState(() {
                     _obscureText = !_obscureText;
                   });
                 },
+
                 icon: Icon(
                   _obscureText
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
+
+                  size: 20.r,
+
                   color: widget.suffixIconColor ?? colorScheme.onSurfaceVariant,
                 ),
               )
@@ -246,39 +282,57 @@ class _AppTextFieldState extends State<AppTextField> {
         // ========================================================
         contentPadding:
             widget.contentPadding ??
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
 
         // ========================================================
         // BORDER
         // ========================================================
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          borderSide: BorderSide(color: borderColor),
+          borderRadius: BorderRadius.circular(widget.borderRadius.r),
+          borderSide: BorderSide(color: borderColor, width: 1.r),
         ),
 
+        // ========================================================
+        // ENABLED BORDER
+        // ========================================================
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          borderSide: BorderSide(color: borderColor),
+          borderRadius: BorderRadius.circular(widget.borderRadius.r),
+          borderSide: BorderSide(color: borderColor, width: 1.r),
         ),
 
+        // ========================================================
+        // FOCUSED BORDER
+        // ========================================================
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+          borderRadius: BorderRadius.circular(widget.borderRadius.r),
+          borderSide: BorderSide(color: colorScheme.primary, width: 1.5.r),
         ),
 
+        // ========================================================
+        // ERROR BORDER
+        // ========================================================
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          borderSide: BorderSide(color: colorScheme.error),
+          borderRadius: BorderRadius.circular(widget.borderRadius.r),
+          borderSide: BorderSide(color: colorScheme.error, width: 1.r),
         ),
 
+        // ========================================================
+        // FOCUSED ERROR BORDER
+        // ========================================================
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          borderSide: BorderSide(color: colorScheme.error, width: 1.5),
+          borderRadius: BorderRadius.circular(widget.borderRadius.r),
+          borderSide: BorderSide(color: colorScheme.error, width: 1.5.r),
         ),
 
+        // ========================================================
+        // DISABLED BORDER
+        // ========================================================
         disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          borderSide: BorderSide(color: borderColor.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(widget.borderRadius.r),
+          borderSide: BorderSide(
+            color: borderColor.withValues(alpha: 0.5),
+            width: 1.r,
+          ),
         ),
       ),
     );

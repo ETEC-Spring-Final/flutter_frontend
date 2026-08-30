@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppDimensions {
   AppDimensions._();
@@ -7,147 +8,144 @@ class AppDimensions {
   // SPACING
   // ============================================================
 
-  static const double space2 = 2.0;
-  static const double space4 = 4.0;
-  static const double space6 = 6.0;
-  static const double space8 = 8.0;
-  static const double space10 = 10.0;
-  static const double space12 = 12.0;
-  static const double space14 = 14.0;
-  static const double space16 = 16.0;
-  static const double space20 = 20.0;
-  static const double space24 = 24.0;
-  static const double space28 = 28.0;
-  static const double space32 = 32.0;
-  static const double space40 = 40.0;
-  static const double space48 = 48.0;
-  static const double space56 = 56.0;
-  static const double space64 = 64.0;
-  static const double space72 = 72.0;
-  static const double space80 = 80.0;
+  static double get space2 => 2.w;
+  static double get space4 => 4.w;
+  static double get space6 => 6.w;
+  static double get space8 => 8.w;
+  static double get space10 => 10.w;
+  static double get space12 => 12.w;
+  static double get space14 => 14.w;
+  static double get space16 => 16.w;
+  static double get space20 => 20.w;
+  static double get space24 => 24.w;
+  static double get space28 => 28.w;
+  static double get space32 => 32.w;
+  static double get space40 => 40.w;
+  static double get space48 => 48.w;
+  static double get space56 => 56.w;
+  static double get space64 => 64.w;
+  static double get space72 => 72.w;
+  static double get space80 => 80.w;
 
   // ============================================================
   // SCREEN
   // ============================================================
 
-  static const double screenHorizontal = 20.0;
-  static const double screenVertical = 16.0;
+  static double get screenHorizontal => 20.w;
+  static double get screenVertical => 16.h;
 
-  static const EdgeInsets screenPadding = EdgeInsets.symmetric(
+  static EdgeInsets get screenPadding => EdgeInsets.symmetric(
     horizontal: screenHorizontal,
     vertical: screenVertical,
   );
 
-  static const EdgeInsets screenHorizontalPadding = EdgeInsets.symmetric(
-    horizontal: screenHorizontal,
-  );
+  static EdgeInsets get screenHorizontalPadding =>
+      EdgeInsets.symmetric(horizontal: screenHorizontal);
 
   // ============================================================
   // BORDER RADIUS
   // ============================================================
 
-  static const double radius4 = 4.0;
-  static const double radius6 = 6.0;
-  static const double radius8 = 8.0;
-  static const double radius10 = 10.0;
-  static const double radius12 = 12.0;
-  static const double radius16 = 16.0;
-  static const double radius20 = 20.0;
-  static const double radius24 = 24.0;
-  static const double radiusCircular = 999.0;
+  static double get radius4 => 4.r;
+  static double get radius6 => 6.r;
+  static double get radius8 => 8.r;
+  static double get radius10 => 10.r;
+  static double get radius12 => 12.r;
+  static double get radius16 => 16.r;
+  static double get radius20 => 20.r;
+  static double get radius24 => 24.r;
+
+  static double get radiusCircular => 999.r;
 
   // ============================================================
   // CARD
   // ============================================================
 
-  static const double cardRadius = 12.0;
-  static const double cardPadding = 18.0;
+  static double get cardRadius => 12.r;
+  static double get cardPadding => 16.w;
 
-  static const EdgeInsets cardContentPadding = EdgeInsets.all(cardPadding);
+  static EdgeInsets get cardContentPadding => EdgeInsets.all(cardPadding);
 
   // ============================================================
   // BUTTON
   // ============================================================
 
-  static const double buttonHeight = 48.0;
-  static const double buttonSmallHeight = 40.0;
-  static const double buttonLargeHeight = 52.0;
+  static double get buttonHeight => 48.h;
+  static double get buttonSmallHeight => 40.h;
+  static double get buttonLargeHeight => 52.h;
 
-  static const double buttonRadius = 8.0;
+  static double get buttonRadius => 8.r;
 
-  static const double buttonHorizontalPadding = 20.0;
+  static double get buttonHorizontalPadding => 20.w;
 
-  static const EdgeInsets buttonPadding = EdgeInsets.symmetric(
-    horizontal: buttonHorizontalPadding,
-    vertical: 12.0,
-  );
+  static EdgeInsets get buttonPadding =>
+      EdgeInsets.symmetric(horizontal: buttonHorizontalPadding, vertical: 12.h);
 
   // ============================================================
   // INPUT
   // ============================================================
 
-  static const double inputHeight = 48.0;
-  static const double inputRadius = 8.0;
-  static const double inputHorizontalPadding = 16.0;
+  static double get inputHeight => 48.h;
+  static double get inputRadius => 8.r;
 
-  static const EdgeInsets inputPadding = EdgeInsets.symmetric(
-    horizontal: inputHorizontalPadding,
-    vertical: 14.0,
-  );
+  static double get inputHorizontalPadding => 16.w;
+
+  static EdgeInsets get inputPadding =>
+      EdgeInsets.symmetric(horizontal: inputHorizontalPadding, vertical: 14.h);
 
   // ============================================================
   // ICON
   // ============================================================
 
-  static const double iconExtraSmall = 14.0;
-  static const double iconSmall = 18.0;
-  static const double iconMedium = 24.0;
-  static const double iconLarge = 32.0;
-  static const double iconExtraLarge = 40.0;
+  static double get iconExtraSmall => 14.sp;
+  static double get iconSmall => 18.sp;
+  static double get iconMedium => 24.sp;
+  static double get iconLarge => 32.sp;
+  static double get iconExtraLarge => 40.sp;
 
   // ============================================================
   // AVATAR
   // ============================================================
 
-  static const double avatarSmall = 32.0;
-  static const double avatarMedium = 40.0;
-  static const double avatarLarge = 48.0;
-  static const double avatarExtraLarge = 64.0;
+  static double get avatarSmall => 32.r;
+  static double get avatarMedium => 40.r;
+  static double get avatarLarge => 48.r;
+  static double get avatarExtraLarge => 64.r;
 
   // ============================================================
   // APP BAR
   // ============================================================
 
-  static const double appBarHeight = 64.0;
+  static double get appBarHeight => 64.h;
 
   // ============================================================
   // BOTTOM NAVIGATION
   // ============================================================
 
-  static const double bottomNavigationHeight = 80.0;
+  static double get bottomNavigationHeight => 80.h;
 
   // ============================================================
   // FAB
   // ============================================================
 
-  static const double fabSmall = 40.0;
-  static const double fabMedium = 56.0;
-  static const double fabLarge = 64.0;
+  static double get fabSmall => 40.r;
+  static double get fabMedium => 56.r;
+  static double get fabLarge => 64.r;
 
   // ============================================================
   // ICON BUTTON
   // ============================================================
 
-  static const double iconButtonSize = 48.0;
-  static const double iconButtonRadius = 8.0;
+  static double get iconButtonSize => 48.r;
+  static double get iconButtonRadius => 8.r;
 
   // ============================================================
   // LIST
   // ============================================================
 
-  static const double listItemHeight = 56.0;
-  static const double listItemLargeHeight = 72.0;
-  static const double listItemSpacing = 12.0;
+  static double get listItemHeight => 56.h;
+  static double get listItemLargeHeight => 72.h;
+  static double get listItemSpacing => 12.h;
 
   // ============================================================
   // IMAGE ASPECT RATIOS
@@ -203,54 +201,50 @@ class AppDimensions {
   // ============================================================
 
   static const double productCardAspectRatio = 1 / 1;
-
   static const double productDetailAspectRatio = 4 / 3;
-
   static const double productBannerAspectRatio = 16 / 9;
 
   // ============================================================
   // IMAGE HEIGHTS
   // ============================================================
 
-  static const double productImageHeight = 180.0;
-
-  static const double vehicleImageHeight = 200.0;
-
-  static const double bannerImageHeight = 180.0;
+  static double get productImageHeight => 180.h;
+  static double get vehicleImageHeight => 200.h;
+  static double get bannerImageHeight => 180.h;
 
   // ============================================================
   // DIALOG
   // ============================================================
 
-  static const double dialogRadius = 16.0;
-  static const double dialogPadding = 24.0;
+  static double get dialogRadius => 16.r;
+  static double get dialogPadding => 24.w;
 
   // ============================================================
   // BOTTOM SHEET
   // ============================================================
 
-  static const double bottomSheetRadius = 24.0;
-  static const double bottomSheetPadding = 20.0;
+  static double get bottomSheetRadius => 24.r;
+  static double get bottomSheetPadding => 20.w;
 
   // ============================================================
   // CHIP
   // ============================================================
 
-  static const double chipHeight = 36.0;
-  static const double chipRadius = 8.0;
-  static const double chipHorizontalPadding = 12.0;
+  static double get chipHeight => 36.h;
+  static double get chipRadius => 8.r;
+  static double get chipHorizontalPadding => 12.w;
 
   // ============================================================
   // STATUS DOT
   // ============================================================
 
-  static const double statusDotSmall = 8.0;
-  static const double statusDotMedium = 10.0;
-  static const double statusDotLarge = 12.0;
+  static double get statusDotSmall => 8.r;
+  static double get statusDotMedium => 10.r;
+  static double get statusDotLarge => 12.r;
 
   // ============================================================
   // DIVIDER
   // ============================================================
 
-  static const double dividerThickness = 1.0;
+  static double get dividerThickness => 1.h;
 }

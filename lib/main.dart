@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vehicle_rental_system/app/app.dart';
 import 'package:vehicle_rental_system/app/locale/bloc/locale_bloc.dart';
 import 'package:vehicle_rental_system/app/theme/bloc/theme_bloc.dart';
+import 'package:vehicle_rental_system/feature/favorite/presentation/bloc/favorite_bloc.dart';
 import 'package:vehicle_rental_system/injection/injection_container.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,6 +15,7 @@ void main() async {
       providers: [
         BlocProvider<LocaleBloc>(create: (_) => LocaleBloc()),
         BlocProvider<ThemeBloc>(create: (_) => ThemeBloc()),
+        BlocProvider<FavoriteBloc>(create: (_) => getit<FavoriteBloc>()),
       ],
       child: const CarRentalApp(),
     ),

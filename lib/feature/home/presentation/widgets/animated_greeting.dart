@@ -186,11 +186,14 @@ class _AnimatedGreetingState extends State<AnimatedGreeting>
             // ==================================================
             Text(
               'Hello, Visal 👋',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                //fontStyle: FontStyle.italic,
+                letterSpacing: -0.3,
+                height: 1.2,
               ),
             ),
-            const SizedBox(height: 4),
+            //const SizedBox(height: 4),
 
             // ==================================================
             // TYPEWRITER TEXT
@@ -200,9 +203,13 @@ class _AnimatedGreetingState extends State<AnimatedGreeting>
               children: [
                 Text(
                   _displayText,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     //color: theme.colorScheme.onSurfaceVariant,
                     color: AppColors.primary,
+                    //fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                    height: 1.3,
                   ),
                 ),
 

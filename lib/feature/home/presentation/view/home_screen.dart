@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/app_size.dart';
@@ -11,7 +12,9 @@ import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_cate
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/animated_greeting.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/home_banner_slider.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/popular_cars_section.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/rental_details_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detail_screen.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card_explore.dart';
 
 class HomeScreen extends StatefulWidget {
   final void Function(bool)? onExploreTap;
@@ -20,10 +23,10 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback? onProfileTap;
   const HomeScreen({
     super.key,
-    required this.onExploreTap,
-    required this.onBookingTap,
-    required this.onFavoriteTap,
-    required this.onProfileTap,
+    this.onExploreTap,
+    this.onBookingTap,
+    this.onFavoriteTap,
+    this.onProfileTap,
   });
 
   @override
@@ -31,7 +34,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Index 0 represents "All", the rest map to `categories` (brands).
   int selectedCategoryIndex = 0;
+
+  String get _selectedBrand {
+    final index = selectedCategoryIndex - 1;
+    if (index < 0 || index >= categories.length) return '';
+    return categories[index].name;
+  }
+
+  List<Vehicle> get _filteredVehicles {
+    final brand = _selectedBrand;
+    if (brand.isEmpty) return vehicles;
+    return vehicles.where((v) => v.brand == brand).toList();
+  }
 
   Future<void> refreshData() async {
     /*
@@ -46,6 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // final viewAllStyle = theme.textTheme.labelMedium?.copyWith(
+    //   color: AppColors.primary,
+    // );
+    final colorScheme = theme.colorScheme;
     return Scaffold(
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
@@ -82,10 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: InkWell(
                   onTap: widget.onProfileTap,
                   child: CircleAvatar(
-                    radius: 20,
+                    radius: 18.r,
 
                     backgroundImage: const NetworkImage(
-                      "https://scontent.fpnh2-2.fna.fbcdn.net/v/t39.30808-6/491968431_1333977137906097_3745547215927394055_n.jpg?stp=dst-jpg_tt6&cstp=mx970x960&ctp=s970x960&_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGX2jXOvNyFkMdU_nHv0_TBLC6QkSp9leUsLpCRKn2V5Uv6wof_Vu5Xc0cjDDFK8I_KxOLFewIUlVXw94akzmKm&_nc_ohc=28p1SuhBkPwQ7kNvwGT5yx6&_nc_oc=AdrUW13_mAxCDkK_fOI2s8--AA2xyqLU9DXhRp2uEMYLB12LE_V1B0Jowg_7Y3R4qAo&_nc_zt=23&_nc_ht=scontent.fpnh2-2.fna&_nc_gid=s_fbaJLoBIWod-PWjdIzRA&_nc_ss=7b2a8&oh=00_AQGN5_K1c1NL_vzQZLKregsB4kTjJFJsv772ceprkaPguA&oe=6A8A8437",
+                      "https://i.pinimg.com/236x/0f/21/77/0f21770c1e42550d64e8c210266141d2.jpg",
                     ),
 
                     backgroundColor: Theme.of(
@@ -112,8 +132,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   refreshTriggerPullDistance,
                   refreshIndicatorExtent,
                 ) {
-                  final colorScheme = Theme.of(context).colorScheme;
-
                   return Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
@@ -144,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     //   style: theme.textTheme.bodyMedium,
                     // ),
                     //AnimatedGreeting(),
-                    const SizedBox(height: AppDimensions.space4),
+                    //SizedBox(height: 4.h),
 
                     // Search field
                     InkWell(
@@ -158,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: AppDimensions.space12),
+                    SizedBox(height: 8.h),
 
                     // Banner
                     HomeBannerSlider(
@@ -166,6 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     //const SizedBox(height: AppDimensions.space12),
+                    /*
                     Row(
                       mainAxisAlignment: .spaceBetween,
                       children: [
@@ -177,32 +196,41 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         InkWell(
                           onTap: () => widget.onExploreTap?.call(false),
-                          child: Text(
-                            "View All",
-                            style: theme.textTheme.labelLarge!.copyWith(
-                              color: AppColors.primary,
-                            ),
-                          ),
+                          child: Text("View All", style: viewAllStyle),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: AppDimensions.space10),
+                    */
+                    SizedBox(height: 8.h),
 
                     SizedBox(
-                      height: AppSize.h(context, 8),
+                      height: 55.h,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
                         padding: EdgeInsets.symmetric(
-                          horizontal: AppDimensions.space16,
+                          horizontal: AppDimensions.space12,
                         ),
-                        itemCount: categories.length,
-                        separatorBuilder: (_, __) {
-                          return SizedBox(width: AppDimensions.space12);
+                        itemCount: categories.length + 1,
+                        separatorBuilder: (_, _) {
+                          return SizedBox(width: AppDimensions.space16);
                         },
                         itemBuilder: (context, index) {
-                          final category = categories[index];
+                          // Index 0 = "All", indices 1..n map to categories.
+                          if (index == 0) {
+                            return _CategoryItem(
+                              title: 'All',
+                              image: '',
+                              isSelected: selectedCategoryIndex == 0,
+                              onTap: () {
+                                setState(() => selectedCategoryIndex = 0);
+                                log('Filter: All');
+                              },
+                            );
+                          }
+
+                          final category = categories[index - 1];
 
                           return _CategoryItem(
                             title: category.name,
@@ -218,7 +246,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                     ),
-                    SizedBox(height: 12),
+
+                    SizedBox(height: 8.h),
+
                     Row(
                       mainAxisAlignment: .spaceBetween,
                       children: [
@@ -226,21 +256,45 @@ class _HomeScreenState extends State<HomeScreen> {
                           "Popular Cars",
                           style: theme.textTheme.bodyLarge!.copyWith(
                             fontWeight: .bold,
+                            fontSize: 18.sp,
+                            //fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                            height: 1.2,
                           ),
                         ),
+
                         InkWell(
                           onTap: () => widget.onExploreTap?.call(false),
-                          child: Text(
-                            "View All",
-                            style: theme.textTheme.labelLarge!.copyWith(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            width: 36.w,
+                            height: 36.h,
+                            decoration: BoxDecoration(
+                              //color: colorScheme.surface,
+                              color: Colors.white.withValues(alpha: 0.92),
+                              shape: BoxShape.circle,
+                              // border: Border.all(
+                              //   color: AppColors.primary,
+                              //   width: 1.5.w,
+                              // ),
+                            ),
+                            child: Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 18.r,
                               color: AppColors.primary,
+                              fontWeight: .bold,
                             ),
                           ),
                         ),
+                        // InkWell(
+                        //   onTap: () => widget.onExploreTap?.call(false),
+                        //   child: Text("View All", style: viewAllStyle),
+                        // ),
                       ],
                     ),
+
                     PopularCarsSection(
-                      vehicles: vehicles,
+                      vehicles: _filteredVehicles,
 
                       onSeeAll: () => widget.onExploreTap,
 
@@ -261,11 +315,115 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       onRentTap: (vehicle) {
                         log('Rent: ${vehicle.brand} ${vehicle.model}');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                RentalDetailsScreen(vehicle: vehicle),
+                          ),
+                        );
                       },
                     ),
+
+                    SizedBox(height: 8.h),
+
+                    Row(
+                      mainAxisAlignment: .spaceBetween,
+                      children: [
+                        Text(
+                          "Recommended Cars for you",
+                          style: theme.textTheme.bodyLarge!.copyWith(
+                            fontWeight: .bold,
+                            fontSize: 18.sp,
+                            //fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                            height: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 12.h),
                   ],
                 ),
               ]),
+            ),
+          ),
+
+          SliverPadding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppDimensions.chipHorizontalPadding,
+            ),
+
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(
+                _filteredVehicles.isEmpty
+                    ? [
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24.h),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.no_crash_outlined,
+                                size: 48.r,
+                                color: colorScheme.outline.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              SizedBox(height: 12.h),
+                              Text(
+                                'No $_selectedBrand cars available',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ]
+                    : _filteredVehicles.map((vehicle) {
+                        return VehicleCardExplore(
+                          vehicle: vehicle,
+
+                          onTap: () {
+                            log(
+                              'Recommended: '
+                              '${vehicle.brand} '
+                              '${vehicle.model}',
+                            );
+
+                            Navigator.push(
+                              context,
+
+                              MaterialPageRoute(
+                                builder: (_) {
+                                  return VehicleDetailScreen(vehicle: vehicle);
+                                },
+                              ),
+                            );
+                          },
+
+                          onFavoriteTap: () {
+                            log(
+                              'Recommended favorite: '
+                              '${vehicle.brand} '
+                              '${vehicle.model}',
+                            );
+                          },
+                        );
+                      }).toList(),
+              ),
+            ),
+          ),
+
+          // ============================================================
+          // BOTTOM SPACE
+          // ============================================================
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 40.h,
+              child: Center(child: CircularProgressIndicator()),
             ),
           ),
         ],
@@ -328,19 +486,50 @@ class _CategoryItem extends StatelessWidget {
               ],
             ),
 
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Image.network(
-                image,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.high,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.image_not_supported_outlined,
-                    color: colorScheme.onSurfaceVariant,
-                  );
-                },
-              ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppDimensions.radius16),
+              child: image.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isSelected
+                                ? Icons.check_circle
+                                : Icons.grid_view_rounded,
+                            size: 22.r,
+                            color: isSelected
+                                ? colorScheme.primary
+                                : colorScheme.onSurfaceVariant,
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: isSelected
+                                      ? colorScheme.primary
+                                      : colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Image.network(
+                      image,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.image_not_supported_outlined,
+                          color: colorScheme.onSurfaceVariant,
+                        );
+                      },
+                    ),
             ),
           ),
         ),

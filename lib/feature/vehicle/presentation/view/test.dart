@@ -11,22 +11,11 @@ import 'package:vehicle_rental_system/core/widgets/favorite_toggle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/service/map_service.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/rental_details_screen.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card.dart';
 
 class VehicleDetailScreen extends StatefulWidget {
   final Vehicle vehicle;
 
-  /// All available vehicles.
-  ///
-  /// Vehicles with the same type/category as the current
-  /// vehicle will be displayed as recommendations.
-  final List<Vehicle> recommendedVehicles;
-
-  const VehicleDetailScreen({
-    super.key,
-    required this.vehicle,
-    this.recommendedVehicles = const [],
-  });
+  const VehicleDetailScreen({super.key, required this.vehicle});
 
   @override
   State<VehicleDetailScreen> createState() => _VehicleDetailScreenState();
@@ -42,10 +31,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   int currentImageIndex = 0;
 
   bool _isDescriptionExpanded = false;
-
-  // ===========================================================================
-  // INIT
-  // ===========================================================================
 
   @override
   void initState() {
@@ -77,17 +62,22 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           // =====================================================================
           SliverAppBar(
             expandedHeight: 340.h,
+
             pinned: true,
+
             elevation: 0,
+
             scrolledUnderElevation: 0,
+
             backgroundColor: colorScheme.surface,
+
             automaticallyImplyLeading: false,
 
             // ===================================================================
             // BACK BUTTON
             // ===================================================================
             leading: Padding(
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.only(left: 10.w),
               child: Center(child: AppBackButton()),
             ),
 
@@ -95,22 +85,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             // FAVORITE BUTTON
             // ===================================================================
             actions: [
-              FavoriteToggle(
-                onFavoriteTap: () {
-                  setState(() {
-                    isFavorite = !isFavorite;
-                  });
-                },
-                vehicle: vehicle,
-              ),
-              SizedBox(width: 12.w),
+              FavoriteToggle(onFavoriteTap: () {}, vehicle: vehicle),
+
+              SizedBox(width: 14.w),
             ],
 
             // ===================================================================
-            // HERO IMAGE
+            // HERO
             // ===================================================================
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
+
               background: Hero(
                 tag: vehicle,
                 child: _buildHero(context, vehicle),
@@ -118,11 +103,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             ),
           ),
 
-          // =========================================================================
+          // =====================================================================
           // CONTENT
-          // =========================================================================
+          // =====================================================================
           SliverPadding(
             padding: AppDimensions.screenPadding,
+
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // =================================================================
@@ -155,6 +141,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                               fontWeight: FontWeight.w800,
                             ),
                           ),
+
                           TextSpan(
                             text: ' / day',
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -245,7 +232,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 SizedBox(height: 20.h),
 
                 // =================================================================
-                // LOCATION
+                // LOCATION TITLE
                 // =================================================================
                 Text(
                   'Location',
@@ -256,14 +243,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
                 SizedBox(height: 14.h),
 
+                // =================================================================
+                // MAP
+                // =================================================================
                 _buildMapPreview(context, vehicle.latitude, vehicle.longitude),
-
-                // =================================================================
-                // RECOMMENDED VEHICLES
-                // =================================================================
-                SizedBox(height: 28.h),
-
-                _buildRecommendedVehicles(context, vehicle),
 
                 // =================================================================
                 // BOTTOM SPACE
@@ -292,6 +275,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     if (vehicle.images.isEmpty) {
       return Container(
         color: colorScheme.surfaceContainerHighest,
+
         child: Center(
           child: Icon(
             Icons.directions_car_rounded,
@@ -304,35 +288,51 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
     return Stack(
       fit: StackFit.expand,
+
       children: [
         // =====================================================================
         // IMAGE SLIDER
         // =====================================================================
         CarouselSlider.builder(
           itemCount: vehicle.images.length,
+
           options: CarouselOptions(
             height: double.infinity,
+
             viewportFraction: 1.0,
+
             enableInfiniteScroll: vehicle.images.length > 1,
+
             autoPlay: vehicle.images.length > 1,
+
             autoPlayInterval: const Duration(seconds: 4),
+
             autoPlayAnimationDuration: const Duration(milliseconds: 700),
+
             enlargeCenterPage: false,
+
             onPageChanged: (index, reason) {
               setState(() {
                 currentImageIndex = index;
               });
             },
           ),
+
           itemBuilder: (context, index, realIndex) {
             final imageUrl = vehicle.images[index];
 
+            debugPrint('IMAGE: $imageUrl');
+
             return SizedBox(
               width: double.infinity,
+
               child: Image.network(
                 imageUrl,
+
                 fit: BoxFit.cover,
+
                 filterQuality: FilterQuality.high,
+
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) {
                     return child;
@@ -340,14 +340,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
                   return Container(
                     color: colorScheme.surfaceContainerHighest,
+
                     child: const Center(
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   );
                 },
+
                 errorBuilder: (context, error, stackTrace) {
+                  debugPrint('IMAGE ERROR: $imageUrl');
+
+                  debugPrint('ERROR: $error');
+
                   return Container(
                     color: colorScheme.surfaceContainerHighest,
+
                     child: Icon(
                       Icons.broken_image_rounded,
                       size: 60.r,
@@ -369,10 +376,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
+
                   end: Alignment.bottomCenter,
+
                   colors: [
                     Colors.black.withValues(alpha: 0.45),
+
                     Colors.transparent,
+
                     Colors.black.withValues(alpha: 0.40),
                   ],
                 ),
@@ -386,15 +397,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         // =====================================================================
         Positioned(
           right: 16.w,
+
           bottom: 18.h,
+
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.45),
+
               borderRadius: BorderRadius.circular(20.r),
             ),
+
             child: Text(
               '${currentImageIndex + 1}/${vehicle.images.length}',
+
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 12.sp,
@@ -409,8 +426,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         // =====================================================================
         Positioned(
           bottom: 21.h,
+
           left: 0,
+
           right: 0,
+
           child: _buildPagination(context, vehicle.images.length),
         ),
       ],
@@ -428,18 +448,24 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
+
       children: List.generate(count, (index) {
         final isSelected = index == currentImageIndex;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
+
           margin: EdgeInsets.symmetric(horizontal: 3.w),
+
           width: isSelected ? 22.w : 7.w,
+
           height: 7.h,
+
           decoration: BoxDecoration(
             color: isSelected
                 ? Colors.white
                 : Colors.white.withValues(alpha: 0.50),
+
             borderRadius: BorderRadius.circular(20.r),
           ),
         );
@@ -453,15 +479,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   Widget _buildDescription(BuildContext context, Vehicle vehicle) {
     final theme = Theme.of(context);
+
     final colorScheme = theme.colorScheme;
 
     final bool showButton = vehicle.description.length > 150;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+
       children: [
+        // =====================================================================
+        // TITLE
+        // =====================================================================
         Text(
           'Description',
+
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
           ),
@@ -469,31 +501,42 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
         SizedBox(height: 10.h),
 
+        // =====================================================================
+        // DESCRIPTION
+        // =====================================================================
         AnimatedSize(
           duration: const Duration(milliseconds: 300),
+
           curve: Curves.easeInOut,
+
           child: GestureDetector(
-            onTap: showButton
-                ? () {
-                    setState(() {
-                      _isDescriptionExpanded = !_isDescriptionExpanded;
-                    });
-                  }
-                : null,
+            onTap: () {
+              setState(() {
+                _isDescriptionExpanded = !_isDescriptionExpanded;
+              });
+            },
+
             child: Text(
               vehicle.description,
+
               maxLines: _isDescriptionExpanded ? null : 3,
+
               overflow: _isDescriptionExpanded
                   ? TextOverflow.visible
                   : TextOverflow.ellipsis,
+
               style: theme.textTheme.bodyMedium?.copyWith(
                 height: 1.6,
+
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
           ),
         ),
 
+        // =====================================================================
+        // SHOW MORE / SHOW LESS
+        // =====================================================================
         if (showButton) ...[
           SizedBox(height: 6.h),
 
@@ -503,13 +546,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 _isDescriptionExpanded = !_isDescriptionExpanded;
               });
             },
+
             child: Row(
               mainAxisSize: MainAxisSize.min,
+
               children: [
                 Text(
                   _isDescriptionExpanded ? 'Show less' : 'Show more',
+
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.primary,
+
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -518,10 +565,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
                 AnimatedRotation(
                   turns: _isDescriptionExpanded ? 0.5 : 0,
+
                   duration: const Duration(milliseconds: 250),
+
                   child: Icon(
                     Icons.keyboard_arrow_down_rounded,
+
                     size: 20.r,
+
                     color: AppColors.primary,
                   ),
                 ),
@@ -539,6 +590,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   Widget _buildSpecifications(BuildContext context, Vehicle vehicle) {
     final theme = Theme.of(context);
+
     final colorScheme = theme.colorScheme;
 
     final specifications = [
@@ -547,26 +599,31 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         label: 'Transmission',
         value: vehicle.transmission,
       ),
+
       (
         icon: Icons.local_gas_station_rounded,
         label: 'Fuel',
         value: vehicle.fuelType,
       ),
+
       (
         icon: Icons.airline_seat_recline_normal_rounded,
         label: 'Seats',
         value: '${vehicle.seats}',
       ),
+
       (
         icon: Icons.door_front_door_rounded,
         label: 'Doors',
         value: '${vehicle.doors}',
       ),
+
       (
         icon: Icons.luggage_rounded,
         label: 'Luggage',
         value: '${vehicle.luggage}',
       ),
+
       (
         icon: Icons.speed_rounded,
         label: 'Kilometer',
@@ -576,10 +633,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
     return Column(
       children: [
+        // =====================================================================
+        // TITLE
+        // =====================================================================
         Row(
           children: [
             Text(
               'Specifications',
+
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -589,30 +650,45 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
         SizedBox(height: 12.h),
 
+        // =====================================================================
+        // GRID
+        // =====================================================================
         GridView.builder(
           shrinkWrap: true,
+
           physics: const NeverScrollableScrollPhysics(),
+
           itemCount: specifications.length,
+
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
+
             crossAxisSpacing: 15,
+
             mainAxisSpacing: 15,
+
             childAspectRatio: 1.1,
           ),
+
           itemBuilder: (context, index) {
             final item = specifications[index];
 
             return Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+
                 border: Border.all(color: colorScheme.outline),
               ),
+
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+
                 children: [
                   Icon(
                     item.icon,
+
                     size: 22.r,
+
                     color: colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
 
@@ -620,7 +696,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
                   Text(
                     item.label,
+
                     textAlign: TextAlign.center,
+
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -630,13 +708,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8.w),
+
                     child: Text(
                       item.value,
+
                       maxLines: 1,
+
                       overflow: TextOverflow.ellipsis,
+
                       textAlign: TextAlign.center,
+
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
+
                         color: colorScheme.onSurface,
                       ),
                     ),
@@ -656,13 +740,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   Widget _buildFeatures(BuildContext context, Vehicle vehicle) {
     final theme = Theme.of(context);
+
     final colorScheme = theme.colorScheme;
 
     if (vehicle.feature.isEmpty) {
       return Text(
         'No features available.',
+
         style: theme.textTheme.bodyMedium?.copyWith(
           color: colorScheme.onSurface,
+
           fontWeight: FontWeight.w600,
         ),
       );
@@ -670,10 +757,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
     return Column(
       children: [
+        // =====================================================================
+        // TITLE
+        // =====================================================================
         Row(
           children: [
             Text(
               'Features',
+
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -683,22 +774,34 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
         SizedBox(height: 12.h),
 
+        // =====================================================================
+        // FEATURES GRID
+        // =====================================================================
         GridView.builder(
           shrinkWrap: true,
+
           physics: const NeverScrollableScrollPhysics(),
+
           itemCount: vehicle.feature.length,
+
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
+
             crossAxisSpacing: 15,
+
             mainAxisSpacing: 8,
+
             childAspectRatio: 3.5,
           ),
+
           itemBuilder: (context, index) {
             return Row(
               children: [
                 Icon(
                   Icons.check_circle_rounded,
+
                   color: AppColors.primary,
+
                   size: AppDimensions.iconMedium,
                 ),
 
@@ -707,10 +810,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 Expanded(
                   child: Text(
                     vehicle.feature[index],
+
                     maxLines: 1,
+
                     overflow: TextOverflow.ellipsis,
+
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurface,
+
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -736,21 +843,27 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
     return FutureBuilder<String>(
       future: MapService.getLocationName(latitude, longitude),
+
       builder: (context, snapshot) {
         final locationName = snapshot.data ?? 'Loading location...';
 
         final theme = Theme.of(context);
+
         final colorScheme = theme.colorScheme;
 
         return Container(
           decoration: BoxDecoration(
             border: Border.all(color: colorScheme.outline),
+
             borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
           ),
+
           child: AspectRatio(
             aspectRatio: AppDimensions.vehicleCardAspectRatio,
+
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+
               child: Stack(
                 children: [
                   // =============================================================
@@ -759,15 +872,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   FlutterMap(
                     options: MapOptions(
                       initialCenter: location,
+
                       initialZoom: 15,
+
                       interactionOptions: const InteractionOptions(
                         flags: InteractiveFlag.none,
                       ),
                     ),
+
                     children: [
                       TileLayer(
                         urlTemplate:
                             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+
                         userAgentPackageName:
                             'com.example.vehicle_rental_system',
                       ),
@@ -776,16 +893,23 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                         markers: [
                           Marker(
                             point: location,
+
                             width: 40,
+
                             height: 40,
+
                             child: Container(
                               decoration: const BoxDecoration(
                                 color: AppColors.primary,
+
                                 shape: BoxShape.circle,
                               ),
+
                               child: const Icon(
                                 Icons.location_on,
+
                                 color: Colors.white,
+
                                 size: 22,
                               ),
                             ),
@@ -800,29 +924,40 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   // =============================================================
                   Positioned(
                     left: 12.w,
+
                     right: 12.w,
+
                     bottom: 12.h,
+
                     child: Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 14.w,
                         vertical: 10.h,
                       ),
+
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.95),
+
                         borderRadius: BorderRadius.circular(12.r),
+
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.08),
+
                             blurRadius: 10,
+
                             offset: const Offset(0, 3),
                           ),
                         ],
                       ),
+
                       child: Row(
                         children: [
                           const Icon(
                             Icons.location_on_rounded,
+
                             color: AppColors.primary,
+
                             size: 20,
                           ),
 
@@ -831,10 +966,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+
                               mainAxisSize: MainAxisSize.min,
+
                               children: [
                                 Text(
                                   'Pickup location',
+
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: Colors.black54,
                                   ),
@@ -842,10 +980,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
                                 Text(
                                   locationName,
+
                                   maxLines: 1,
+
                                   overflow: TextOverflow.ellipsis,
+
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
+
                                     color: Colors.black,
                                   ),
                                 ),
@@ -855,7 +997,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
                           const Icon(
                             Icons.chevron_right_rounded,
+
                             color: Colors.black45,
+
                             size: 20,
                           ),
                         ],
@@ -870,6 +1014,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     onTap: () {
                       MapService.openGoogleMaps(latitude, longitude);
                     },
+
                     child: Container(color: Colors.transparent),
                   ),
                 ],
@@ -882,214 +1027,22 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   // ===========================================================================
-  // RECOMMENDED VEHICLES
-  // ===========================================================================
-
-  /*
-  Widget _buildRecommendedVehicles(
-    BuildContext context,
-    Vehicle currentVehicle,
-  ) {
-    final theme = Theme.of(context);
-
-    // If a list was provided, use it.
-    // Otherwise use the global vehicles list.
-    final allVehicles = widget.recommendedVehicles.isNotEmpty
-        ? widget.recommendedVehicles
-        : vehicles;
-
-    final recommendedVehicles = allVehicles
-        .where(
-          (vehicle) =>
-              vehicle.id != currentVehicle.id &&
-              vehicle.type.toLowerCase().trim() ==
-                  currentVehicle.type.toLowerCase().trim(),
-        )
-        .take(5)
-        .toList();
-
-    if (recommendedVehicles.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Recommended ${currentVehicle.type}s',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-
-        SizedBox(height: 6.h),
-
-        Text(
-          'Other ${currentVehicle.type} vehicles you may like',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-
-        SizedBox(height: 14.h),
-
-        ...recommendedVehicles.map((recommendedVehicle) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: 16.h),
-            child: VehicleCard(
-              vehicle: recommendedVehicle,
-
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => VehicleDetailScreen(
-                      vehicle: recommendedVehicle,
-
-                      // Pass the complete vehicle list.
-                      recommendedVehicles: allVehicles,
-                    ),
-                  ),
-                );
-              },
-
-              onFavoriteTap: () {
-                // Connect to FavoriteBloc here.
-              },
-
-              onRentTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        RentalDetailsScreen(vehicle: recommendedVehicle),
-                  ),
-                );
-              },
-            ),
-          );
-        }),
-      ],
-    );
-  }
-  */
-
-  // ================================================================
-  // HORIZONTAL VEHICLE LIST
-  // ================================================================
-
-  Widget _buildRecommendedVehicles(
-    BuildContext context,
-    Vehicle currentVehicle,
-  ) {
-    final theme = Theme.of(context);
-
-    final allVehicles = widget.recommendedVehicles.isNotEmpty
-        ? widget.recommendedVehicles
-        : vehicles;
-
-    final recommendedVehicles = allVehicles
-        .where(
-          (vehicle) =>
-              vehicle.id != currentVehicle.id &&
-              vehicle.type.toLowerCase().trim() ==
-                  currentVehicle.type.toLowerCase().trim(),
-        )
-        .take(5)
-        .toList();
-
-    if (recommendedVehicles.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ================================================================
-        // TITLE
-        // ================================================================
-        Text(
-          'Recommended ${currentVehicle.type}s',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-
-        SizedBox(height: 6.h),
-
-        Text(
-          'Other ${currentVehicle.type} vehicles you may like',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-
-        SizedBox(height: 14.h),
-
-        SizedBox(
-          height: 300.h,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: recommendedVehicles.length,
-            separatorBuilder: (context, index) {
-              return SizedBox(width: 14.w);
-            },
-            itemBuilder: (context, index) {
-              final recommendedVehicle = recommendedVehicles[index];
-
-              return SizedBox(
-                width: 280.w,
-                child: VehicleCard(
-                  vehicle: recommendedVehicle,
-
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => VehicleDetailScreen(
-                          vehicle: recommendedVehicle,
-                          recommendedVehicles: allVehicles,
-                        ),
-                      ),
-                    );
-                  },
-
-                  onFavoriteTap: () {
-                    // Connect to FavoriteBloc.
-                  },
-
-                  onRentTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            RentalDetailsScreen(vehicle: recommendedVehicle),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ===========================================================================
   // BOTTOM BOOKING BAR
   // ===========================================================================
 
   Widget _buildBottomBar(BuildContext context, Vehicle vehicle) {
     final theme = Theme.of(context);
+
     final colorScheme = theme.colorScheme;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 12.h),
+
       decoration: BoxDecoration(color: colorScheme.surface),
+
       child: SafeArea(
         top: false,
+
         child: Row(
           children: [
             // =================================================================
@@ -1097,10 +1050,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             // =================================================================
             Column(
               mainAxisSize: MainAxisSize.min,
+
               crossAxisAlignment: CrossAxisAlignment.start,
+
               children: [
                 Text(
                   'Price',
+
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -1113,14 +1069,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     children: [
                       TextSpan(
                         text: '\$${vehicle.pricePerDay.toStringAsFixed(0)}',
+
                         style: theme.textTheme.titleLarge?.copyWith(
                           color: AppColors.primary,
+
                           fontWeight: FontWeight.w800,
                         ),
                       ),
 
                       TextSpan(
                         text: ' / day',
+
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -1139,30 +1098,39 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             Expanded(
               child: SizedBox(
                 height: 45.h,
+
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
+
                       MaterialPageRoute(
                         builder: (context) =>
                             RentalDetailsScreen(vehicle: vehicle),
                       ),
                     );
                   },
+
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.white,
+
+                    foregroundColor: Colors.white,
+
                     elevation: 0,
+
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(
                         AppDimensions.radius12,
                       ),
                     ),
                   ),
+
                   child: Text(
                     'Rent Now',
+
                     style: TextStyle(
                       fontSize: 16.sp,
+
                       fontWeight: FontWeight.w700,
                     ),
                   ),

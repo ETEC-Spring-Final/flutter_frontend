@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
+import 'package:vehicle_rental_system/core/widgets/app_badge.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/booking.dart';
 
 class BookingCard extends StatelessWidget {
@@ -85,35 +87,47 @@ class BookingCard extends StatelessWidget {
                       // ------------------------------------------------------
                       // VEHICLE TYPE
                       // ------------------------------------------------------
-                      Positioned(
-                        top: 14,
-                        left: 14,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 13,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surface.withValues(alpha: 0.92),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          child: Text(
-                            vehicle.type,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: colorScheme.onSurface,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
+                      // Positioned(
+                      //   top: 14,
+                      //   left: 14,
+                      //   child: Container(
+                      //     padding: const EdgeInsets.symmetric(
+                      //       horizontal: 13,
+                      //       vertical: 7,
+                      //     ),
+                      //     decoration: BoxDecoration(
+                      //       color: colorScheme.surface.withValues(alpha: 0.92),
+                      //       borderRadius: BorderRadius.circular(30),
+                      //     ),
+                      //     child: Text(
+                      //       vehicle.type,
+                      //       style: theme.textTheme.labelLarge?.copyWith(
+                      //         color: colorScheme.onSurface,
+                      //         fontWeight: FontWeight.w700,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
 
                       // ------------------------------------------------------
                       // STATUS
                       // ------------------------------------------------------
+                      // Positioned(
+                      //   top: 14,
+                      //   right: 14,
+                      //   child: _StatusBadge(status: booking.status),
+                      // ),
                       Positioned(
-                        top: 14,
-                        right: 14,
-                        child: _StatusBadge(status: booking.status),
+                        top: 8,
+                        left: 8,
+                        right: 8,
+                        child: Row(
+                          mainAxisAlignment: .spaceBetween,
+                          children: [
+                            AppBadge(label: vehicle.type),
+                            _StatusBadge(status: booking.status),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -162,13 +176,34 @@ class BookingCard extends StatelessWidget {
 
                           const SizedBox(width: 10),
 
-                          Text(
-                            '\$${booking.totalPrice.toStringAsFixed(0)}',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w800,
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text:
+                                      '\$${vehicle.pricePerDay.toStringAsFixed(0)}',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' / day',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+
+                          // Text(
+                          //   '\$${booking.totalPrice.toStringAsFixed(0)}',
+                          //   style: theme.textTheme.titleLarge?.copyWith(
+                          //     color: AppColors.primary,
+                          //     fontWeight: FontWeight.w800,
+                          //   ),
+                          // ),
                         ],
                       ),
 
@@ -283,7 +318,8 @@ class BookingCard extends StatelessWidget {
                                 Text(
                                   '\$${booking.totalPrice.toStringAsFixed(0)}',
                                   style: theme.textTheme.titleLarge?.copyWith(
-                                    color: colorScheme.onSurface,
+                                    color: AppColors.primary,
+                                    //color: colorScheme.onSurface,
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
@@ -467,13 +503,14 @@ class _StatusBadge extends StatelessWidget {
         textColor = colorScheme.onSurfaceVariant;
         dotColor = colorScheme.onSurfaceVariant;
     }
-
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+      height: 28.h,
+      padding: const EdgeInsets.symmetric(horizontal: 11),
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: borderColor),
+        color: backgroundColor.withValues(alpha: 0.80),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusCircular),
+        //border: Border.all(color: borderColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -488,11 +525,15 @@ class _StatusBadge extends StatelessWidget {
 
           Text(
             status,
-            style: TextStyle(
-              fontSize: 13,
+            style: theme.textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: textColor,
             ),
+            // style: TextStyle(
+            //   fontSize: 13,
+            //   fontWeight: FontWeight.w700,
+            //   color: textColor,
+            // ),
           ),
         ],
       ),

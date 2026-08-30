@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
-import 'package:vehicle_rental_system/app/theme/app_size.dart';
+import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -44,10 +45,6 @@ class AppBottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // ============================================================
-    // LIGHT MODE COLORS
-    // ============================================================
-
     final backgroundColor = isDark ? AppColors.darkSurface : AppColors.surface;
 
     final selectedIconColor = isDark
@@ -69,20 +66,21 @@ class AppBottomNavigation extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        height: AppSize.h(context, 8),
+        height: 65.h,
 
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
+
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(18.r),
+            topRight: Radius.circular(18.r),
           ),
 
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(isDark ? 0.30 : 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, -2),
+              blurRadius: 12.r,
+              offset: Offset(0, -2.h),
             ),
           ],
         ),
@@ -139,12 +137,11 @@ class _BottomNavButton extends StatelessWidget {
 
       child: InkWell(
         onTap: onTap,
-
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
 
         child: SizedBox(
-          height: 82,
+          height: 52.h,
 
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -157,45 +154,53 @@ class _BottomNavButton extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
 
-                width: selected ? 64 : 50,
-                height: 38,
+                width: selected ? 50.w : 50.w,
+                height: 32.h,
 
                 decoration: BoxDecoration(
                   color: selected
                       ? selectedBackgroundColor
                       : Colors.transparent,
 
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusCircular,
+                  ),
                 ),
 
                 child: Center(
                   child: Icon(
                     selected ? item.selectedIcon : item.icon,
 
-                    size: 27,
+                    size: 20.r,
 
                     color: selected ? selectedIconColor : unselectedIconColor,
                   ),
                 ),
               ),
 
-              const SizedBox(height: 3),
+              // Center(
+              //   child: Icon(
+              //     selected ? item.selectedIcon : item.icon,
+
+              //     size: 18.r,
+
+              //     color: selected ? selectedIconColor : unselectedIconColor,
+              //   ),
+              // ),
+
+              //SizedBox(height: 2.h),
 
               // ==================================================
               // LABEL
               // ==================================================
               Text(
                 item.label,
-
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-
                 style: TextStyle(
-                  fontSize: 15,
-
-                  fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
-
-                  color: selected ? selectedTextColor : unselectedIconColor,
+                  fontSize: 10.sp,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                  color: selected ? AppColors.primary : unselectedIconColor,
                 ),
               ),
             ],

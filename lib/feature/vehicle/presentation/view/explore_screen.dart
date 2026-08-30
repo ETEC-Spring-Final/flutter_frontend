@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/explore_category_filter.dart';
@@ -28,6 +29,24 @@ class ExploreScreenState extends State<ExploreScreen> {
 
       searchFocusNode.requestFocus();
     });
+  }
+
+  List<Vehicle> get _filteredVehicles {
+    final query = searchController.text.trim().toLowerCase();
+
+    final types = ExploreCategoryFilter.typesForIndex(selectedCategory);
+
+    return vehicles.where((vehicle) {
+      final matchesCategory =
+          types == null || types.contains(vehicle.type);
+
+      final matchesQuery =
+          query.isEmpty ||
+          vehicle.brand.toLowerCase().contains(query) ||
+          vehicle.model.toLowerCase().contains(query);
+
+      return matchesCategory && matchesQuery;
+    }).toList();
   }
 
   @override
@@ -102,15 +121,20 @@ class ExploreScreenState extends State<ExploreScreen> {
 
             titleSpacing: 16,
             centerTitle: false,
-            title: AppTextField(
-              focusNode: searchFocusNode,
-              controller: searchController,
-              hint: "Search cars or brands..",
-              prefixIcon: Icons.search,
-              keyboardType: TextInputType.text,
-              onChanged: (value) {
-                log("Search : ${searchController.text}");
-              },
+            title: Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              child: AppTextField(
+                contentPadding: EdgeInsets.only(top: 10, bottom: 10),
+                focusNode: searchFocusNode,
+                controller: searchController,
+                hint: "Search cars or brands..",
+                prefixIcon: Icons.search,
+                keyboardType: TextInputType.text,
+                onChanged: (value) {
+                  setState(() {});
+                  log("Search : ${searchController.text}");
+                },
+              ),
             ),
           ),
 
@@ -148,16 +172,13 @@ class ExploreScreenState extends State<ExploreScreen> {
           SliverToBoxAdapter(
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: ExploreCategoryFilter(
-                    selectedIndex: selectedCategory,
-                    onSelected: (index) {
-                      setState(() {
-                        selectedCategory = index;
-                      });
-                    },
-                  ),
+                ExploreCategoryFilter(
+                  selectedIndex: selectedCategory,
+                  onSelected: (index) {
+                    setState(() {
+                      selectedCategory = index;
+                    });
+                  },
                 ),
               ],
             ),
@@ -168,9 +189,44 @@ class ExploreScreenState extends State<ExploreScreen> {
               AppDimensions.chipHorizontalPadding,
             ),
             sliver: SliverList.builder(
-              itemCount: vehicles.length,
+              itemCount: _filteredVehicles.isEmpty ? 1 : _filteredVehicles.length,
               itemBuilder: (context, index) {
-                final vehicle = vehicles[index];
+                if (_filteredVehicles.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 48.h),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 56.r,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withValues(alpha: 0.5),
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          "No cars found",
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          "Try a different search or filter.",
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final vehicle = _filteredVehicles[index];
                 return VehicleCardExplore(
                   vehicle: vehicle,
                   onTap: () {
