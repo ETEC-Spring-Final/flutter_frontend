@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:vehicle_rental_system/app/app.dart';
 import 'package:vehicle_rental_system/app/locale/bloc/locale_bloc.dart';
 import 'package:vehicle_rental_system/app/theme/bloc/theme_bloc.dart';
@@ -19,7 +20,8 @@ void main() async {
         BlocProvider<LocaleBloc>(create: (_) => LocaleBloc()),
         BlocProvider<ThemeBloc>(create: (_) => ThemeBloc()),
         BlocProvider<AuthBloc>(
-          create: (_) => AuthBloc(getit<AuthRepository>()),
+          create: (_) =>
+              AuthBloc(getit<AuthRepository>(), getit<FlutterSecureStorage>()),
         ),
         BlocProvider<FavoriteBloc>(create: (_) => getit<FavoriteBloc>()),
         BlocProvider<BookingBloc>(create: (_) => getit<BookingBloc>()),

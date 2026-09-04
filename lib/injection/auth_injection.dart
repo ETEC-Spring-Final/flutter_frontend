@@ -33,6 +33,7 @@ void registerAuth() {
   // use case
 
   // bloc
-
-  getIt.registerFactory(() => AuthBloc(getIt<AuthRepository>()));
+  getIt.registerFactory(
+    () => AuthBloc(getIt<AuthRepository>(), getIt<FlutterSecureStorage>()),
+  );
 }

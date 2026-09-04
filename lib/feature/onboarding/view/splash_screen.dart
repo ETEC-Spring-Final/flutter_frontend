@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
 
 import '../../../app/router/app_routes.dart';
 
@@ -41,6 +43,9 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+
+    // Check whether JWT token already exists
+    context.read<AuthBloc>().add(CheckAuthStatus());
 
     _setupIntroAnimation();
     _setupJumpAnimation();
@@ -181,149 +186,160 @@ class _SplashScreenState extends State<SplashScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.primary,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // ======================================================
-            // TOP RIGHT DECORATION
-            // ======================================================
-            Positioned(
-              top: -90.h,
-              right: -80.w,
-              child: Container(
-                width: 220.w,
-                height: 220.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colorScheme.onPrimary.withValues(alpha: 0.08),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          context.go(AppRoutes.mainHome);
+        }
+
+        if (state is AuthUnauthenticated) {
+          context.go(AppRoutes.onboarding);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: colorScheme.primary,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              // ======================================================
+              // TOP RIGHT DECORATION
+              // ======================================================
+              Positioned(
+                top: -90.h,
+                right: -80.w,
+                child: Container(
+                  width: 220.w,
+                  height: 220.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.onPrimary.withValues(alpha: 0.08),
+                  ),
                 ),
               ),
-            ),
 
-            // ======================================================
-            // BOTTOM LEFT DECORATION
-            // ======================================================
-            Positioned(
-              bottom: -120.h,
-              left: -100.w,
-              child: Container(
-                width: 280.w,
-                height: 280.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colorScheme.onPrimary.withValues(alpha: 0.06),
+              // ======================================================
+              // BOTTOM LEFT DECORATION
+              // ======================================================
+              Positioned(
+                bottom: -120.h,
+                left: -100.w,
+                child: Container(
+                  width: 280.w,
+                  height: 280.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.onPrimary.withValues(alpha: 0.06),
+                  ),
                 ),
               ),
-            ),
 
-            // ======================================================
-            // CENTER CONTENT
-            // ======================================================
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // ==================================================
-                  // JUMPING CAR LOGO
-                  // ==================================================
-                  AnimatedBuilder(
-                    animation: _jumpAnimation,
-                    builder: (context, child) {
-                      return Transform.translate(
-                        offset: Offset(0, _jumpAnimation.value),
-                        child: child,
-                      );
-                    },
-                    child: FadeTransition(
-                      opacity: _logoFadeAnimation,
-                      child: ScaleTransition(
-                        scale: _logoScaleAnimation,
-                        child: _buildLogo(colorScheme),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 28.h),
-
-                  // ==================================================
-                  // APP NAME
-                  // ==================================================
-                  FadeTransition(
-                    opacity: _textFadeAnimation,
-                    child: SlideTransition(
-                      position: _textSlideAnimation,
-                      child: Column(
-                        children: [
-                          Text(
-                            'Auto Rent',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              color: colorScheme.onPrimary,
-                              fontSize: 30.sp,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-
-                          SizedBox(height: 8.h),
-
-                          Text(
-                            'Drive your journey',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onPrimary.withValues(
-                                alpha: 0.75,
-                              ),
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ======================================================
-            // LOADING
-            // ======================================================
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 42.h,
-              child: FadeTransition(
-                opacity: _textFadeAnimation,
+              // ======================================================
+              // CENTER CONTENT
+              // ======================================================
+              Center(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(
-                      width: 24.w,
-                      height: 24.w,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2.w,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          colorScheme.onPrimary.withValues(alpha: 0.85),
+                    // ==================================================
+                    // JUMPING CAR LOGO
+                    // ==================================================
+                    AnimatedBuilder(
+                      animation: _jumpAnimation,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(0, _jumpAnimation.value),
+                          child: child,
+                        );
+                      },
+                      child: FadeTransition(
+                        opacity: _logoFadeAnimation,
+                        child: ScaleTransition(
+                          scale: _logoScaleAnimation,
+                          child: _buildLogo(colorScheme),
                         ),
                       ),
                     ),
 
-                    SizedBox(height: 12.h),
+                    SizedBox(height: 28.h),
 
-                    Text(
-                      'Loading...',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onPrimary.withValues(alpha: 0.65),
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w500,
+                    // ==================================================
+                    // APP NAME
+                    // ==================================================
+                    FadeTransition(
+                      opacity: _textFadeAnimation,
+                      child: SlideTransition(
+                        position: _textSlideAnimation,
+                        child: Column(
+                          children: [
+                            Text(
+                              'Auto Rent',
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                color: colorScheme.onPrimary,
+                                fontSize: 30.sp,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+
+                            SizedBox(height: 8.h),
+
+                            Text(
+                              'Drive your journey',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onPrimary.withValues(
+                                  alpha: 0.75,
+                                ),
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              // ======================================================
+              // LOADING
+              // ======================================================
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 42.h,
+                child: FadeTransition(
+                  opacity: _textFadeAnimation,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: 24.w,
+                        height: 24.w,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2.w,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            colorScheme.onPrimary.withValues(alpha: 0.85),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 12.h),
+
+                      Text(
+                        'Loading...',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: colorScheme.onPrimary.withValues(alpha: 0.65),
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -3,11 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:vehicle_rental_system/app/locale/bloc/locale_bloc.dart';
+import 'package:vehicle_rental_system/app/router/app_routes.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/bloc/theme_bloc.dart';
+import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
 import 'package:vehicle_rental_system/l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -39,247 +42,287 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    return Scaffold(
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            automaticallyImplyLeading: false,
-            floating: true,
-            snap: true,
-            pinned: false,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            surfaceTintColor: Colors.transparent,
-            titleSpacing: 16,
-            centerTitle: false,
-            title: Text(
-              l10n.profile,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          context.go(AppRoutes.login);
+        }
+
+        if (state is AuthFailure) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      child: Scaffold(
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              automaticallyImplyLeading: false,
+              floating: true,
+              snap: true,
+              pinned: false,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              surfaceTintColor: Colors.transparent,
+              titleSpacing: 16,
+              centerTitle: false,
+              title: Text(
+                l10n.profile,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
+              actions: [
+                TextButton.icon(
+                  onPressed: () {
+                    context.read<AuthBloc>().add(LogoutRequested());
+                    // Navigator.of(context).push(
+                    //   MaterialPageRoute(
+                    //     builder: (_) => const _LogoutPlaceholder(),
+                    //   ),
+                    // );
+                  },
+                  icon: Icon(
+                    Icons.logout_rounded,
+                    size: 20.r,
+                    color: theme.colorScheme.error,
+                  ),
+                  label: Text(
+                    'Logout',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
 
-          SliverPadding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimensions.chipHorizontalPadding,
-            ),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // =====================================================
-                  // PROFILE HEADER CARD
-                  // =====================================================
-                  _ProfileHeader(
-                    image: _profileImage,
-                    defaultAvatar: _defaultAvatar,
-                    onEditTap: _pickProfileImage,
-                  ),
+            SliverPadding(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppDimensions.chipHorizontalPadding,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // =====================================================
+                    // PROFILE HEADER CARD
+                    // =====================================================
+                    _ProfileHeader(
+                      image: _profileImage,
+                      defaultAvatar: _defaultAvatar,
+                      onEditTap: _pickProfileImage,
+                    ),
 
-                  SizedBox(height: 24.h),
+                    SizedBox(height: 24.h),
 
-                  // =====================================================
-                  // QUICK STATS
-                  // =====================================================
-                  Row(
-                    children: [
-                      _StatCard(
-                        icon: Icons.route_rounded,
-                        value: '12',
-                        label: 'Trips',
-                      ),
-                      SizedBox(width: 12.w),
-                      _StatCard(
-                        icon: Icons.book_online_rounded,
-                        value: '3',
-                        label: 'Bookings',
-                      ),
-                      SizedBox(width: 12.w),
-                      _StatCard(
-                        icon: Icons.favorite_rounded,
-                        value: '7',
-                        label: 'Favorites',
-                      ),
-                    ],
-                  ),
+                    // =====================================================
+                    // QUICK STATS
+                    // =====================================================
+                    Row(
+                      children: [
+                        _StatCard(
+                          icon: Icons.route_rounded,
+                          value: '12',
+                          label: 'Trips',
+                        ),
+                        SizedBox(width: 12.w),
+                        _StatCard(
+                          icon: Icons.book_online_rounded,
+                          value: '3',
+                          label: 'Bookings',
+                        ),
+                        SizedBox(width: 12.w),
+                        _StatCard(
+                          icon: Icons.favorite_rounded,
+                          value: '7',
+                          label: 'Favorites',
+                        ),
+                      ],
+                    ),
 
-                  SizedBox(height: 28.h),
+                    SizedBox(height: 28.h),
 
-                  // =====================================================
-                  // MY ACTIVITY
-                  // =====================================================
-                  _SectionTitle(title: 'My Activity'),
+                    // =====================================================
+                    // MY ACTIVITY
+                    // =====================================================
+                    _SectionTitle(title: 'My Activity'),
 
-                  SizedBox(height: 12.h),
+                    SizedBox(height: 12.h),
 
-                  _MenuCard(
-                    children: [
-                      _MenuTile(
-                        icon: Icons.book_online_outlined,
-                        title: 'My Bookings',
-                        subtitle: 'View and manage bookings',
-                        onTap: widget.onBookingsTap,
-                      ),
-                      _MenuTile(
-                        icon: Icons.favorite_border_rounded,
-                        title: 'Favorites',
-                        subtitle: 'Cars you have liked',
-                        onTap: widget.onFavoritesTap,
-                      ),
-                      _MenuTile(
-                        icon: Icons.explore_outlined,
-                        title: 'Explore Vehicles',
-                        subtitle: 'Find your next ride',
-                        onTap: widget.onExploreTap,
-                      ),
-                    ],
-                  ),
+                    _MenuCard(
+                      children: [
+                        _MenuTile(
+                          icon: Icons.book_online_outlined,
+                          title: 'My Bookings',
+                          subtitle: 'View and manage bookings',
+                          onTap: widget.onBookingsTap,
+                        ),
+                        _MenuTile(
+                          icon: Icons.favorite_border_rounded,
+                          title: 'Favorites',
+                          subtitle: 'Cars you have liked',
+                          onTap: widget.onFavoritesTap,
+                        ),
+                        _MenuTile(
+                          icon: Icons.explore_outlined,
+                          title: 'Explore Vehicles',
+                          subtitle: 'Find your next ride',
+                          onTap: widget.onExploreTap,
+                        ),
+                      ],
+                    ),
 
-                  SizedBox(height: 24.h),
+                    SizedBox(height: 24.h),
 
-                  // =====================================================
-                  // SETTINGS
-                  // =====================================================
-                  _SectionTitle(title: l10n.settings),
+                    // =====================================================
+                    // SETTINGS
+                    // =====================================================
+                    _SectionTitle(title: l10n.settings),
 
-                  SizedBox(height: 12.h),
+                    SizedBox(height: 12.h),
 
-                  _MenuCard(
-                    children: [
-                      // ---------- Language ----------
-                      BlocBuilder<LocaleBloc, LocaleState>(
-                        builder: (context, state) {
-                          final current = state.locale.languageCode;
-                          return _MenuTile(
-                            icon: Icons.language_rounded,
-                            title: l10n.language,
-                            subtitle: current == 'km'
-                                ? 'Khmer (ខ្មែរ)'
-                                : 'English',
-                            onTap: () {
-                              _showLanguageDialog(context, current);
-                            },
-                          );
-                        },
-                      ),
+                    _MenuCard(
+                      children: [
+                        // ---------- Language ----------
+                        BlocBuilder<LocaleBloc, LocaleState>(
+                          builder: (context, state) {
+                            final current = state.locale.languageCode;
+                            return _MenuTile(
+                              icon: Icons.language_rounded,
+                              title: l10n.language,
+                              subtitle: current == 'km'
+                                  ? 'Khmer (ខ្មែរ)'
+                                  : 'English',
+                              onTap: () {
+                                _showLanguageDialog(context, current);
+                              },
+                            );
+                          },
+                        ),
 
-                      // ---------- Dark Mode ----------
-                      BlocBuilder<ThemeBloc, ThemeState>(
-                        builder: (context, state) {
-                          return SwitchListTile(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16.w,
-                            ),
-                            activeThumbColor: theme.colorScheme.primary,
-                            secondary: Container(
-                              width: 38.r,
-                              height: 38.r,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withValues(
-                                  alpha: 0.10,
+                        // ---------- Dark Mode ----------
+                        BlocBuilder<ThemeBloc, ThemeState>(
+                          builder: (context, state) {
+                            return SwitchListTile(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                              ),
+                              activeThumbColor: theme.colorScheme.primary,
+                              secondary: Container(
+                                width: 38.r,
+                                height: 38.r,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.10,
+                                  ),
+                                  shape: BoxShape.circle,
                                 ),
-                                shape: BoxShape.circle,
+                                child: Icon(
+                                  state.isDarkMode
+                                      ? Icons.dark_mode_rounded
+                                      : Icons.light_mode_rounded,
+                                  size: 20.r,
+                                  color: theme.colorScheme.primary,
+                                ),
                               ),
-                              child: Icon(
-                                state.isDarkMode
-                                    ? Icons.dark_mode_rounded
-                                    : Icons.light_mode_rounded,
-                                size: 20.r,
-                                color: theme.colorScheme.primary,
+                              title: Text(
+                                'Dark Mode',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                            title: Text(
-                              'Dark Mode',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
+                              subtitle: Text(
+                                state.isDarkMode ? 'Dark theme' : 'Light theme',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                               ),
-                            ),
-                            subtitle: Text(
-                              state.isDarkMode ? 'Dark theme' : 'Light theme',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            value: state.isDarkMode,
-                            onChanged: (_) {
-                              context.read<ThemeBloc>().add(ToggleThemeEvent());
-                            },
-                          );
+                              value: state.isDarkMode,
+                              onChanged: (_) {
+                                context.read<ThemeBloc>().add(
+                                  ToggleThemeEvent(),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // =====================================================
+                    // SUPPORT
+                    // =====================================================
+                    _SectionTitle(title: 'Support'),
+
+                    SizedBox(height: 12.h),
+
+                    _MenuCard(
+                      children: [
+                        _MenuTile(
+                          icon: Icons.help_outline_rounded,
+                          title: 'Help Center',
+                          subtitle: 'Get answers and support',
+                          onTap: () {},
+                        ),
+                        _MenuTile(
+                          icon: Icons.receipt_long_outlined,
+                          title: 'Terms & Privacy',
+                          subtitle: 'Policies and agreements',
+                          onTap: () {},
+                        ),
+                        _MenuTile(
+                          icon: Icons.info_outline_rounded,
+                          title: 'About',
+                          subtitle: 'Vehicle Rental System v1.0.0',
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    // =====================================================
+                    // LOGOUT
+                    // =====================================================
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () {
+                          context.read<AuthBloc>().add(LogoutRequested());
+                          // Navigator.of(context).push(
+                          //   MaterialPageRoute(
+                          //     builder: (_) => const _LogoutPlaceholder(),
+                          //   ),
+                          // );
                         },
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 24.h),
-
-                  // =====================================================
-                  // SUPPORT
-                  // =====================================================
-                  _SectionTitle(title: 'Support'),
-
-                  SizedBox(height: 12.h),
-
-                  _MenuCard(
-                    children: [
-                      _MenuTile(
-                        icon: Icons.help_outline_rounded,
-                        title: 'Help Center',
-                        subtitle: 'Get answers and support',
-                        onTap: () {},
-                      ),
-                      _MenuTile(
-                        icon: Icons.receipt_long_outlined,
-                        title: 'Terms & Privacy',
-                        subtitle: 'Policies and agreements',
-                        onTap: () {},
-                      ),
-                      _MenuTile(
-                        icon: Icons.info_outline_rounded,
-                        title: 'About',
-                        subtitle: 'Vehicle Rental System v1.0.0',
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 20.h),
-
-                  // =====================================================
-                  // LOGOUT
-                  // =====================================================
-                  Center(
-                    child: TextButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const _LogoutPlaceholder(),
-                          ),
-                        );
-                      },
-                      icon: Icon(
-                        Icons.logout_rounded,
-                        size: 20.r,
-                        color: theme.colorScheme.error,
-                      ),
-                      label: Text(
-                        'Logout',
-                        style: theme.textTheme.titleSmall?.copyWith(
+                        icon: Icon(
+                          Icons.logout_rounded,
+                          size: 20.r,
                           color: theme.colorScheme.error,
-                          fontWeight: FontWeight.w600,
+                        ),
+                        label: Text(
+                          'Logout',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  SizedBox(height: 40.h),
-                ],
+                    SizedBox(height: 40.h),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -681,14 +724,14 @@ class _MenuTile extends StatelessWidget {
 // Logout placeholder (kept minimal)
 // =====================================================================
 
-class _LogoutPlaceholder extends StatelessWidget {
-  const _LogoutPlaceholder();
+// class _LogoutPlaceholder extends StatelessWidget {
+//   const _LogoutPlaceholder();
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Logout')),
-      body: const Center(child: Text('Logout feature coming soon')),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('Logout')),
+//       body: const Center(child: Text('Logout feature coming soon')),
+//     );
+//   }
+// }

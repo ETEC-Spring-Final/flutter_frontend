@@ -2,6 +2,10 @@ part of 'auth_bloc.dart';
 
 abstract class AuthEvent {}
 
+class CheckAuthStatus extends AuthEvent {}
+
+class LogoutRequested extends AuthEvent {}
+
 class LoginSubmitted extends AuthEvent {
   final String email;
   final String password;
