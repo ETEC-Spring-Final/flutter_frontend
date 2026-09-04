@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_badge.dart';
-import 'package:vehicle_rental_system/feature/vehicle/domain/entity/booking.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart';
 
 class BookingCard extends StatelessWidget {
   final Booking booking;

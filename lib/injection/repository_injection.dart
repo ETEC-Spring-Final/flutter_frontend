@@ -1,4 +1,7 @@
 import 'package:get_it/get_it.dart';
+import 'package:vehicle_rental_system/feature/booking/data/datasource/booking_remote_data_source.dart';
+import 'package:vehicle_rental_system/feature/booking/data/repository/booking_repository_impl.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/repository/booking_repository.dart';
 import 'package:vehicle_rental_system/feature/favorite/data/repository/favorite_repository_impl.dart';
 import 'package:vehicle_rental_system/feature/favorite/domain/repository/favorite_repository.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/datasource/location_remote_data_source.dart';
@@ -33,6 +36,16 @@ void registerRepositories() {
   getIt.registerLazySingleton<LocationRepository>(
     () => LocationRepositoryImpl(
       remoteDataSource: getIt<LocationRemoteDataSource>(),
+    ),
+  );
+
+  // ==========================================
+  // Booking
+  // ==========================================
+
+  getIt.registerLazySingleton<BookingRepository>(
+    () => BookingRepositoryImpl(
+      remote: getIt<BookingRemoteDataSource>(),
     ),
   );
 

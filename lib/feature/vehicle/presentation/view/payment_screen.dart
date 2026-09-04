@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/entity/new_booking_request.dart';
+import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/booking_confirmation_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   final Vehicle vehicle;
@@ -16,6 +21,11 @@ class PaymentScreen extends StatefulWidget {
 
   final Map<String, bool> selectedServices;
 
+  final DateTime pickupDate;
+  final DateTime returnDate;
+  final String pickupLocation;
+  final String returnLocation;
+
   const PaymentScreen({
     super.key,
     required this.vehicle,
@@ -24,6 +34,10 @@ class PaymentScreen extends StatefulWidget {
     required this.servicesPrice,
     required this.totalPrice,
     required this.selectedServices,
+    required this.pickupDate,
+    required this.returnDate,
+    required this.pickupLocation,
+    required this.returnLocation,
   });
 
   @override
@@ -34,33 +48,33 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String selectedPayment = 'Visa';
 
   void _payNow() {
-    showDialog(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          icon: Icon(
-            Icons.check_circle_rounded,
-            size: 56.sp,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          title: const Text('Payment Successful'),
-          content: const Text(
-            'Your vehicle rental has been confirmed successfully.',
-            textAlign: TextAlign.center,
-          ),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.popUntil(context, (route) => route.isFirst);
-                },
-                child: const Text('Done'),
-              ),
+    context.read<BookingBloc>().add(
+          CreateBookingEvent(
+            NewBookingRequest(
+              vehicleId: widget.vehicle.id,
+              startDate: widget.pickupDate,
+              endDate: widget.returnDate,
+              pickupLocation: widget.pickupLocation,
+              returnLocation: widget.returnLocation,
+              paymentMethod: selectedPayment,
             ),
-          ],
+          ),
         );
-      },
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => BookingConfirmationScreen(
+          vehicle: widget.vehicle,
+          rentalDays: widget.rentalDays,
+          pickupDate: widget.pickupDate,
+          returnDate: widget.returnDate,
+          pickupLocation: widget.pickupLocation,
+          returnLocation: widget.returnLocation,
+          selectedServices: widget.selectedServices,
+          paymentMethod: selectedPayment,
+          totalPrice: widget.totalPrice,
+        ),
+      ),
     );
   }
 
@@ -321,6 +335,9 @@ class _PaymentMethodTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final softBorder = theme.brightness == Brightness.dark
+        ? AppColors.darkBorder
+        : AppColors.borderLight;
 
     return InkWell(
       onTap: onTap,
@@ -332,7 +349,7 @@ class _PaymentMethodTile extends StatelessWidget {
           border: Border.all(
             color: selected
                 ? theme.colorScheme.primary
-                : theme.colorScheme.outlineVariant,
+                : softBorder,
             width: selected ? 1.5 : 1,
           ),
         ),

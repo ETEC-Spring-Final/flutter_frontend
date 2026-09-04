@@ -218,7 +218,7 @@ class _AppTextFieldState extends State<AppTextField> {
       decoration: InputDecoration(
         isDense: true,
 
-        constraints: BoxConstraints(minHeight: 42.h, maxHeight: 42.h),
+        constraints: BoxConstraints(minHeight: 42.h),
         // ========================================================
         // TEXT
         // ========================================================

@@ -10,7 +10,7 @@ class RouterNames {
   // ============================================================
 
   static const login = "login";
-  static const signup = "signup";
+  static const register = "register";
   static const forgotPassword = "forgotPassword";
 
   // ============================================================

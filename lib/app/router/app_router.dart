@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:vehicle_rental_system/app/router/router_names.dart';
+import 'package:vehicle_rental_system/feature/auth/presentation/view/login_screen.dart';
+import 'package:vehicle_rental_system/feature/auth/presentation/view/register_screen.dart';
 
 import '../../feature/home/presentation/view/main_screen.dart';
 import '../../feature/onboarding/view/onboarding_screen.dart';
@@ -18,7 +21,7 @@ class AppRouter {
     // ============================================================
     // INITIAL ROUTE
     // ============================================================
-    initialLocation: AppRoutes.mainHome,
+    initialLocation: AppRoutes.splash,
 
     routes: [
       // ============================================================
@@ -26,9 +29,41 @@ class AppRouter {
       // ============================================================
       GoRoute(
         path: AppRoutes.splash,
-        name: 'splash',
+        name: RouterNames.splash,
         builder: (context, state) {
           return const SplashScreen();
+        },
+      ),
+
+      // ============================================================
+      // ONBOARDING
+      // ============================================================
+      GoRoute(
+        path: AppRoutes.onboarding,
+        name: RouterNames.onboarding,
+        builder: (context, state) {
+          return const OnboardingScreen();
+        },
+      ),
+
+      // ============================================================
+      // login
+      // ============================================================
+      GoRoute(
+        path: AppRoutes.login,
+        name: RouterNames.login,
+        builder: (context, state) {
+          return const LoginScreen();
+        },
+      ),
+      // ============================================================
+      // signup
+      // ============================================================
+      GoRoute(
+        path: AppRoutes.register,
+        name: RouterNames.register,
+        builder: (context, state) {
+          return const RegisterScreen();
         },
       ),
 
@@ -37,7 +72,7 @@ class AppRouter {
       // ============================================================
       GoRoute(
         path: AppRoutes.mainHome,
-        name: 'mainHome',
+        name: RouterNames.main,
         pageBuilder: (context, state) {
           return CustomTransitionPage<void>(
             key: state.pageKey,
@@ -106,7 +141,7 @@ class AppRouter {
       // ============================================================
       GoRoute(
         path: AppRoutes.home,
-        name: 'home',
+        name: RouterNames.home,
         builder: (context, state) {
           return const MainScreen(index: 0);
         },
@@ -117,7 +152,7 @@ class AppRouter {
       // ============================================================
       GoRoute(
         path: AppRoutes.explore,
-        name: 'explore',
+        name: RouterNames.explore,
         builder: (context, state) {
           return const ExploreScreen();
         },
@@ -128,7 +163,7 @@ class AppRouter {
       // ============================================================
       GoRoute(
         path: AppRoutes.booking,
-        name: 'booking',
+        name: RouterNames.booking,
         builder: (context, state) {
           return const BookingScreen();
         },
@@ -139,7 +174,7 @@ class AppRouter {
       // ============================================================
       GoRoute(
         path: AppRoutes.favorite,
-        name: 'favorite',
+        name: RouterNames.favorite,
         builder: (context, state) {
           return const FavoriteScreen();
         },
@@ -150,20 +185,9 @@ class AppRouter {
       // ============================================================
       GoRoute(
         path: AppRoutes.profile,
-        name: 'profile',
+        name: RouterNames.profile,
         builder: (context, state) {
           return const ProfileScreen();
-        },
-      ),
-
-      // ============================================================
-      // ONBOARDING
-      // ============================================================
-      GoRoute(
-        path: AppRoutes.onboarding,
-        name: 'onboarding',
-        builder: (context, state) {
-          return const OnboardingScreen();
         },
       ),
 
@@ -172,7 +196,7 @@ class AppRouter {
       // ============================================================
       GoRoute(
         path: '${AppRoutes.detail}/:id',
-        name: 'detail',
+        name: RouterNames.detail,
         builder: (context, state) {
           final vehicle = state.extra;
 

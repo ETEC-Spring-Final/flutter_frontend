@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
@@ -99,6 +100,10 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
           servicesPrice: servicesPrice,
           totalPrice: totalPrice,
           selectedServices: selectedServices,
+          pickupDate: widget.pickupDate,
+          returnDate: widget.returnDate,
+          pickupLocation: widget.pickupLocation,
+          returnLocation: widget.returnLocation,
         ),
       ),
     );
@@ -293,6 +298,9 @@ class _ServiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final softBorder = theme.brightness == Brightness.dark
+        ? AppColors.darkBorder
+        : AppColors.borderLight;
 
     return Material(
       color: Colors.transparent,
@@ -310,7 +318,7 @@ class _ServiceTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(14.r),
 
             border: Border.all(
-              color: selected ? colors.primary : colors.outlineVariant,
+              color: selected ? colors.primary : softBorder,
 
               width: selected ? 1.5 : 1,
             ),
@@ -398,6 +406,9 @@ class _OrderSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final softBorder = theme.brightness == Brightness.dark
+        ? AppColors.darkBorder
+        : AppColors.borderLight;
 
     return Card(
       elevation: 0,
@@ -407,7 +418,7 @@ class _OrderSummary extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
 
-        side: BorderSide(color: colors.outlineVariant),
+        side: BorderSide(color: softBorder),
       ),
 
       child: Padding(

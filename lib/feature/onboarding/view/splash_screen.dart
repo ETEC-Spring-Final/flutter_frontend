@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
       _jumpController.repeat();
     });
 
-    _goToMainScreen();
+    _goToNextScreen();
   }
 
   // ============================================================
@@ -152,12 +152,12 @@ class _SplashScreenState extends State<SplashScreen>
   // NAVIGATION
   // ============================================================
 
-  Future<void> _goToMainScreen() async {
-    await Future.delayed(const Duration(milliseconds: 2600));
+  Future<void> _goToNextScreen() async {
+    await Future.delayed(const Duration(milliseconds: 5000));
 
     if (!mounted) return;
 
-    context.go(AppRoutes.mainHome);
+    context.go(AppRoutes.onboarding);
   }
 
   // ============================================================

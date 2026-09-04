@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/additional_services_screen.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_date_time_field.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_days_summary.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_header.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_location_dropdown.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_section_card.dart';
 
 class RentalDetailsScreen extends StatefulWidget {
   const RentalDetailsScreen({super.key, required this.vehicle});
@@ -25,9 +31,9 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
   String _pickupLocation = 'Phnom Penh International Airport';
   String _returnLocation = 'Phnom Penh International Airport';
 
-  // ---------------------------------------------------------------------------
-  // DATE & TIME
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
+  // DATE
+  // ===========================================================================
 
   Future<void> _selectDate({required bool isPickup}) async {
     final now = DateTime.now();
@@ -48,17 +54,11 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
 
     if (selectedDate == null || !mounted) return;
 
-    // When choosing a return date, reject the same day as pick-up and inform
-    // the user that the rental must be at least 1 day long.
     if (!isPickup &&
         _pickupDate != null &&
         _isSameDate(selectedDate, _pickupDate!)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Return date must be a different day from the pick-up date.',
-          ),
-        ),
+      _showMessage(
+        'Return date must be a different day from the pick-up date.',
       );
       return;
     }
@@ -74,11 +74,9 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
       } else {
         _returnDate = selectedDate;
 
-        // If return date is the same day as pickup,
-        // clear return time if it is earlier than pickup time.
         if (_pickupDate != null &&
             _pickupTime != null &&
-            selectedDate.isAtSameMomentAs(_pickupDate!)) {
+            _isSameDate(selectedDate, _pickupDate!)) {
           if (_returnTime != null &&
               _isTimeBefore(_returnTime!, _pickupTime!)) {
             _returnTime = null;
@@ -87,6 +85,10 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
       }
     });
   }
+
+  // ===========================================================================
+  // TIME
+  // ===========================================================================
 
   Future<void> _selectTime({required bool isPickup}) async {
     final selectedTime = await showTimePicker(
@@ -104,11 +106,7 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
         _pickupTime != null &&
         _isSameDate(_pickupDate!, _returnDate!) &&
         _isTimeBefore(selectedTime, _pickupTime!)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Return time must be after the pick-up time.'),
-        ),
-      );
+      _showMessage('Return time must be after the pick-up time.');
       return;
     }
 
@@ -121,6 +119,10 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
     });
   }
 
+  // ===========================================================================
+  // VALIDATION
+  // ===========================================================================
+
   bool _isSameDate(DateTime first, DateTime second) {
     return first.year == second.year &&
         first.month == second.month &&
@@ -129,14 +131,80 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
 
   bool _isTimeBefore(TimeOfDay first, TimeOfDay second) {
     final firstMinutes = first.hour * 60 + first.minute;
+
     final secondMinutes = second.hour * 60 + second.minute;
 
     return firstMinutes < secondMinutes;
   }
 
-  // ---------------------------------------------------------------------------
+  bool get _hasAllDetails {
+    return _pickupDate != null &&
+        _returnDate != null &&
+        _pickupTime != null &&
+        _returnTime != null;
+  }
+
+  DateTime _combine(DateTime date, TimeOfDay time) {
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  int get _rentalDays {
+    if (!_hasAllDetails) return 0;
+
+    final pickup = _combine(_pickupDate!, _pickupTime!);
+
+    final returnDate = _combine(_returnDate!, _returnTime!);
+
+    final difference = returnDate.difference(pickup);
+
+    if (difference <= Duration.zero) {
+      return 0;
+    }
+
+    return (difference.inMinutes / (24 * 60)).ceil();
+  }
+
+  bool get _canContinue => _rentalDays > 0;
+
+  // ===========================================================================
+  // CONTINUE
+  // ===========================================================================
+
+  void _continue() {
+    if (!_hasAllDetails) {
+      _showMessage('Please complete your rental details.');
+      return;
+    }
+
+    if (_rentalDays <= 0) {
+      _showMessage('Return date/time must be after the pick-up date/time.');
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AdditionalServicesScreen(
+          vehicle: widget.vehicle,
+          pickupDate: _pickupDate!,
+          returnDate: _returnDate!,
+          pickupTime: _pickupTime!,
+          returnTime: _returnTime!,
+          pickupLocation: _pickupLocation,
+          returnLocation: _returnLocation,
+        ),
+      ),
+    );
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  // ===========================================================================
   // FORMATTERS
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'mm/dd/yyyy';
@@ -158,90 +226,9 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
     return '$hour:$minute $period';
   }
 
-  // ---------------------------------------------------------------------------
-  // VALIDATION
-  // ---------------------------------------------------------------------------
-
-  /// Combines a date and time into a single [DateTime].
-  DateTime _combine(DateTime date, TimeOfDay time) {
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-  }
-
-  bool get _hasAllDetails {
-    return _pickupDate != null &&
-        _returnDate != null &&
-        _pickupTime != null &&
-        _returnTime != null;
-  }
-
-  /// Full rental duration in days (date + time), rounded up so that any
-  /// partial final day counts as a full day.
-  int get _rentalDays {
-    if (!_hasAllDetails) return 0;
-
-    final pickup = _combine(_pickupDate!, _pickupTime!);
-    final returnDate = _combine(_returnDate!, _returnTime!);
-
-    final difference = returnDate.difference(pickup);
-
-    // A rental must be strictly longer than 0 full days. Round up partial
-    // days (e.g. 1.5 days -> 2) so pricing matches the rest of the app.
-    return difference.inDays + (difference.inMinutes % (24 * 60) == 0 ? 0 : 1);
-  }
-
-  /// Continue is only allowed when all details are filled in AND the rental
-  /// duration is greater than 0 days.
-  bool get _canContinue {
-    return _hasAllDetails && _rentalDays > 0;
-  }
-
-  // ---------------------------------------------------------------------------
-  // CONTINUE
-  // ---------------------------------------------------------------------------
-
-  void _continue() {
-    if (!_hasAllDetails) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete your rental details.')),
-      );
-      return;
-    }
-
-    if (_rentalDays <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Return date/time must be after the pick-up date/time.',
-          ),
-        ),
-      );
-      return;
-    }
-
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AdditionalServicesScreen(
-          vehicle: widget.vehicle,
-          pickupDate: _pickupDate!,
-          returnDate: _returnDate!,
-          pickupTime: _pickupTime!,
-          returnTime: _returnTime!,
-          pickupLocation: _pickupLocation,
-          returnLocation: _returnLocation,
-        ),
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
   // BUILD
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +249,9 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 SizedBox(height: 24.h),
+
                 _buildRentalDetailsCard(),
+
                 SizedBox(height: 14.h),
               ]),
             ),
@@ -270,14 +259,8 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
         ],
       ),
 
-      // bottomNavigationBar: SafeArea(
-      //   child: Padding(
-      //     padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 12.h),
-      //     child: _ContinueButton(enabled: _canContinue, onPressed: _continue),
-      //   ),
-      // ),
       bottomNavigationBar: AppBookingBottomBar(
-        label: "Continue to Services",
+        label: 'Continue to Services',
         icon: Icons.arrow_forward_rounded,
         onPressed: _continue,
         enabled: _canContinue,
@@ -285,9 +268,9 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
   // APP BAR
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
 
   Widget _buildAppBar() {
     final theme = Theme.of(context);
@@ -298,13 +281,14 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
       elevation: 0,
       scrolledUnderElevation: 0,
       backgroundColor: colors.surface,
-      //expandedHeight: 220.h,
       expandedHeight: 340.h,
       leadingWidth: 60.w,
+
       leading: Padding(
         padding: EdgeInsets.all(12.w),
         child: const AppBackButton(),
       ),
+
       title: Text(
         'Rental Details',
         style: theme.textTheme.titleMedium?.copyWith(
@@ -312,31 +296,38 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
           fontWeight: FontWeight.w700,
         ),
       ),
+
       flexibleSpace: FlexibleSpaceBar(
         collapseMode: CollapseMode.parallax,
-        background: _RentalHeader(vehicle: widget.vehicle),
+        background: RentalHeader(vehicle: widget.vehicle),
       ),
     );
   }
 
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
   // RENTAL DETAILS
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
 
   Widget _buildRentalDetailsCard() {
-    return _SectionCard(
+    return RentalSectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionTitle(
+          const RentalSectionTitle(
             icon: Icons.calendar_month_rounded,
             title: 'Rental Dates',
           ),
+
           SizedBox(height: 20.h),
-          const _FieldLabel(label: 'Pick-up Date & Time'),
+
+          const RentalFieldLabel(label: 'Pick-up Date & Time'),
+
           SizedBox(height: 8.h),
-          _DateTimeField(
-            value: '${_formatDate(_pickupDate)} • ${_formatTime(_pickupTime)}',
+
+          RentalDateTimeField(
+            value:
+                '${_formatDate(_pickupDate)} • '
+                '${_formatTime(_pickupTime)}',
             isSet: _pickupDate != null && _pickupTime != null,
             onTap: () async {
               await _selectDate(isPickup: true);
@@ -346,19 +337,21 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
               }
             },
           ),
+
           SizedBox(height: 16.h),
-          const _FieldLabel(label: 'Return Date & Time'),
+
+          const RentalFieldLabel(label: 'Return Date & Time'),
+
           SizedBox(height: 8.h),
-          _DateTimeField(
-            value: '${_formatDate(_returnDate)} • ${_formatTime(_returnTime)}',
+
+          RentalDateTimeField(
+            value:
+                '${_formatDate(_returnDate)} • '
+                '${_formatTime(_returnTime)}',
             isSet: _returnDate != null && _returnTime != null,
             onTap: () async {
               if (_pickupDate == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please select pick-up date first.'),
-                  ),
-                );
+                _showMessage('Please select pick-up date first.');
                 return;
               }
 
@@ -369,22 +362,26 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
               }
             },
           ),
+
           if (_rentalDays > 0) ...[
             SizedBox(height: 16.h),
-            _RentalDaysSummary(
+
+            RentalDaysSummary(
               days: _rentalDays,
               pricePerDay: widget.vehicle.pricePerDay,
             ),
           ],
+
           SizedBox(height: 26.h),
-          // const _SectionDivider(),
-          // SizedBox(height: 26.h),
-          const _SectionTitle(
+
+          const RentalSectionTitle(
             icon: Icons.location_on_rounded,
             title: 'Location',
           ),
+
           SizedBox(height: 20.h),
-          _LocationDropdown(
+
+          RentalLocationDropdown(
             label: 'Pick-up Location',
             value: _pickupLocation,
             onChanged: (value) {
@@ -393,8 +390,10 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
               });
             },
           ),
+
           SizedBox(height: 16.h),
-          _LocationDropdown(
+
+          RentalLocationDropdown(
             label: 'Return Location',
             value: _returnLocation,
             onChanged: (value) {
@@ -405,674 +404,6 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// =============================================================================
-// RENTAL HEADER
-// =============================================================================
-
-class _RentalHeader extends StatelessWidget {
-  const _RentalHeader({required this.vehicle});
-
-  final Vehicle vehicle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        _VehicleImage(
-          imageUrl: vehicle.images.isNotEmpty ? vehicle.images.first : null,
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: const [0.0, 0.45, 1.0],
-              colors: [
-                Colors.black.withValues(alpha: 0.45),
-                Colors.transparent,
-                Colors.black.withValues(alpha: 0.85),
-              ],
-            ),
-          ),
-        ),
-        Positioned(
-          left: 20.w,
-          right: 20.w,
-          bottom: 22.h,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${vehicle.brand} ${vehicle.model}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              SizedBox(height: 10.h),
-              Row(
-                children: [
-                  _HeaderChip(label: vehicle.type),
-                  SizedBox(width: 8.w),
-                  _HeaderChip(
-                    label: '\$${vehicle.pricePerDay.toStringAsFixed(0)}/day',
-                    emphasized: true,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HeaderChip extends StatelessWidget {
-  const _HeaderChip({required this.label, this.emphasized = false});
-
-  final String label;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-      decoration: BoxDecoration(
-        color: emphasized ? Colors.white : Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12.5.sp,
-          fontWeight: FontWeight.w700,
-          color: emphasized ? Colors.black87 : Colors.white,
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// SECTION CARD
-// =============================================================================
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: EdgeInsets.all(AppDimensions.cardPadding),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
-        border: Border.all(color: colors.outline),
-      ),
-      child: child,
-    );
-  }
-}
-
-// =============================================================================
-// SECTION TITLE
-// =============================================================================
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.icon, required this.title});
-
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(6.w),
-          decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.10),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 17.sp, color: colors.primary),
-        ),
-        SizedBox(width: 10.w),
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.2,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// =============================================================================
-// FIELD LABEL
-// =============================================================================
-
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Text(
-      label,
-      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-        color: colors.onSurfaceVariant,
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// RENTAL DAYS SUMMARY
-// =============================================================================
-
-class _RentalDaysSummary extends StatelessWidget {
-  const _RentalDaysSummary({required this.days, required this.pricePerDay});
-
-  final int days;
-  final double pricePerDay;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    final total = days * pricePerDay;
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: colors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: colors.primary.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.event_available_rounded,
-              size: 20.sp,
-              color: colors.primary,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Number of Days',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  '$days ${days == 1 ? 'day' : 'days'}',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: colors.onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            '\$${total.toStringAsFixed(2)}',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: colors.primary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// DATE TIME FIELD
-// =============================================================================
-
-class _DateTimeField extends StatelessWidget {
-  const _DateTimeField({
-    required this.value,
-    required this.onTap,
-    this.isSet = false,
-  });
-
-  final String value;
-  final VoidCallback onTap;
-  final bool isSet;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Material(
-      color: colors.surface,
-      borderRadius: BorderRadius.circular(14.r),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14.r),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14.r),
-            border: Border.all(
-              color: isSet
-                  ? colors.primary.withValues(alpha: 0.35)
-                  : colors.outlineVariant,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(7.w),
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.calendar_today_rounded,
-                  size: 15.sp,
-                  color: colors.primary,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: isSet ? colors.onSurface : colors.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 22.sp,
-                color: colors.onSurfaceVariant,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// LOCATION DROPDOWN
-// =============================================================================
-
-class _LocationDropdown extends StatelessWidget {
-  const _LocationDropdown({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  static const locations = [
-    'Phnom Penh International Airport',
-    'Phnom Penh City Center',
-    'Aeon Mall Sen Sok',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _FieldLabel(label: label),
-        SizedBox(height: 8.h),
-        DropdownButtonFormField<String>(
-          initialValue: value,
-          isExpanded: true,
-          icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: colors.onSurfaceVariant,
-          ),
-          borderRadius: BorderRadius.circular(14.r),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: colors.surface,
-            prefixIcon: Padding(
-              padding: EdgeInsets.all(10.w),
-              child: Container(
-                padding: EdgeInsets.all(6.w),
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.location_on_rounded,
-                  size: 15.sp,
-                  color: colors.primary,
-                ),
-              ),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 14.w,
-              vertical: 14.h,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(color: colors.outlineVariant),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(color: colors.outlineVariant),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14.r),
-              borderSide: BorderSide(color: colors.primary, width: 1.5),
-            ),
-          ),
-          items: locations
-              .map(
-                (location) => DropdownMenuItem<String>(
-                  value: location,
-                  child: Text(
-                    location,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value != null) {
-              onChanged(value);
-            }
-          },
-        ),
-      ],
-    );
-  }
-}
-
-// =============================================================================
-// VEHICLE PREVIEW CARD
-// =============================================================================
-
-class _VehiclePreviewCard extends StatelessWidget {
-  const _VehiclePreviewCard({required this.vehicle});
-
-  final Vehicle vehicle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 160.h,
-            width: double.infinity,
-            child: _VehicleImage(
-              imageUrl: vehicle.images.isNotEmpty ? vehicle.images.first : null,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${vehicle.brand} ${vehicle.model}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      SizedBox(height: 5.h),
-                      Text(
-                        vehicle.type,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '\$${vehicle.pricePerDay.toStringAsFixed(0)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colors.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      'per day',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// VEHICLE IMAGE
-// =============================================================================
-
-class _VehicleImage extends StatelessWidget {
-  const _VehicleImage({required this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    if (imageUrl == null || imageUrl!.isEmpty) {
-      return _PlaceholderImage(
-        color: theme.colorScheme.surfaceContainerHighest,
-        iconColor: theme.colorScheme.onSurfaceVariant,
-      );
-    }
-
-    return Image.network(
-      imageUrl!,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) {
-        return _PlaceholderImage(
-          color: theme.colorScheme.surfaceContainerHighest,
-          iconColor: theme.colorScheme.onSurfaceVariant,
-        );
-      },
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-
-        return _PlaceholderImage(
-          color: theme.colorScheme.surfaceContainerHighest,
-          iconColor: theme.colorScheme.onSurfaceVariant,
-          showLoading: true,
-        );
-      },
-    );
-  }
-}
-
-// =============================================================================
-// IMAGE PLACEHOLDER
-// =============================================================================
-
-class _PlaceholderImage extends StatelessWidget {
-  const _PlaceholderImage({
-    required this.color,
-    required this.iconColor,
-    this.showLoading = false,
-  });
-
-  final Color color;
-  final Color iconColor;
-  final bool showLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: color,
-      alignment: Alignment.center,
-      child: showLoading
-          ? const CircularProgressIndicator(strokeWidth: 2)
-          : Icon(Icons.directions_car_rounded, size: 48.sp, color: iconColor),
-    );
-  }
-}
-
-// =============================================================================
-// CONTINUE BUTTON
-// =============================================================================
-
-class _ContinueButton extends StatelessWidget {
-  const _ContinueButton({required this.enabled, required this.onPressed});
-
-  final bool enabled;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return SizedBox(
-      width: double.infinity,
-      height: 54.h,
-      child: ElevatedButton(
-        onPressed: enabled ? onPressed : null,
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: colors.primary,
-          disabledBackgroundColor: colors.onSurface.withValues(alpha: 0.08),
-          foregroundColor: Colors.white,
-          disabledForegroundColor: colors.onSurface.withValues(alpha: 0.35),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Continue to Services',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-            SizedBox(width: 8.w),
-            const Icon(Icons.arrow_forward_rounded, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// FROSTED ICON WRAPPER (for the back button over the header image)
-// =============================================================================
-
-class _FrostedIconWrapper extends StatelessWidget {
-  const _FrostedIconWrapper({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: child,
     );
   }
 }
