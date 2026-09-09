@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
-
 import '../../../app/router/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -44,9 +43,6 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // Check whether JWT token already exists
-    context.read<AuthBloc>().add(CheckAuthStatus());
-
     _setupIntroAnimation();
     _setupJumpAnimation();
 
@@ -59,7 +55,19 @@ class _SplashScreenState extends State<SplashScreen>
       _jumpController.repeat();
     });
 
-    _goToNextScreen();
+    _checkAuthentication();
+
+    //_goToNextScreen();
+  }
+
+  Future<void> _checkAuthentication() async {
+    // Keep splash screen visible for 3 seconds
+    await Future.delayed(const Duration(seconds: 3));
+
+    if (!mounted) return;
+
+    // Ask AuthBloc to check JWT
+    context.read<AuthBloc>().add(CheckAuthStatus());
   }
 
   // ============================================================

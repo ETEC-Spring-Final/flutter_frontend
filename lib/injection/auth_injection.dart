@@ -11,11 +11,6 @@ final getIt = GetIt.instance;
 
 void registerAuth() {
   // dio
-  //getit.registerLazySingleton<Dio>(() => DioClient.create());
-
-  // getIt.registerLazySingleton<SecureStorageService>(
-  //   () => SecureStorageService(getIt<FlutterSecureStorage>()),
-  // );
 
   // data
   getIt.registerLazySingleton<AuthRemoteDataSource>(
@@ -23,7 +18,6 @@ void registerAuth() {
   );
 
   // repo
-
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       getIt<AuthRemoteDataSource>(),
