@@ -1,131 +1,104 @@
+import 'vehicle_image_model.dart';
+
 class VehicleModel {
   final int id;
-  final List<String> images;
   final String brand;
   final String model;
-  final int year;
+  final int yearOfManufacture;
   final String licensePlate;
   final String color;
-
   final String type;
-  final double pricePerDay;
-  final String description;
-  final double rating;
-
-  final List<String> feature;
-
-  final double latitude;
-  final double longitude;
-
   final String transmission;
   final String fuelType;
   final int seats;
   final int doors;
-  final int luggage;
-  final double kilometer;
-
-  final bool isFavorite;
+  final int luggages;
+  final double pricePerDay;
+  final int mileAge;
+  final String description;
   final String status;
-
-  final DateTime? createAt;
-  final DateTime? updateAt;
+  final List<VehicleImageModel> images;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const VehicleModel({
     required this.id,
-    required this.images,
     required this.brand,
     required this.model,
-    required this.year,
+    required this.yearOfManufacture,
     required this.licensePlate,
     required this.color,
     required this.type,
-    required this.pricePerDay,
-    required this.description,
-    required this.rating,
-    required this.feature,
-    required this.latitude,
-    required this.longitude,
     required this.transmission,
     required this.fuelType,
     required this.seats,
     required this.doors,
-    required this.luggage,
-    required this.kilometer,
-    required this.isFavorite,
+    required this.luggages,
+    required this.pricePerDay,
+    required this.mileAge,
+    required this.description,
     required this.status,
-    required this.createAt,
-    required this.updateAt,
+    required this.images,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
     return VehicleModel(
-      id: json['id'] as int,
-
-      images: List<String>.from(json['images'] ?? []),
-
-      brand: json['brand'] as String,
-      model: json['model'] as String,
-
-      year: json['year'] as int,
-      licensePlate: json['license_plate'] as String,
-      color: json['color'] as String,
-
-      type: json['type'] as String,
-
-      pricePerDay: (json['price_per_day'] as num).toDouble(),
-
-      description: json['description'] as String,
-
-      rating: (json['rating'] as num).toDouble(),
-
-      feature: List<String>.from(json['feature'] ?? []),
-
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-
-      transmission: json['transmission'] as String,
-      fuelType: json['fuel_type'] as String,
-
-      seats: json['seats'] as int,
-      doors: json['doors'] as int,
-      luggage: json['luggage'] as int,
-
-      kilometer: (json['kilometer'] as num).toDouble(),
-
-      isFavorite: json['is_favorite'] ?? false,
-
-      status: json['status'] as String,
-      createAt: json['createAt'],
-      updateAt: json['updateAt'],
+      id: json['id'] ?? 0,
+      brand: json['brand'] ?? '',
+      model: json['model'] ?? '',
+      yearOfManufacture: json['yearOfManufacture'] ?? 0,
+      licensePlate: json['licensePlate'] ?? '',
+      color: json['color'] ?? '',
+      type: json['type'] ?? '',
+      transmission: json['transmission'] ?? '',
+      fuelType: json['fuelType'] ?? '',
+      seats: json['seats'] ?? 0,
+      doors: json['doors'] ?? 0,
+      luggages: json['luggages'] ?? 0,
+      pricePerDay: (json['pricePerDay'] as num?)?.toDouble() ?? 0.0,
+      mileAge: json['mileAge'] ?? 0,
+      description: json['description'] ?? '',
+      status: json['status'] ?? '',
+      images:
+          (json['images'] as List<dynamic>?)
+              ?.map(
+                (image) =>
+                    VehicleImageModel.fromJson(image as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'])
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'images': images,
       'brand': brand,
       'model': model,
-      'year': year,
-      'license_plate': licensePlate,
+      'yearOfManufacture': yearOfManufacture,
+      'licensePlate': licensePlate,
       'color': color,
       'type': type,
-      'price_per_day': pricePerDay,
-      'description': description,
-      'rating': rating,
-      'feature': feature,
-      'latitude': latitude,
-      'longitude': longitude,
       'transmission': transmission,
-      'fuel_type': fuelType,
+      'fuelType': fuelType,
       'seats': seats,
       'doors': doors,
-      'luggage': luggage,
-      'kilometer': kilometer,
-      'is_favorite': isFavorite,
+      'luggages': luggages,
+      'pricePerDay': pricePerDay,
+      'mileAge': mileAge,
+      'description': description,
       'status': status,
-      'createAt': createAt,
-      'updateAt': updateAt,
+      'images': images.map((image) => image.toJson()).toList(),
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 }

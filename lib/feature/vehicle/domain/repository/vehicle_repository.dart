@@ -4,6 +4,5 @@ import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart
 
 abstract class VehicleRepository {
   Future<Either<Failure, List<Vehicle>>> getVehicles();
-
   Future<Either<Failure, Vehicle>> getVehicleById(int id);
 }

@@ -8,16 +8,16 @@ import 'package:vehicle_rental_system/feature/vehicle/data/datasource/location_r
 import 'package:vehicle_rental_system/feature/vehicle/data/repository/location_repository_impl.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/repository/location_repository.dart';
 
-final getIt = GetIt.instance;
+final sl = GetIt.instance;
 
 void registerRepositories() {
   // ==========================================
   // Authentication
   // ==========================================
 
-  // getIt.registerLazySingleton<AuthRepository>(
+  // sl.registerLazySingleton<AuthRepository>(
   //   () => AuthRepositoryImpl(
-  //     getIt(),
+  //     sl(),
   //   ),
   // );
 
@@ -29,13 +29,11 @@ void registerRepositories() {
   // Favorite
   // ==========================================
 
-  getIt.registerLazySingleton<FavoriteRepository>(
-    () => FavoriteRepositoryImpl(),
-  );
+  sl.registerLazySingleton<FavoriteRepository>(() => FavoriteRepositoryImpl());
 
-  getIt.registerLazySingleton<LocationRepository>(
+  sl.registerLazySingleton<LocationRepository>(
     () => LocationRepositoryImpl(
-      remoteDataSource: getIt<LocationRemoteDataSource>(),
+      remoteDataSource: sl<LocationRemoteDataSource>(),
     ),
   );
 
@@ -43,15 +41,13 @@ void registerRepositories() {
   // Booking
   // ==========================================
 
-  getIt.registerLazySingleton<BookingRepository>(
-    () => BookingRepositoryImpl(
-      remote: getIt<BookingRemoteDataSource>(),
-    ),
+  sl.registerLazySingleton<BookingRepository>(
+    () => BookingRepositoryImpl(remote: sl<BookingRemoteDataSource>()),
   );
 
-  // getIt.registerLazySingleton<VehicleRepository>(
+  // sl.registerLazySingleton<VehicleRepository>(
   //   () => VehicleRepositoryImpl(
-  //     getIt(),
+  //     sl(),
   //   ),
   // );
 
@@ -59,9 +55,9 @@ void registerRepositories() {
   // Customer
   // ==========================================
 
-  // getIt.registerLazySingleton<CustomerRepository>(
+  // sl.registerLazySingleton<CustomerRepository>(
   //   () => CustomerRepositoryImpl(
-  //     getIt(),
+  //     sl(),
   //   ),
   // );
 
@@ -69,9 +65,9 @@ void registerRepositories() {
   // Booking
   // ==========================================
 
-  // getIt.registerLazySingleton<BookingRepository>(
+  // sl.registerLazySingleton<BookingRepository>(
   //   () => BookingRepositoryImpl(
-  //     getIt(),
+  //     sl(),
   //   ),
   // );
 }

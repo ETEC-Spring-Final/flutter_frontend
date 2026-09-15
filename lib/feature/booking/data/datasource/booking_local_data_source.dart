@@ -5,6 +5,7 @@ import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart
 ///
 /// These mirror the catalog in `vehicle/domain/entity/vehicle.dart` and are the
 /// fallback data source until the `/bookings` endpoint is live.
+/*
 final List<Booking> mockBookings = [
   Booking(
     id: 1,
@@ -119,3 +120,5 @@ final List<Booking> mockBookings = [
     status: 'cancelled',
   ),
 ];
+
+*/

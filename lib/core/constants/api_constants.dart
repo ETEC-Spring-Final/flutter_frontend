@@ -1,9 +1,23 @@
 class ApiConstants {
+  ApiConstants._();
+  // API Base Url
+  static const String apiBaseUrl = '';
+
   // use with emulator
-  //static String baseUrl = 'http://10.0.2.2:8000/api';
+
+  // static String baseUrl = String.fromEnvironment(
+  //   apiBaseUrl,
+  //   defaultValue: 'http://10.0.2.2:8080/api',
+  // );
 
   // use with real device
-  static String baseUrl = 'http://172.20.10.11:8080/api';
+
+  // static String baseUrl = String.fromEnvironment(
+  //   apiBaseUrl,
+  //   defaultValue: 'http://172.20.10.11:8080/api',
+  // );
+
+  static const String baseUrl = 'http://10.0.2.2:8080/api';
 
   // auth
   static const String login = '/auth/login';
@@ -22,6 +36,8 @@ class ApiConstants {
   static String vehicleById(int id) => '/vehicles/{$id}';
   static String updateVehicle(int id) => '/vehicles/{$id}';
   static String deleteVehicle(int id) => '/vehicles/{$id}';
+
+  //
 
   // image
   static const String vehicleImages = '/vehicle-images';
@@ -101,8 +117,8 @@ class ApiConstants {
       '/inspections/rental/{$rentalId}';
 
   static String inspectionById(int id) => '/inspections/{$id}';
-  static String updateInspections(int id) => '/inspections/{$id}';
-  static String deleteInspections(int id) => '/inspections/{$id}';
+  static String updateInspection(int id) => '/inspections/{$id}';
+  static String deleteInspection(int id) => '/inspections/{$id}';
 
   // attachedment
   static const String attachedments = '/attachedments';
@@ -113,7 +129,6 @@ class ApiConstants {
   static String deleteAttachedment(int id) => '/attachedments/{$id}';
 
   // bakong
-
   static const String qrImage = '/v1/bakong/qr-image';
   static const String generateQr = '/v1/bakong/generate-qr';
   static const String checkTransection = '/v1/bakong/check-transection';

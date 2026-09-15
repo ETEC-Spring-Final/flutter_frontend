@@ -1,114 +1,96 @@
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_image.dart';
+
 class Vehicle {
   final int id;
-  final List<String> images;
   final String brand;
   final String model;
-  final int year;
+  final int yearOfManufacture;
   final String licensePlate;
   final String color;
-
-  // Basic Information
   final String type;
-  final double pricePerDay;
-  final String description;
-  final double rating;
-
-  // Features
-  final List<String> feature;
-
-  // Map
-  final double latitude;
-  final double longitude;
-
-  // Specifications
   final String transmission;
   final String fuelType;
   final int seats;
   final int doors;
-  final int luggage;
-  final double kilometer;
-
-  // User-specific
-  final bool isFavorite;
-
-  // Vehicle Status
+  final int luggages;
+  final double pricePerDay;
+  final int mileAge;
+  final String description;
   final String status;
+  final List<VehicleImage> images;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const Vehicle({
     required this.id,
-    required this.images,
     required this.brand,
     required this.model,
-    required this.year,
+    required this.yearOfManufacture,
     required this.licensePlate,
     required this.color,
     required this.type,
-    required this.pricePerDay,
-    required this.description,
-    required this.rating,
-    required this.feature,
-    required this.latitude,
-    required this.longitude,
     required this.transmission,
     required this.fuelType,
     required this.seats,
     required this.doors,
-    required this.luggage,
-    required this.kilometer,
-    required this.isFavorite,
+    required this.luggages,
+    required this.pricePerDay,
+    required this.mileAge,
+    required this.description,
     required this.status,
+    required this.images,
+    this.createdAt,
+    this.updatedAt,
   });
 
   Vehicle copyWith({
     int? id,
-    List<String>? images,
     String? brand,
     String? model,
-    int? year,
+    int? yearOfManufacture,
     String? licensePlate,
     String? color,
     String? type,
-    double? pricePerDay,
-    String? description,
-    double? rating,
-    List<String>? feature,
-    double? latitude,
-    double? longitude,
     String? transmission,
     String? fuelType,
     int? seats,
     int? doors,
-    int? luggage,
-    double? kilometer,
-    bool? isFavorite,
+    int? luggages,
+    double? pricePerDay,
+    int? mileAge,
+    String? description,
     String? status,
+    List<VehicleImage>? images,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return Vehicle(
       id: id ?? this.id,
-      images: images ?? this.images,
       brand: brand ?? this.brand,
       model: model ?? this.model,
-      year: year ?? this.year,
+      yearOfManufacture: yearOfManufacture ?? this.yearOfManufacture,
       licensePlate: licensePlate ?? this.licensePlate,
       color: color ?? this.color,
       type: type ?? this.type,
-      pricePerDay: pricePerDay ?? this.pricePerDay,
-      description: description ?? this.description,
-      rating: rating ?? this.rating,
-      feature: feature ?? this.feature,
-      latitude: latitude ?? this.latitude,
-      longitude: longitude ?? this.longitude,
       transmission: transmission ?? this.transmission,
       fuelType: fuelType ?? this.fuelType,
       seats: seats ?? this.seats,
       doors: doors ?? this.doors,
-      luggage: luggage ?? this.luggage,
-      kilometer: kilometer ?? this.kilometer,
-      isFavorite: isFavorite ?? this.isFavorite,
+      luggages: luggages ?? this.luggages,
+      pricePerDay: pricePerDay ?? this.pricePerDay,
+      mileAge: mileAge ?? this.mileAge,
+      description: description ?? this.description,
       status: status ?? this.status,
+      images: images ?? this.images,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
+
+
+
+/*
 
 final List<Vehicle> vehicles = [
   // ============================================================
@@ -952,3 +934,6 @@ final List<Vehicle> vehicles = [
     status: 'Available',
   ),
 ];
+
+
+*/

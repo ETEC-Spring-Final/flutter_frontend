@@ -10,29 +10,29 @@ import 'package:vehicle_rental_system/core/network/network_info.dart';
 import 'package:vehicle_rental_system/core/network/interceptors/auth_interceptor.dart';
 import 'package:vehicle_rental_system/core/storage/secure_storage_service.dart';
 
-final GetIt getIt = GetIt.instance;
+final sl = GetIt.instance;
 void registerNetwork() {
-  getIt.registerLazySingleton<Connectivity>(() => Connectivity());
+  sl.registerLazySingleton<Connectivity>(() => Connectivity());
 
-  getIt.registerLazySingleton<NetworkInfo>(
-    () => NetworkInfoImpl(getIt<Connectivity>()),
+  sl.registerLazySingleton<NetworkInfo>(
+    () => NetworkInfoImpl(sl<Connectivity>()),
   );
 
-  getIt.registerLazySingleton<FlutterSecureStorage>(
+  sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(),
   );
 
-  getIt.registerLazySingleton<SecureStorageService>(
-    () => SecureStorageService(getIt<FlutterSecureStorage>()),
+  sl.registerLazySingleton<SecureStorageService>(
+    () => SecureStorageService(sl<FlutterSecureStorage>()),
   );
 
-  getIt.registerLazySingleton<AuthInterceptor>(
-    () => AuthInterceptor(getIt<SecureStorageService>()),
+  sl.registerLazySingleton<AuthInterceptor>(
+    () => AuthInterceptor(sl<SecureStorageService>()),
   );
 
-  getIt.registerLazySingleton<LoggingInterceptor>(() => LoggingInterceptor());
+  sl.registerLazySingleton<LoggingInterceptor>(() => LoggingInterceptor());
 
-  getIt.registerLazySingleton<Dio>(() {
+  sl.registerLazySingleton<Dio>(() {
     final dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
@@ -46,12 +46,12 @@ void registerNetwork() {
       ),
     );
 
-    dio.interceptors.add(getIt<AuthInterceptor>());
+    dio.interceptors.add(sl<AuthInterceptor>());
 
-    dio.interceptors.add(getIt<LoggingInterceptor>());
+    dio.interceptors.add(sl<LoggingInterceptor>());
 
     return dio;
   });
 
-  getIt.registerLazySingleton<ApiClient>(() => ApiClient(getIt<Dio>()));
+  sl.registerLazySingleton<ApiClient>(() => ApiClient(sl<Dio>()));
 }

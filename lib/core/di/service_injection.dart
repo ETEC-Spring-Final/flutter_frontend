@@ -1,13 +1,13 @@
 import 'package:get_it/get_it.dart';
 
-final getIt = GetIt.instance;
+final sl = GetIt.instance;
 
 void registerServices() {
   // ==========================================
   // API Service
   // ==========================================
 
-  // getIt.registerLazySingleton<ApiService>(
+  // sl.registerLazySingleton<ApiService>(
   //   () => ApiService(),
   // );
 
@@ -15,7 +15,7 @@ void registerServices() {
   // Storage Service
   // ==========================================
 
-  // getIt.registerLazySingleton<StorageService>(
+  // sl.registerLazySingleton<StorageService>(
   //   () => StorageService(),
   // );
 
@@ -23,9 +23,9 @@ void registerServices() {
   // Auth Service
   // ==========================================
 
-  // getIt.registerLazySingleton<AuthService>(
+  // sl.registerLazySingleton<AuthService>(
   //   () => AuthService(
-  //     getIt(),
+  //     sl(),
   //   ),
   // );
 }

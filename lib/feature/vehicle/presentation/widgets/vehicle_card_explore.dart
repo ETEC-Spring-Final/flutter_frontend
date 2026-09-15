@@ -56,7 +56,7 @@ class VehicleCardExplore extends StatelessWidget {
                       // CAR IMAGE
                       // ------------------------------------------------------
                       Image.network(
-                        vehicle.images.first,
+                        vehicle.images.first.fileUrl,
                         fit: BoxFit.cover,
                         filterQuality: FilterQuality.high,
 
@@ -236,16 +236,16 @@ class VehicleCardExplore extends StatelessWidget {
                             color: AppColors.primary,
                           ),
 
-                          Flexible(
-                            child: Text(
-                              vehicle.rating.toString(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
+                          // Flexible(
+                          //   child: Text(
+                          //     vehicle.rating.toString(),
+                          //     maxLines: 1,
+                          //     overflow: TextOverflow.ellipsis,
+                          //     style: theme.textTheme.bodyMedium?.copyWith(
+                          //       color: colorScheme.onSurfaceVariant,
+                          //     ),
+                          //   ),
+                          // ),
 
                           //const SizedBox(width: 4),
 
@@ -276,6 +276,7 @@ class VehicleCardExplore extends StatelessWidget {
                           //     color: colorScheme.onSurfaceVariant,
                           //   ),
                           // ),
+                          /*
                           FutureBuilder<String>(
                             future: MapService.getLocationName(
                               vehicle.latitude,
@@ -301,6 +302,7 @@ class VehicleCardExplore extends StatelessWidget {
                             },
                           ),
 
+                          */
                           _Dot(),
 
                           // Feature

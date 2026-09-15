@@ -11,7 +11,7 @@ import '../../feature/profile/presentation/view/profile_screen.dart';
 import '../../feature/vehicle/presentation/view/booking_screen.dart';
 import '../../feature/vehicle/presentation/view/explore_screen.dart';
 import '../../feature/vehicle/presentation/view/favorite_screen.dart';
-import '../../feature/vehicle/presentation/view/vehicle_detail_screen.dart';
+import '../../feature/vehicle/presentation/view/vehicle_detial/vehicle_detail_screen.dart';
 import '../router/app_routes.dart';
 
 class AppRouter {

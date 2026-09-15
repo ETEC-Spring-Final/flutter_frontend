@@ -5,16 +5,16 @@ import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_booking
 import 'package:vehicle_rental_system/feature/vehicle/domain/repository/location_repository.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/usecase/get_location_name.dart';
 
-final getIt = GetIt.instance;
+final sl = GetIt.instance;
 
 void registerUseCases() {
   // ==========================================
   // Authentication
   // ==========================================
 
-  // getIt.registerFactory<LoginUseCase>(
+  // sl.registerFactory<LoginUseCase>(
   //   () => LoginUseCase(
-  //     getIt(),
+  //     sl(),
   //   ),
   // );
 
@@ -22,19 +22,19 @@ void registerUseCases() {
   // Vehicle
   // ==========================================
 
-  getIt.registerLazySingleton<GetLocationName>(
-    () => GetLocationName(repository: getIt<LocationRepository>()),
+  sl.registerLazySingleton<GetLocationName>(
+    () => GetLocationName(repository: sl<LocationRepository>()),
   );
 
-  // getIt.registerFactory<GetVehiclesUseCase>(
+  // sl.registerFactory<GetVehiclesUseCase>(
   //   () => GetVehiclesUseCase(
-  //     getIt(),
+  //     sl(),
   //   ),
   // );
 
-  // getIt.registerFactory<GetVehicleByIdUseCase>(
+  // sl.registerFactory<GetVehicleByIdUseCase>(
   //   () => GetVehicleByIdUseCase(
-  //     getIt(),
+  //     sl(),
   //   ),
   // );
 
@@ -42,11 +42,9 @@ void registerUseCases() {
   // Booking
   // ==========================================
 
-  getIt.registerFactory<GetBookings>(
-    () => GetBookings(getIt<BookingRepository>()),
-  );
+  sl.registerFactory<GetBookings>(() => GetBookings(sl<BookingRepository>()));
 
-  getIt.registerFactory<CreateBooking>(
-    () => CreateBooking(getIt<BookingRepository>()),
+  sl.registerFactory<CreateBooking>(
+    () => CreateBooking(sl<BookingRepository>()),
   );
 }

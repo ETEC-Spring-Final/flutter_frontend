@@ -2,18 +2,24 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/app_size.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
-import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
-import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_category.dart';
+
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/animated_greeting.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/home_banner_slider.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/popular_cars_section.dart';
+
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_category.dart';
+
+import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/rental_details_screen.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detail_screen.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/vehicle_detail_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card_explore.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,6 +27,7 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback? onBookingTap;
   final VoidCallback? onFavoriteTap;
   final VoidCallback? onProfileTap;
+
   const HomeScreen({
     super.key,
     this.onExploreTap,
@@ -34,42 +41,78 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Index 0 represents "All", the rest map to `categories` (brands).
+  // ============================================================
+  // CATEGORY
+  // ============================================================
+
+  // Index 0 = All
+  // Index 1..n = categories
   int selectedCategoryIndex = 0;
 
   String get _selectedBrand {
     final index = selectedCategoryIndex - 1;
-    if (index < 0 || index >= categories.length) return '';
+
+    if (index < 0 || index >= categories.length) {
+      return '';
+    }
+
     return categories[index].name;
   }
 
-  List<Vehicle> get _filteredVehicles {
+  // ============================================================
+  // FILTER VEHICLES
+  // ============================================================
+
+  List<Vehicle> _filteredVehicles(List<Vehicle> vehicles) {
     final brand = _selectedBrand;
-    if (brand.isEmpty) return vehicles;
-    return vehicles.where((v) => v.brand == brand).toList();
+
+    // "All"
+    if (brand.isEmpty) {
+      return vehicles;
+    }
+
+    // Filter by brand
+    return vehicles
+        .where((vehicle) => vehicle.brand.toLowerCase() == brand.toLowerCase())
+        .toList();
   }
 
-  Future<void> refreshData() async {
-    /*
-  context.read<VehicleBloc>().add(
-    const GetVehiclesEvent(
-      refresh: true,
-    ),
-  );
-  */
+  // ============================================================
+  // INIT
+  // ============================================================
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Load vehicles from Spring Boot API
+    context.read<VehicleBloc>().add(const GetVehicles());
   }
+
+  // ============================================================
+  // REFRESH
+  // ============================================================
+
+  Future<void> refreshData() async {
+    context.read<VehicleBloc>().add(const GetVehicles());
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // final viewAllStyle = theme.textTheme.labelMedium?.copyWith(
-    //   color: AppColors.primary,
-    // );
     final colorScheme = theme.colorScheme;
+
     return Scaffold(
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
+          // ========================================================
+          // APP BAR
+          // ========================================================
           SliverAppBar(
             automaticallyImplyLeading: false,
 
@@ -91,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
             surfaceTintColor: Colors.transparent,
 
             titleSpacing: 16,
+
             centerTitle: false,
 
             title: const AnimatedGreeting(),
@@ -98,25 +142,23 @@ class _HomeScreenState extends State<HomeScreen> {
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 16),
-
                 child: InkWell(
                   onTap: widget.onProfileTap,
                   child: CircleAvatar(
                     radius: 18.r,
-
                     backgroundImage: const NetworkImage(
-                      "https://i.pinimg.com/236x/0f/21/77/0f21770c1e42550d64e8c210266141d2.jpg",
+                      'https://i.pinimg.com/236x/0f/21/77/0f21770c1e42550d64e8c210266141d2.jpg',
                     ),
-
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
                   ),
                 ),
               ),
             ],
           ),
 
+          // ========================================================
+          // PULL TO REFRESH
+          // ========================================================
           CupertinoSliverRefreshControl(
             onRefresh: refreshData,
 
@@ -135,9 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-
                       color: colorScheme.primary,
-
                       backgroundColor: colorScheme.primary.withValues(
                         alpha: 0.10,
                       ),
@@ -146,31 +186,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
           ),
 
+          // ========================================================
+          // HOME CONTENT
+          // ========================================================
           SliverPadding(
-            padding: EdgeInsetsGeometry.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: AppDimensions.chipHorizontalPadding,
             ),
-
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 Column(
-                  crossAxisAlignment: .start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Text("Hello, Visal 👋", style: theme.textTheme.titleLarge),
-                    // Text(
-                    //   "Ready for your next journey?",
-                    //   style: theme.textTheme.bodyMedium,
-                    // ),
-                    //AnimatedGreeting(),
-                    //SizedBox(height: 4.h),
-
-                    // Search field
+                    // ==================================================
+                    // SEARCH
+                    // ==================================================
                     InkWell(
-                      onTap: () => widget.onExploreTap?.call(true),
+                      onTap: () {
+                        widget.onExploreTap?.call(true);
+                      },
                       child: AppTextField(
                         enabled: false,
-
-                        hint: "Search cars or brands..",
+                        hint: 'Search cars or brands..',
                         prefixIcon: Icons.search,
                         keyboardType: TextInputType.text,
                       ),
@@ -178,57 +215,59 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     SizedBox(height: 8.h),
 
-                    // Banner
+                    // ==================================================
+                    // BANNER
+                    // ==================================================
                     HomeBannerSlider(
-                      onExploreTap: () => widget.onExploreTap?.call(false),
+                      onExploreTap: () {
+                        widget.onExploreTap?.call(false);
+                      },
                     ),
 
-                    //const SizedBox(height: AppDimensions.space12),
-                    /*
-                    Row(
-                      mainAxisAlignment: .spaceBetween,
-                      children: [
-                        Text(
-                          "Choose By brand",
-                          style: theme.textTheme.bodyLarge!.copyWith(
-                            fontWeight: .bold,
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () => widget.onExploreTap?.call(false),
-                          child: Text("View All", style: viewAllStyle),
-                        ),
-                      ],
-                    ),
-
-                    */
                     SizedBox(height: 8.h),
 
+                    // ==================================================
+                    // BRAND CATEGORY
+                    // ==================================================
                     SizedBox(
                       height: 55.h,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
+
                         padding: EdgeInsets.symmetric(
                           horizontal: AppDimensions.space12,
                         ),
+
                         itemCount: categories.length + 1,
+
                         separatorBuilder: (_, _) {
                           return SizedBox(width: AppDimensions.space16);
                         },
+
                         itemBuilder: (context, index) {
-                          // Index 0 = "All", indices 1..n map to categories.
+                          // ==========================================
+                          // ALL
+                          // ==========================================
+
                           if (index == 0) {
                             return _CategoryItem(
                               title: 'All',
                               image: '',
                               isSelected: selectedCategoryIndex == 0,
                               onTap: () {
-                                setState(() => selectedCategoryIndex = 0);
+                                setState(() {
+                                  selectedCategoryIndex = 0;
+                                });
+
                                 log('Filter: All');
                               },
                             );
                           }
+
+                          // ==========================================
+                          // BRAND
+                          // ==========================================
 
                           final category = categories[index - 1];
 
@@ -239,8 +278,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () {
                               setState(() {
                                 selectedCategoryIndex = index;
-                                log(category.name);
                               });
+
+                              log('Filter: ${category.name}');
                             },
                           );
                         },
@@ -249,93 +289,177 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     SizedBox(height: 8.h),
 
+                    // ==================================================
+                    // POPULAR CARS TITLE
+                    // ==================================================
                     Row(
-                      mainAxisAlignment: .spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Popular Cars",
-                          style: theme.textTheme.bodyLarge!.copyWith(
-                            fontWeight: .bold,
+                          'Popular Cars',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
                             fontSize: 18.sp,
-                            //fontWeight: FontWeight.w800,
                             letterSpacing: -0.4,
                             height: 1.2,
                           ),
                         ),
 
                         InkWell(
-                          onTap: () => widget.onExploreTap?.call(false),
+                          onTap: () {
+                            widget.onExploreTap?.call(false);
+                          },
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
                             width: 36.w,
                             height: 36.h,
                             decoration: BoxDecoration(
-                              //color: colorScheme.surface,
                               color: Colors.white.withValues(alpha: 0.92),
                               shape: BoxShape.circle,
-                              // border: Border.all(
-                              //   color: AppColors.primary,
-                              //   width: 1.5.w,
-                              // ),
                             ),
                             child: Icon(
                               Icons.arrow_forward_ios_rounded,
                               size: 18.r,
                               color: AppColors.primary,
-                              fontWeight: .bold,
                             ),
                           ),
                         ),
-                        // InkWell(
-                        //   onTap: () => widget.onExploreTap?.call(false),
-                        //   child: Text("View All", style: viewAllStyle),
-                        // ),
                       ],
                     ),
 
-                    PopularCarsSection(
-                      vehicles: _filteredVehicles,
+                    SizedBox(height: 8.h),
 
-                      onSeeAll: () => widget.onExploreTap,
+                    // ==================================================
+                    // POPULAR CARS
+                    // ==================================================
+                    BlocBuilder<VehicleBloc, VehicleState>(
+                      builder: (context, state) {
+                        // ============================================
+                        // LOADING
+                        // ============================================
 
-                      onVehicleTap: (vehicle) {
-                        log('Vehicle: ${vehicle.brand} ${vehicle.model}');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                VehicleDetailScreen(vehicle: vehicle),
-                          ),
-                        );
-                      },
+                        if (state is VehicleLoading) {
+                          return const SizedBox(
+                            height: 200,
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
 
-                      onFavoriteTap: (vehicle) {
-                        log('Favorite: ${vehicle.brand}');
-                      },
+                        // ============================================
+                        // ERROR
+                        // ============================================
 
-                      onRentTap: (vehicle) {
-                        log('Rent: ${vehicle.brand} ${vehicle.model}');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                RentalDetailsScreen(vehicle: vehicle),
-                          ),
-                        );
+                        if (state is VehicleError) {
+                          return _ErrorWidget(
+                            message: state.message,
+                            onRetry: () {
+                              context.read<VehicleBloc>().add(
+                                const GetVehicles(),
+                              );
+                            },
+                          );
+                        }
+
+                        // ============================================
+                        // LOADED
+                        // ============================================
+
+                        if (state is VehicleLoaded) {
+                          final filteredVehicles = _filteredVehicles(
+                            state.vehicles,
+                          );
+
+                          if (filteredVehicles.isEmpty) {
+                            return _EmptyVehiclesWidget(brand: _selectedBrand);
+                          }
+
+                          return PopularCarsSection(
+                            vehicles: filteredVehicles,
+
+                            onSeeAll: () {
+                              widget.onExploreTap?.call(false);
+                            },
+
+                            // ========================================
+                            // VEHICLE TAP
+                            // ========================================
+                            onVehicleTap: (vehicle) {
+                              log(
+                                'Vehicle: '
+                                '${vehicle.brand} '
+                                '${vehicle.model}',
+                              );
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) {
+                                    return VehicleDetailScreen(
+                                      vehicle: vehicle,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+
+                            // ========================================
+                            // FAVORITE
+                            // ========================================
+                            onFavoriteTap: (vehicle) {
+                              log(
+                                'Favorite: '
+                                '${vehicle.brand} '
+                                '${vehicle.model}',
+                              );
+
+                              widget.onFavoriteTap?.call();
+                            },
+
+                            // ========================================
+                            // RENT
+                            // ========================================
+                            onRentTap: (vehicle) {
+                              log(
+                                'Rent: '
+                                '${vehicle.brand} '
+                                '${vehicle.model}',
+                              );
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) {
+                                    return RentalDetailsScreen(
+                                      vehicle: vehicle,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          );
+                        }
+
+                        // ============================================
+                        // INITIAL
+                        // ============================================
+
+                        return const SizedBox.shrink();
                       },
                     ),
 
                     SizedBox(height: 8.h),
 
+                    // ==================================================
+                    // RECOMMENDED TITLE
+                    // ==================================================
                     Row(
-                      mainAxisAlignment: .spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Recommended Cars for you",
-                          style: theme.textTheme.bodyLarge!.copyWith(
-                            fontWeight: .bold,
+                          'Recommended Cars for you',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
                             fontSize: 18.sp,
-                            //fontWeight: FontWeight.w800,
                             letterSpacing: -0.4,
                             height: 1.2,
                           ),
@@ -350,87 +474,117 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
+          // ==========================================================
+          // RECOMMENDED VEHICLES
+          // ==========================================================
           SliverPadding(
             padding: EdgeInsets.symmetric(
               horizontal: AppDimensions.chipHorizontalPadding,
             ),
+            sliver: SliverToBoxAdapter(
+              child: BlocBuilder<VehicleBloc, VehicleState>(
+                builder: (context, state) {
+                  // ================================================
+                  // LOADING
+                  // ================================================
 
-            sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                _filteredVehicles.isEmpty
-                    ? [
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24.h),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.no_crash_outlined,
-                                size: 48.r,
-                                color: colorScheme.outline.withValues(
-                                  alpha: 0.5,
+                  if (state is VehicleLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 30),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  // ================================================
+                  // ERROR
+                  // ================================================
+
+                  if (state is VehicleError) {
+                    return _ErrorWidget(
+                      message: state.message,
+                      onRetry: () {
+                        context.read<VehicleBloc>().add(const GetVehicles());
+                      },
+                    );
+                  }
+
+                  // ================================================
+                  // LOADED
+                  // ================================================
+
+                  if (state is VehicleLoaded) {
+                    final filteredVehicles = _filteredVehicles(state.vehicles);
+
+                    if (filteredVehicles.isEmpty) {
+                      return _EmptyVehiclesWidget(brand: _selectedBrand);
+                    }
+
+                    return Column(
+                      children: filteredVehicles.map((vehicle) {
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 12.h),
+                          child: VehicleCardExplore(
+                            vehicle: vehicle,
+
+                            // ======================================
+                            // VEHICLE TAP
+                            // ======================================
+                            onTap: () {
+                              log(
+                                'Recommended: '
+                                '${vehicle.brand} '
+                                '${vehicle.model}',
+                              );
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) {
+                                    return VehicleDetailScreen(
+                                      vehicle: vehicle,
+                                    );
+                                  },
                                 ),
-                              ),
-                              SizedBox(height: 12.h),
-                              Text(
-                                'No $_selectedBrand cars available',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                              );
+                            },
+
+                            // ======================================
+                            // FAVORITE
+                            // ======================================
+                            onFavoriteTap: () {
+                              log(
+                                'Recommended favorite: '
+                                '${vehicle.brand} '
+                                '${vehicle.model}',
+                              );
+
+                              widget.onFavoriteTap?.call();
+                            },
                           ),
-                        ),
-                      ]
-                    : _filteredVehicles.map((vehicle) {
-                        return VehicleCardExplore(
-                          vehicle: vehicle,
-
-                          onTap: () {
-                            log(
-                              'Recommended: '
-                              '${vehicle.brand} '
-                              '${vehicle.model}',
-                            );
-
-                            Navigator.push(
-                              context,
-
-                              MaterialPageRoute(
-                                builder: (_) {
-                                  return VehicleDetailScreen(vehicle: vehicle);
-                                },
-                              ),
-                            );
-                          },
-
-                          onFavoriteTap: () {
-                            log(
-                              'Recommended favorite: '
-                              '${vehicle.brand} '
-                              '${vehicle.model}',
-                            );
-                          },
                         );
                       }).toList(),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
               ),
             ),
           ),
 
-          // ============================================================
+          // ==========================================================
           // BOTTOM SPACE
-          // ============================================================
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 40.h,
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          ),
+          // ==========================================================
+          SliverToBoxAdapter(child: SizedBox(height: 40.h)),
         ],
       ),
     );
   }
 }
+
+// ====================================================================
+// CATEGORY ITEM
+// ====================================================================
 
 class _CategoryItem extends StatelessWidget {
   final String title;
@@ -451,13 +605,18 @@ class _CategoryItem extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
+
       child: InkWell(
         onTap: onTap,
+
         borderRadius: BorderRadius.circular(AppDimensions.radius16),
+
         child: AspectRatio(
           aspectRatio: AppDimensions.aspectRatioSquare,
+
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 250),
+
             curve: Curves.easeOut,
 
             width: AppSize.w(context, 20),
@@ -473,6 +632,7 @@ class _CategoryItem extends StatelessWidget {
                 color: isSelected
                     ? colorScheme.primary
                     : colorScheme.outline.withValues(alpha: 0.15),
+
                 width: isSelected ? 1.5 : 1,
               ),
 
@@ -488,7 +648,11 @@ class _CategoryItem extends StatelessWidget {
 
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppDimensions.radius16),
+
               child: image.isEmpty
+                  // ==================================================
+                  // ALL
+                  // ==================================================
                   ? Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -497,32 +661,47 @@ class _CategoryItem extends StatelessWidget {
                             isSelected
                                 ? Icons.check_circle
                                 : Icons.grid_view_rounded,
+
                             size: 22.r,
+
                             color: isSelected
                                 ? colorScheme.primary
                                 : colorScheme.onSurfaceVariant,
                           ),
+
                           SizedBox(height: 4.h),
+
                           Text(
                             title,
+
                             textAlign: TextAlign.center,
+
                             maxLines: 1,
+
                             overflow: TextOverflow.ellipsis,
+
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: isSelected
                                       ? colorScheme.primary
                                       : colorScheme.onSurface,
+
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
                         ],
                       ),
                     )
+                  // ==================================================
+                  // CATEGORY IMAGE
+                  // ==================================================
                   : Image.network(
                       image,
+
                       fit: BoxFit.cover,
+
                       filterQuality: FilterQuality.high,
+
                       errorBuilder: (context, error, stackTrace) {
                         return Icon(
                           Icons.image_not_supported_outlined,
@@ -533,6 +712,87 @@ class _CategoryItem extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ====================================================================
+// EMPTY VEHICLES
+// ====================================================================
+
+class _EmptyVehiclesWidget extends StatelessWidget {
+  final String brand;
+
+  const _EmptyVehiclesWidget({required this.brand});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 24.h),
+
+      child: Column(
+        children: [
+          Icon(
+            Icons.no_crash_outlined,
+            size: 48.r,
+            color: theme.colorScheme.outline.withValues(alpha: 0.5),
+          ),
+
+          SizedBox(height: 12.h),
+
+          Text(
+            brand.isEmpty
+                ? 'No vehicles available'
+                : 'No $brand cars available',
+
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ====================================================================
+// ERROR
+// ====================================================================
+
+class _ErrorWidget extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorWidget({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 24.h),
+
+      child: Column(
+        children: [
+          Icon(Icons.error_outline, size: 44.r, color: theme.colorScheme.error),
+
+          SizedBox(height: 8.h),
+
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium,
+          ),
+
+          SizedBox(height: 12.h),
+
+          OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
       ),
     );
   }

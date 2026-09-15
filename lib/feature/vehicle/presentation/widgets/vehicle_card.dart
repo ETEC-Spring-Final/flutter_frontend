@@ -64,7 +64,7 @@ class VehicleCard extends StatelessWidget {
               // IMAGE
               // ====================================================
               Hero(
-                tag: vehicle,
+                tag: vehicle.id,
                 child: AspectRatio(
                   //aspectRatio: 1.87,
                   aspectRatio: AppDimensions.vehicleCardAspectRatio,
@@ -79,7 +79,7 @@ class VehicleCard extends StatelessWidget {
                         color: AppColors.secondary,
                         child: vehicle.images.isNotEmpty
                             ? Image.network(
-                                vehicle.images.first,
+                                vehicle.images.first.fileUrl,
                                 fit: BoxFit.cover,
                                 filterQuality: FilterQuality.high,
                                 loadingBuilder:

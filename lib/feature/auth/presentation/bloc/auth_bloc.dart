@@ -2,17 +2,25 @@ import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:vehicle_rental_system/core/constants/storage_keys.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/entity/login_request.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/entity/register_request.dart';
-import 'package:vehicle_rental_system/feature/auth/domain/repository/auth_repository.dart';
+import 'package:vehicle_rental_system/feature/auth/domain/usecase/login_use_case.dart';
+import 'package:vehicle_rental_system/feature/auth/domain/usecase/register_use_case.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository repository;
+  //final AuthRepository repository;
+  final LoginUseCase loginUseCase;
+  final RegisterUseCase registerUseCase;
   final FlutterSecureStorage secureStorage;
-  AuthBloc(this.repository, this.secureStorage) : super(AuthInitial()) {
+  AuthBloc({
+    required this.loginUseCase,
+    required this.registerUseCase,
+    required this.secureStorage,
+  }) : super(AuthInitial()) {
     on<LoginSubmitted>(_onLogin);
     on<RegisterSubmitted>(_onRegister);
     on<CheckAuthStatus>(_onCheckAuthStatus);
@@ -20,7 +28,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     //on<AuthEvent>((event, emit) {});
   }
 
-  final String key = 'jwt_token';
+  //final String key = 'jwt_token';
 
   String _getErrorMessage(Object error) {
     final message = error.toString();
@@ -35,6 +43,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogin(LoginSubmitted event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
+      /*
+
       final request = LoginRequest(
         email: event.email,
         password: event.password,
@@ -42,9 +52,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // get JWT token from repository
       final resopnse = await repository.login(request);
 
-      log("JWT Token: ${resopnse.token}");
+      */
 
-      emit(AuthSuccess());
+      final request = LoginRequest(
+        email: event.email,
+        password: event.password,
+      );
+
+      final resopnse = await loginUseCase(request);
+
+      await secureStorage.write(key: StorageKeys.jwtKey, value: resopnse.token);
+
+      log('Login Successful');
+      log('JWT token saved');
+      emit(AuthAuthenticated());
+      //emit(AuthSuccess());
     } catch (e, stackTrace) {
       final message = _getErrorMessage(e);
 
@@ -71,7 +93,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         phone: event.phone,
         gender: event.gender,
       );
-      await repository.register(request);
+
+      final response = await registerUseCase(request);
+
+      // if register API  return JWT
+      // save it and authenticated automatically
+      if (response.token.isEmpty) {
+        await secureStorage.write(
+          key: StorageKeys.jwtKey,
+          value: response.token,
+        );
+        log('Registration successful.');
+        log('JWT token saved');
+        emit(AuthAuthenticated());
+      } else {
+        // if registration doesn't return JWT
+        emit(AuthSuccess());
+      }
+
+      //await repository.register(request);
+
       emit(AuthSuccess());
     } catch (e, stackTrace) {
       final message = _getErrorMessage(e);
@@ -91,7 +132,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
-      final token = await secureStorage.read(key: 'jwt_token');
+      final token = await secureStorage.read(key: StorageKeys.jwtKey);
       if (token != null && token.isNotEmpty) {
         log('Existing JWT token found');
         log('User is already authenticated');
@@ -116,13 +157,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
-      await secureStorage.delete(key: key);
+      await secureStorage.delete(key: StorageKeys.jwtKey);
 
       log('JWT token deleted');
       log('Logout successful');
 
       emit(AuthUnauthenticated());
-      ;
     } catch (e, stackTrace) {
       log('Logout failed', error: e, stackTrace: stackTrace);
 

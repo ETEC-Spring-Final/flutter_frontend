@@ -49,17 +49,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   void _payNow() {
     context.read<BookingBloc>().add(
-          CreateBookingEvent(
-            NewBookingRequest(
-              vehicleId: widget.vehicle.id,
-              startDate: widget.pickupDate,
-              endDate: widget.returnDate,
-              pickupLocation: widget.pickupLocation,
-              returnLocation: widget.returnLocation,
-              paymentMethod: selectedPayment,
-            ),
-          ),
-        );
+      CreateBookingEvent(
+        NewBookingRequest(
+          vehicleId: widget.vehicle.id,
+          startDate: widget.pickupDate,
+          endDate: widget.returnDate,
+          pickupLocation: widget.pickupLocation,
+          returnLocation: widget.returnLocation,
+          paymentMethod: selectedPayment,
+        ),
+      ),
+    );
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -277,7 +277,7 @@ class _VehiclePaymentCard extends StatelessWidget {
                 width: 80.w,
                 height: 65.h,
                 child: Image.network(
-                  vehicle.images.first,
+                  vehicle.images.first.fileUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) {
                     return const Icon(Icons.directions_car_outlined);
@@ -347,9 +347,7 @@ class _PaymentMethodTile extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: selected
-                ? theme.colorScheme.primary
-                : softBorder,
+            color: selected ? theme.colorScheme.primary : softBorder,
             width: selected ? 1.5 : 1,
           ),
         ),

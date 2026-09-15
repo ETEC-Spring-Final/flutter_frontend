@@ -6,30 +6,28 @@ import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_
 import 'package:vehicle_rental_system/feature/favorite/domain/repository/favorite_repository.dart';
 import 'package:vehicle_rental_system/feature/favorite/presentation/bloc/favorite_bloc.dart';
 
-final getIt = GetIt.instance;
+final sl = GetIt.instance;
 
 void registerBlocs() {
   // Locale BLoC
 
-  getIt.registerFactory<LocaleBloc>(() => LocaleBloc());
+  sl.registerFactory<LocaleBloc>(() => LocaleBloc());
 
   // Theme BLoC
 
-  getIt.registerFactory<ThemeBloc>(() => ThemeBloc());
+  sl.registerFactory<ThemeBloc>(() => ThemeBloc());
 
   // Auth Bloc
 
-  // getIt.registerFactory<AuthBloc>(() => AuthBloc(getIt<AuthRepository>()));
+  // sl.registerFactory<AuthBloc>(() => AuthBloc(sl<AuthRepository>()));
 
   // Favorite BLoC
 
-  getIt.registerFactory<FavoriteBloc>(
-    () => FavoriteBloc(getIt<FavoriteRepository>()),
+  sl.registerFactory<FavoriteBloc>(
+    () => FavoriteBloc(sl<FavoriteRepository>()),
   );
 
   // Booking BLoC
 
-  getIt.registerFactory<BookingBloc>(
-    () => BookingBloc(getIt<BookingRepository>()),
-  );
+  sl.registerFactory<BookingBloc>(() => BookingBloc(sl<BookingRepository>()));
 }

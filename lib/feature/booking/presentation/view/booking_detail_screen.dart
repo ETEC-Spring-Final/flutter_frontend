@@ -51,10 +51,7 @@ class BookingDetailScreen extends StatelessWidget {
   // APP BAR
   // ---------------------------------------------------------------------------
 
-  Widget _buildAppBar(
-    ThemeData theme,
-    ColorScheme colors,
-  ) {
+  Widget _buildAppBar(ThemeData theme, ColorScheme colors) {
     return SliverAppBar(
       pinned: true,
       elevation: 0,
@@ -99,9 +96,9 @@ class _HeaderImage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        imageUrl.isNotEmpty
+        imageUrl.toString().isNotEmpty
             ? Image.network(
-                imageUrl,
+                imageUrl.toString(),
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, e) => _Placeholder(theme),
                 loadingBuilder: (context, child, loadingProgress) {
@@ -212,7 +209,9 @@ class _StatusCard extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
                   color: bg,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusCircular),
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusCircular,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -220,7 +219,10 @@ class _StatusCard extends StatelessWidget {
                     Container(
                       width: 7,
                       height: 7,
-                      decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: fg,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     SizedBox(width: 7.w),
                     Text(
@@ -288,7 +290,8 @@ class _BookingSummaryCard extends StatelessWidget {
           _InfoRow(
             icon: Icons.access_time_rounded,
             label: 'Duration',
-            value: '${booking.totalDays} '
+            value:
+                '${booking.totalDays} '
                 '${booking.totalDays == 1 ? 'day' : 'days'}',
           ),
         ],
@@ -525,7 +528,11 @@ class _InfoRow extends StatelessWidget {
           : ('Pending', AppColors.warningBackground, AppColors.warningDark);
     case 'completed':
       return isDark
-          ? ('Completed', AppColors.darkSuccessBackground, AppColors.darkSuccess)
+          ? (
+              'Completed',
+              AppColors.darkSuccessBackground,
+              AppColors.darkSuccess,
+            )
           : ('Completed', AppColors.successBackground, AppColors.successDark);
     case 'cancelled':
     case 'canceled':
@@ -533,7 +540,10 @@ class _InfoRow extends StatelessWidget {
           ? ('Cancelled', AppColors.darkErrorBackground, AppColors.darkError)
           : ('Cancelled', AppColors.errorBackground, AppColors.errorDark);
     default:
-      return ('${status[0].toUpperCase()}${status.substring(1)}',
-          Colors.transparent, Colors.grey);
+      return (
+        '${status[0].toUpperCase()}${status.substring(1)}',
+        Colors.transparent,
+        Colors.grey,
+      );
   }
 }

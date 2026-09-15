@@ -4,19 +4,13 @@ import 'package:vehicle_rental_system/core/network/api_client.dart';
 import 'package:vehicle_rental_system/feature/booking/data/datasource/booking_remote_data_source.dart';
 import 'package:vehicle_rental_system/feature/booking/data/datasource/booking_remote_data_source_impl.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/datasource/location_remote_data_source.dart';
+import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
+import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source_impl.dart';
 
-final getIt = GetIt.instance;
+final sl = GetIt.instance;
 
 void registerDataSource() {
-  getIt.registerLazySingleton<LocationRemoteDataSource>(
-    () => LocationRemoteDataSourceImpl(dio: getIt<Dio>()),
-  );
-
-  // ==========================================
-  // Booking
-  // ==========================================
-
-  getIt.registerLazySingleton<BookingRemoteDataSource>(
-    () => BookingRemoteDataSourceImpl(getIt<ApiClient>()),
+  sl.registerLazySingleton<LocationRemoteDataSource>(
+    () => LocationRemoteDataSourceImpl(dio: sl<Dio>()),
   );
 }

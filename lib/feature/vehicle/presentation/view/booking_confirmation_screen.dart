@@ -49,10 +49,9 @@ class BookingConfirmationScreen extends StatelessWidget {
   }
 
   void _viewBookings(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/booking',
-      (route) => route.isFirst,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil('/booking', (route) => route.isFirst);
   }
 
   // ---------------------------------------------------------------------------
@@ -337,7 +336,8 @@ class _VehicleSummaryCard extends StatelessWidget {
               width: 76.w,
               height: 62.h,
               child: Image.network(
-                vehicle.images.isNotEmpty ? vehicle.images.first : '',
+                //vehicle.images.isNotEmpty ? vehicle.images.first : '',
+                vehicle.images.isNotEmpty ? vehicle.images.first.fileUrl : '',
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, e) => Container(
                   color: colors.surfaceContainerHighest,
@@ -373,7 +373,7 @@ class _VehicleSummaryCard extends StatelessWidget {
                     ),
                     SizedBox(width: 4.w),
                     Text(
-                      '${vehicle.type} • ${vehicle.year}',
+                      '${vehicle.type} • ${vehicle.yearOfManufacture}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),
@@ -418,8 +418,18 @@ class _TripDetailsCard extends StatelessWidget {
 
   String _format(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
 
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
@@ -431,10 +441,7 @@ class _TripDetailsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionTitle(
-            icon: Icons.route_rounded,
-            title: 'Trip Details',
-          ),
+          const _SectionTitle(icon: Icons.route_rounded, title: 'Trip Details'),
           SizedBox(height: 16.h),
           _InfoRow(
             icon: Icons.event_available_rounded,
@@ -481,10 +488,7 @@ class _PaymentSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionTitle(
-            icon: Icons.payments_rounded,
-            title: 'Payment',
-          ),
+          const _SectionTitle(icon: Icons.payments_rounded, title: 'Payment'),
           SizedBox(height: 16.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

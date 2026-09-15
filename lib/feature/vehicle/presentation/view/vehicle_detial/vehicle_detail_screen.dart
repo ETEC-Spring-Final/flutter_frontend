@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:latlong2/latlong.dart';
@@ -9,8 +10,10 @@ import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/favorite_toggle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/service/map_service.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/rental_details_screen.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/widget/vehicle_image_viewer.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card.dart';
 
 class VehicleDetailScreen extends StatefulWidget {
@@ -37,26 +40,26 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   // STATE
   // ===========================================================================
 
-  late bool isFavorite;
-
   int currentImageIndex = 0;
 
   bool _isDescriptionExpanded = false;
 
-  // ===========================================================================
-  // INIT
-  // ===========================================================================
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
 
-  @override
-  void initState() {
-    super.initState();
-
-    isFavorite = widget.vehicle.isFavorite;
+  void _showImageViewer(
+    BuildContext context,
+    Vehicle vehicle,
+    int initialIndex,
+  ) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.95),
+      builder: (_) {
+        return VehicleImageViewer(vehicle: vehicle, initialIndex: initialIndex);
+      },
+    );
   }
-
-  // ===========================================================================
-  // BUILD
-  // ===========================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +91,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             // ===================================================================
             leading: Padding(
               padding: EdgeInsets.all(12.w),
-              child: Center(child: AppBackButton()),
+              child: const Center(child: AppBackButton()),
             ),
 
             // ===================================================================
@@ -97,9 +100,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             actions: [
               FavoriteToggle(
                 onFavoriteTap: () {
-                  setState(() {
-                    isFavorite = !isFavorite;
-                  });
+                  // Connect your FavoriteBloc here.
+                  //
+                  // Example:
+                  //
+                  // context.read<FavoriteBloc>().add(
+                  //   ToggleFavoriteEvent(vehicle.id),
+                  // );
                 },
                 vehicle: vehicle,
               ),
@@ -112,7 +119,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.parallax,
               background: Hero(
-                tag: vehicle,
+                tag: vehicle.id,
                 child: _buildHero(context, vehicle),
               ),
             ),
@@ -170,12 +177,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 SizedBox(height: 10.h),
 
                 // =================================================================
-                // RATING + TYPE
+                // TYPE
                 // =================================================================
                 Row(
                   children: [
                     Icon(
-                      Icons.star_rounded,
+                      Icons.directions_car_rounded,
                       size: 20.r,
                       color: colorScheme.primary,
                     ),
@@ -183,17 +190,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     SizedBox(width: 6.w),
 
                     Text(
-                      vehicle.rating.toStringAsFixed(1),
+                      vehicle.type,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-
-                    SizedBox(width: 4.w),
-
-                    Text(
-                      '(124 Reviews)',
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -212,9 +211,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     SizedBox(width: 12.w),
 
                     Text(
-                      vehicle.type,
+                      '${vehicle.yearOfManufacture}',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -240,9 +239,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 // =================================================================
                 // FEATURES
                 // =================================================================
-                _buildFeatures(context, vehicle),
 
-                SizedBox(height: 20.h),
+                // Your new backend Vehicle entity does not contain `feature`.
+                // So this section is removed for now.
 
                 // =================================================================
                 // LOCATION
@@ -256,7 +255,44 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
                 SizedBox(height: 14.h),
 
-                _buildMapPreview(context, vehicle.latitude, vehicle.longitude),
+                // Your new Vehicle entity does not contain latitude/longitude.
+                //
+                // If you add latitude and longitude to the backend later,
+                // you can enable:
+                //
+                // _buildMapPreview(
+                //   context,
+                //   vehicle.latitude,
+                //   vehicle.longitude,
+                // ),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colorScheme.outline),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.cardRadius,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_rounded,
+                        color: AppColors.primary,
+                        size: 24.r,
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: Text(
+                          'Vehicle location will be available soon.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 // =================================================================
                 // RECOMMENDED VEHICLES
@@ -309,6 +345,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         // IMAGE SLIDER
         // =====================================================================
         CarouselSlider.builder(
+          carouselController: _carouselController,
           itemCount: vehicle.images.length,
           options: CarouselOptions(
             height: double.infinity,
@@ -325,40 +362,56 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             },
           ),
           itemBuilder: (context, index, realIndex) {
-            final imageUrl = vehicle.images[index];
+            final image = vehicle.images[index];
 
-            return SizedBox(
-              width: double.infinity,
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) {
-                    return child;
-                  }
+            return GestureDetector(
+              onTap: () {
+                _showImageViewer(context, vehicle, index);
+              },
+              child: SizedBox(
+                width: double.infinity,
+                child: Image.network(
+                  image.fileUrl,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.high,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) {
+                      return child;
+                    }
 
-                  return Container(
-                    color: colorScheme.surfaceContainerHighest,
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: colorScheme.surfaceContainerHighest,
-                    child: Icon(
-                      Icons.broken_image_rounded,
-                      size: 60.r,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  );
-                },
+                    return Container(
+                      color: colorScheme.surfaceContainerHighest,
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: colorScheme.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.broken_image_rounded,
+                        size: 60.r,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    );
+                  },
+                ),
               ),
             );
           },
         ),
+
+        // =====================================================================
+        // CAR GALLERY THUMBNAILS
+        // =====================================================================
+        if (vehicle.images.length > 1)
+          Positioned(
+            left: 16.w,
+            right: 16.w,
+            bottom: 52.h,
+            child: _buildImageThumbnails(context, vehicle),
+          ),
 
         // =====================================================================
         // GRADIENT
@@ -414,6 +467,123 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           child: _buildPagination(context, vehicle.images.length),
         ),
       ],
+    );
+  }
+
+  // ===========================================================================
+  // IMAGE THUMBNAILS
+  // ===========================================================================
+
+  Widget _buildImageThumbnails(BuildContext context, Vehicle vehicle) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const double thumbnailWidth = 72;
+        const double spacing = 8;
+
+        final totalWidth =
+            (thumbnailWidth.w * vehicle.images.length) +
+            (spacing.w * (vehicle.images.length - 1));
+
+        // ================================================================
+        // FEW IMAGES → CENTER
+        // ================================================================
+        if (totalWidth <= constraints.maxWidth) {
+          return Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(vehicle.images.length, (index) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: index == vehicle.images.length - 1 ? 0 : spacing.w,
+                  ),
+                  child: _buildThumbnail(context, vehicle, index, colorScheme),
+                );
+              }),
+            ),
+          );
+        }
+
+        // ================================================================
+        // MANY IMAGES → HORIZONTAL SCROLL
+        // ================================================================
+        return SizedBox(
+          height: 58.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: vehicle.images.length,
+            separatorBuilder: (context, index) {
+              return SizedBox(width: spacing.w);
+            },
+            itemBuilder: (context, index) {
+              return _buildThumbnail(context, vehicle, index, colorScheme);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildThumbnail(
+    BuildContext context,
+    Vehicle vehicle,
+    int index,
+    ColorScheme colorScheme,
+  ) {
+    final image = vehicle.images[index];
+
+    final bool isSelected = index == currentImageIndex;
+
+    return GestureDetector(
+      onTap: () {
+        _carouselController.animateToPage(index);
+
+        setState(() {
+          currentImageIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 72.w,
+        height: 58.h,
+        padding: EdgeInsets.all(isSelected ? 2.w : 0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : Colors.white.withValues(alpha: 0.7),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8.r),
+          child: Image.network(
+            image.fileUrl,
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  Icons.broken_image_rounded,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 22.r,
+                ),
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 
@@ -565,12 +735,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       (
         icon: Icons.luggage_rounded,
         label: 'Luggage',
-        value: '${vehicle.luggage}',
+        value: '${vehicle.luggages}',
       ),
       (
         icon: Icons.speed_rounded,
         label: 'Kilometer',
-        value: '${vehicle.kilometer.toStringAsFixed(0)} km',
+        value: '${vehicle.mileAge} km',
       ),
     ];
 
@@ -643,79 +813,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   ),
                 ],
               ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  // ===========================================================================
-  // FEATURES
-  // ===========================================================================
-
-  Widget _buildFeatures(BuildContext context, Vehicle vehicle) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    if (vehicle.feature.isEmpty) {
-      return Text(
-        'No features available.',
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: colorScheme.onSurface,
-          fontWeight: FontWeight.w600,
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            Text(
-              'Features',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-
-        SizedBox(height: 12.h),
-
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: vehicle.feature.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 15,
-            mainAxisSpacing: 8,
-            childAspectRatio: 3.5,
-          ),
-          itemBuilder: (context, index) {
-            return Row(
-              children: [
-                Icon(
-                  Icons.check_circle_rounded,
-                  color: AppColors.primary,
-                  size: AppDimensions.iconMedium,
-                ),
-
-                SizedBox(width: 8.w),
-
-                Expanded(
-                  child: Text(
-                    vehicle.feature[index],
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
             );
           },
         ),
@@ -885,108 +982,36 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   // RECOMMENDED VEHICLES
   // ===========================================================================
 
-  /*
   Widget _buildRecommendedVehicles(
     BuildContext context,
     Vehicle currentVehicle,
   ) {
     final theme = Theme.of(context);
 
-    // If a list was provided, use it.
-    // Otherwise use the global vehicles list.
-    final allVehicles = widget.recommendedVehicles.isNotEmpty
-        ? widget.recommendedVehicles
-        : vehicles;
+    // ---------------------------------------------------------------
+    // Get all vehicles.
+    //
+    // If recommendedVehicles was passed from the previous screen,
+    // use it.
+    //
+    // Otherwise get vehicles from VehicleBloc.
+    // ---------------------------------------------------------------
 
-    final recommendedVehicles = allVehicles
-        .where(
-          (vehicle) =>
-              vehicle.id != currentVehicle.id &&
-              vehicle.type.toLowerCase().trim() ==
-                  currentVehicle.type.toLowerCase().trim(),
-        )
-        .take(5)
-        .toList();
+    final vehicleState = context.read<VehicleBloc>().state;
 
-    if (recommendedVehicles.isEmpty) {
-      return const SizedBox.shrink();
+    final List<Vehicle> allVehicles;
+
+    if (widget.recommendedVehicles.isNotEmpty) {
+      allVehicles = widget.recommendedVehicles;
+    } else if (vehicleState is VehicleLoaded) {
+      allVehicles = vehicleState.vehicles;
+    } else {
+      allVehicles = [];
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Recommended ${currentVehicle.type}s',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-
-        SizedBox(height: 6.h),
-
-        Text(
-          'Other ${currentVehicle.type} vehicles you may like',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-
-        SizedBox(height: 14.h),
-
-        ...recommendedVehicles.map((recommendedVehicle) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: 16.h),
-            child: VehicleCard(
-              vehicle: recommendedVehicle,
-
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => VehicleDetailScreen(
-                      vehicle: recommendedVehicle,
-
-                      // Pass the complete vehicle list.
-                      recommendedVehicles: allVehicles,
-                    ),
-                  ),
-                );
-              },
-
-              onFavoriteTap: () {
-                // Connect to FavoriteBloc here.
-              },
-
-              onRentTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        RentalDetailsScreen(vehicle: recommendedVehicle),
-                  ),
-                );
-              },
-            ),
-          );
-        }),
-      ],
-    );
-  }
-  */
-
-  // ================================================================
-  // HORIZONTAL VEHICLE LIST
-  // ================================================================
-
-  Widget _buildRecommendedVehicles(
-    BuildContext context,
-    Vehicle currentVehicle,
-  ) {
-    final theme = Theme.of(context);
-
-    final allVehicles = widget.recommendedVehicles.isNotEmpty
-        ? widget.recommendedVehicles
-        : vehicles;
+    // ---------------------------------------------------------------
+    // Find vehicles with the same type.
+    // ---------------------------------------------------------------
 
     final recommendedVehicles = allVehicles
         .where(
@@ -997,6 +1022,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         )
         .take(5)
         .toList();
+
+    // ---------------------------------------------------------------
+    // No recommendations.
+    // ---------------------------------------------------------------
 
     if (recommendedVehicles.isEmpty) {
       return const SizedBox.shrink();
@@ -1026,6 +1055,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
         SizedBox(height: 14.h),
 
+        // ================================================================
+        // HORIZONTAL VEHICLE LIST
+        // ================================================================
         SizedBox(
           height: 300.h,
           child: ListView.separated(
@@ -1043,6 +1075,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 child: VehicleCard(
                   vehicle: recommendedVehicle,
 
+                  // ------------------------------------------------------
+                  // VEHICLE TAP
+                  // ------------------------------------------------------
                   onTap: () {
                     Navigator.push(
                       context,
@@ -1055,10 +1090,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     );
                   },
 
+                  // ------------------------------------------------------
+                  // FAVORITE TAP
+                  // ------------------------------------------------------
                   onFavoriteTap: () {
-                    // Connect to FavoriteBloc.
+                    // Connect to FavoriteBloc here.
                   },
 
+                  // ------------------------------------------------------
+                  // RENT TAP
+                  // ------------------------------------------------------
                   onRentTap: () {
                     Navigator.push(
                       context,

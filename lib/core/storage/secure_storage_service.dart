@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:vehicle_rental_system/core/constants/storage_keys.dart';
 
 /// Thin wrapper around [FlutterSecureStorage] for auth-related secrets.
 ///
@@ -8,18 +9,16 @@ class SecureStorageService {
 
   SecureStorageService(this.storage);
 
-  final String key = 'jwt_token';
-
   Future<void> saveToken(String token) async {
-    await storage.write(key: key, value: token);
+    await storage.write(key: StorageKeys.jwtKey, value: token);
   }
 
   Future<String?> getToken() async {
-    return await storage.read(key: key);
+    return await storage.read(key: StorageKeys.jwtKey);
   }
 
   Future<void> deleteToken() async {
-    await storage.delete(key: key);
+    await storage.delete(key: StorageKeys.jwtKey);
   }
   // static const String _authTokenKey = 'auth_token';
 

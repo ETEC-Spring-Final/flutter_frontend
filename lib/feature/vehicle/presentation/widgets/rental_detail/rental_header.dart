@@ -16,7 +16,11 @@ class RentalHeader extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         _VehicleImage(
-          imageUrl: vehicle.images.isNotEmpty ? vehicle.images.first : null,
+          imageUrl: vehicle.images.where((image) => image.isPrimary).isNotEmpty
+              ? vehicle.images.firstWhere((image) => image.isPrimary).fileUrl
+              : vehicle.images.isNotEmpty
+              ? vehicle.images.first.fileUrl
+              : null,
         ),
 
         DecoratedBox(

@@ -31,7 +31,7 @@ class AppError extends StatelessWidget {
           const SizedBox(height: 16),
 
           Text(
-            "Oop!",
+            message,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),

@@ -57,9 +57,9 @@ class BookingCard extends StatelessWidget {
                       // ------------------------------------------------------
                       // VEHICLE IMAGE
                       // ------------------------------------------------------
-                      imageUrl.isNotEmpty
+                      imageUrl.toString().isNotEmpty
                           ? Image.network(
-                              imageUrl,
+                              imageUrl.toString(),
                               fit: BoxFit.cover,
                               filterQuality: FilterQuality.high,
                               loadingBuilder:
