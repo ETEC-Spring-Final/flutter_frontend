@@ -8,7 +8,7 @@ import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart
 class FavoriteToggle extends StatelessWidget {
   const FavoriteToggle({
     super.key,
-    required this.onFavoriteTap,
+    this.onFavoriteTap,
     required this.vehicle,
     this.size = 35,
     this.iconSize = 18,
@@ -37,9 +37,7 @@ class FavoriteToggle extends StatelessWidget {
           shadowColor: Colors.black.withValues(alpha: 0.15),
           child: InkWell(
             onTap: () {
-              context
-                  .read<FavoriteBloc>()
-                  .add(ToggleFavoriteEvent(vehicle.id));
+              context.read<FavoriteBloc>().add(ToggleFavoriteEvent(vehicle.id));
               onFavoriteTap?.call();
             },
             customBorder: const CircleBorder(),

@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/widget/image_viewer_arrow.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/widget/vehicle_image_thumbnails.dart';
 
 class VehicleImageViewer extends StatefulWidget {
   final Vehicle vehicle;
@@ -21,14 +22,14 @@ class VehicleImageViewer extends StatefulWidget {
 }
 
 class _VehicleImageViewerState extends State<VehicleImageViewer> {
-  late int currentIndex;
+  late int currentImageIndex;
 
   final CarouselSliderController controller = CarouselSliderController();
 
   @override
   void initState() {
     super.initState();
-    currentIndex = widget.initialIndex;
+    currentImageIndex = widget.initialIndex;
   }
 
   @override
@@ -96,7 +97,7 @@ class _VehicleImageViewerState extends State<VehicleImageViewer> {
                     if (!mounted) return;
 
                     setState(() {
-                      currentIndex = index;
+                      currentImageIndex = index;
                     });
                   },
                 ),
@@ -182,7 +183,7 @@ class _VehicleImageViewerState extends State<VehicleImageViewer> {
                     borderRadius: BorderRadius.circular(20.r),
                   ),
                   child: Text(
-                    '${currentIndex + 1} / ${images.length}',
+                    '${currentImageIndex + 1} / ${images.length}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13.sp,
@@ -204,7 +205,7 @@ class _VehicleImageViewerState extends State<VehicleImageViewer> {
                 child: Center(
                   child: GestureDetector(
                     onTap: () {
-                      if (currentIndex > 0) {
+                      if (currentImageIndex > 0) {
                         controller.previousPage();
                       } else {
                         controller.animateToPage(images.length - 1);
@@ -228,7 +229,7 @@ class _VehicleImageViewerState extends State<VehicleImageViewer> {
                 child: Center(
                   child: GestureDetector(
                     onTap: () {
-                      if (currentIndex < images.length - 1) {
+                      if (currentImageIndex < images.length - 1) {
                         controller.nextPage();
                       } else {
                         controller.animateToPage(0);
@@ -249,69 +250,16 @@ class _VehicleImageViewerState extends State<VehicleImageViewer> {
                 left: 16.w,
                 right: 16.w,
                 bottom: 16.h,
-                child: SizedBox(
-                  height: 60.h,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: images.length,
-                    separatorBuilder: (_, index) {
-                      return SizedBox(width: 8.w);
-                    },
-                    itemBuilder: (context, index) {
-                      final image = images[index];
-                      final isSelected = index == currentIndex;
-
-                      return GestureDetector(
-                        onTap: () {
-                          controller.animateToPage(index);
-
-                          setState(() {
-                            currentIndex = index;
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 72.w,
-                          height: 58.h,
-                          padding: EdgeInsets.all(isSelected ? 2.w : 0),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : Colors.white.withValues(alpha: 0.7),
-                              width: isSelected ? 2 : 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8.r),
-                            child: Image.network(
-                              image.fileUrl,
-                              fit: BoxFit.cover,
-                              filterQuality: FilterQuality.medium,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey.shade900,
-                                  child: const Icon(
-                                    Icons.broken_image_rounded,
-                                    color: Colors.white54,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                child: VehicleImageThumbnails(
+                  vehicle: widget.vehicle,
+                  currentImageIndex: currentImageIndex,
+                  onImageSelected: (index) {
+                    //_carouselController.animateToPage(index);
+                    controller.animateToPage(index);
+                    setState(() {
+                      currentImageIndex = index;
+                    });
+                  },
                 ),
               ),
           ],

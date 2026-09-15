@@ -284,11 +284,12 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
       expandedHeight: 340.h,
       leadingWidth: 60.w,
 
-      leading: Padding(
-        padding: EdgeInsets.all(12.w),
-        child: const AppBackButton(),
-      ),
+      leading: const AppBackButton(),
 
+      // leading: Padding(
+      //   //padding: EdgeInsets.all(12.w),
+      //   child: const AppBackButton(),
+      // ),
       title: Text(
         'Rental Details',
         style: theme.textTheme.titleMedium?.copyWith(

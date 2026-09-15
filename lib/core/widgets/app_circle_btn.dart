@@ -15,7 +15,7 @@ class AppCircleBtn extends StatelessWidget {
     required this.onTap,
     this.iconColor = Colors.white,
     this.backgroundColor = const Color(0x59000000),
-    this.size = 35,
+    this.size = 30,
     this.iconSize = 18,
   });
 
@@ -33,7 +33,7 @@ class AppCircleBtn extends StatelessWidget {
             icon,
             size: iconSize.sp,
             color: iconColor,
-            fontWeight: .bold,
+            //fontWeight: .bold,
           ),
         ),
       ),

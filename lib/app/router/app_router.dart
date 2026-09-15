@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:vehicle_rental_system/app/router/router_names.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/view/login_screen.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/view/register_screen.dart';
+import 'package:vehicle_rental_system/feature/notification/presentation/view/notification_screen.dart';
 
 import '../../feature/home/presentation/view/main_screen.dart';
 import '../../feature/onboarding/view/onboarding_screen.dart';
@@ -144,6 +145,17 @@ class AppRouter {
         name: RouterNames.home,
         builder: (context, state) {
           return const MainScreen(index: 0);
+        },
+      ),
+
+      // ============================================================
+      // NOTIFICATION
+      // ============================================================
+      GoRoute(
+        path: AppRoutes.notification,
+        name: RouterNames.notification,
+        builder: (context, state) {
+          return const NotificationScreen();
         },
       ),
 

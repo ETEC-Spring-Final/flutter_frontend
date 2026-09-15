@@ -83,10 +83,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Payment'),
-        leading: Padding(padding: EdgeInsets.all(12.w), child: AppBackButton()),
-      ),
+      appBar: AppBar(title: const Text('Payment'), leading: AppBackButton()),
       body: SafeArea(
         child: Column(
           children: [

@@ -1,4 +1,6 @@
 import 'package:get_it/get_it.dart';
+import 'package:vehicle_rental_system/core/network/dio_client.dart';
+import 'package:vehicle_rental_system/feature/booking/data/datasource/booking_remote_data_source.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/repository/booking_repository.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/usecase/create_booking.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_bookings.dart';
@@ -42,9 +44,9 @@ void registerUseCases() {
   // Booking
   // ==========================================
 
-  sl.registerFactory<GetBookings>(() => GetBookings(sl<BookingRepository>()));
+  // sl.registerFactory<GetBookings>(() => GetBookings(sl<BookingRepository>()));
 
-  sl.registerFactory<CreateBooking>(
-    () => CreateBooking(sl<BookingRepository>()),
-  );
+  // sl.registerFactory<CreateBooking>(
+  //   () => CreateBooking(sl<BookingRepository>()),
+  // );
 }

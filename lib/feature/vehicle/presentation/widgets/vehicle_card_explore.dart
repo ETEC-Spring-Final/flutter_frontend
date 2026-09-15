@@ -160,7 +160,7 @@ class VehicleCardExplore extends StatelessWidget {
                             // FAVORITE
                             // ------------------------------------------------
                             FavoriteToggle(
-                              onFavoriteTap: onFavoriteTap,
+                              //onFavoriteTap: onFavoriteTap,
                               vehicle: vehicle,
                             ),
                           ],

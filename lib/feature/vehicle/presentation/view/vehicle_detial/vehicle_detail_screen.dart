@@ -13,6 +13,7 @@ import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart
 import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/service/map_service.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/rental_details_screen.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/widget/vehicle_image_thumbnails.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/widget/vehicle_image_viewer.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card.dart';
 
@@ -89,10 +90,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             // ===================================================================
             // BACK BUTTON
             // ===================================================================
-            leading: Padding(
-              padding: EdgeInsets.all(12.w),
-              child: const Center(child: AppBackButton()),
-            ),
+            leading: AppBackButton(),
+
+            // leading: Padding(
+            //   padding: EdgeInsets.all(5.w),
+            //   child: const Center(child: AppBackButton()),
+            // ),
 
             // ===================================================================
             // FAVORITE BUTTON
@@ -100,10 +103,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             actions: [
               FavoriteToggle(
                 onFavoriteTap: () {
-                  // Connect your FavoriteBloc here.
-                  //
-                  // Example:
-                  //
                   // context.read<FavoriteBloc>().add(
                   //   ToggleFavoriteEvent(vehicle.id),
                   // );
@@ -410,7 +409,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             left: 16.w,
             right: 16.w,
             bottom: 52.h,
-            child: _buildImageThumbnails(context, vehicle),
+            child: VehicleImageThumbnails(
+              vehicle: vehicle,
+              currentImageIndex: currentImageIndex,
+              onImageSelected: (index) {
+                _carouselController.animateToPage(index);
+
+                setState(() {
+                  currentImageIndex = index;
+                });
+              },
+            ),
           ),
 
         // =====================================================================
@@ -473,119 +482,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   // ===========================================================================
   // IMAGE THUMBNAILS
   // ===========================================================================
-
-  Widget _buildImageThumbnails(BuildContext context, Vehicle vehicle) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const double thumbnailWidth = 72;
-        const double spacing = 8;
-
-        final totalWidth =
-            (thumbnailWidth.w * vehicle.images.length) +
-            (spacing.w * (vehicle.images.length - 1));
-
-        // ================================================================
-        // FEW IMAGES → CENTER
-        // ================================================================
-        if (totalWidth <= constraints.maxWidth) {
-          return Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(vehicle.images.length, (index) {
-                return Padding(
-                  padding: EdgeInsets.only(
-                    right: index == vehicle.images.length - 1 ? 0 : spacing.w,
-                  ),
-                  child: _buildThumbnail(context, vehicle, index, colorScheme),
-                );
-              }),
-            ),
-          );
-        }
-
-        // ================================================================
-        // MANY IMAGES → HORIZONTAL SCROLL
-        // ================================================================
-        return SizedBox(
-          height: 58.h,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: vehicle.images.length,
-            separatorBuilder: (context, index) {
-              return SizedBox(width: spacing.w);
-            },
-            itemBuilder: (context, index) {
-              return _buildThumbnail(context, vehicle, index, colorScheme);
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildThumbnail(
-    BuildContext context,
-    Vehicle vehicle,
-    int index,
-    ColorScheme colorScheme,
-  ) {
-    final image = vehicle.images[index];
-
-    final bool isSelected = index == currentImageIndex;
-
-    return GestureDetector(
-      onTap: () {
-        _carouselController.animateToPage(index);
-
-        setState(() {
-          currentImageIndex = index;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 72.w,
-        height: 58.h,
-        padding: EdgeInsets.all(isSelected ? 2.w : 0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : Colors.white.withValues(alpha: 0.7),
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.r),
-          child: Image.network(
-            image.fileUrl,
-            fit: BoxFit.cover,
-            filterQuality: FilterQuality.medium,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: colorScheme.surfaceContainerHighest,
-                child: Icon(
-                  Icons.broken_image_rounded,
-                  color: colorScheme.onSurfaceVariant,
-                  size: 22.r,
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
 
   // ===========================================================================
   // PAGINATION
@@ -775,7 +671,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             return Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
-                border: Border.all(color: colorScheme.outline),
+                border: Border.all(
+                  //color: colorScheme.outline
+                  color: AppColors.primary,
+                  width: 1.5,
+                ),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -783,7 +683,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   Icon(
                     item.icon,
                     size: 22.r,
-                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    //color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    color: AppColors.primary,
                   ),
 
                   SizedBox(height: 8.h),
@@ -807,7 +708,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
+                        //color: colorScheme.onSurface,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),

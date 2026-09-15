@@ -4,10 +4,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:vehicle_rental_system/app/router/app_routes.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/app_size.dart';
+import 'package:vehicle_rental_system/core/widgets/app_notification.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
 
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/animated_greeting.dart';
@@ -40,7 +43,11 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   // ============================================================
   // CATEGORY
   // ============================================================
@@ -103,11 +110,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
       body: CustomScrollView(
+        key: const PageStorageKey('home_screen'),
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ========================================================
@@ -143,15 +153,26 @@ class _HomeScreenState extends State<HomeScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: InkWell(
-                  onTap: widget.onProfileTap,
-                  child: CircleAvatar(
-                    radius: 18.r,
-                    backgroundImage: const NetworkImage(
-                      'https://i.pinimg.com/236x/0f/21/77/0f21770c1e42550d64e8c210266141d2.jpg',
-                    ),
-                    backgroundColor: colorScheme.surfaceContainerHighest,
+                  onTap: () {
+                    context.go(AppRoutes.notification);
+                  },
+                  child: AppNotification(
+                    notificationCount: 5,
+                    onTap: () {
+                      context.go(AppRoutes.notification);
+                    },
                   ),
                 ),
+                // child: InkWell(
+                //   onTap: widget.onProfileTap,
+                //   child: CircleAvatar(
+                //     radius: 18.r,
+                //     backgroundImage: const NetworkImage(
+                //       'https://i.pinimg.com/236x/0f/21/77/0f21770c1e42550d64e8c210266141d2.jpg',
+                //     ),
+                //     backgroundColor: colorScheme.surfaceContainerHighest,
+                //   ),
+                // ),
               ),
             ],
           ),

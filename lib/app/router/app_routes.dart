@@ -18,6 +18,8 @@ class AppRoutes {
   static const favorite = "/favorite";
   static const profile = "/profile";
 
+  static const notification = "/notification";
+
   // Vehicle
   static const detail = "/detail";
 }

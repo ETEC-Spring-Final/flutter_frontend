@@ -125,12 +125,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // =====================================================
                     Row(
                       children: [
-                        _StatCard(
-                          icon: Icons.route_rounded,
-                          value: '12',
-                          label: 'Trips',
-                        ),
-                        SizedBox(width: 12.w),
+                        // _StatCard(
+                        //   icon: Icons.route_rounded,
+                        //   value: '12',
+                        //   label: 'Trips',
+                        // ),
+                        // SizedBox(width: 12.w),
                         _StatCard(
                           icon: Icons.book_online_rounded,
                           value: '3',
@@ -146,38 +146,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
 
                     SizedBox(height: 28.h),
-
-                    // =====================================================
-                    // MY ACTIVITY
-                    // =====================================================
-                    _SectionTitle(title: 'My Activity'),
-
-                    SizedBox(height: 12.h),
-
-                    _MenuCard(
-                      children: [
-                        _MenuTile(
-                          icon: Icons.book_online_outlined,
-                          title: 'My Bookings',
-                          subtitle: 'View and manage bookings',
-                          onTap: widget.onBookingsTap,
-                        ),
-                        _MenuTile(
-                          icon: Icons.favorite_border_rounded,
-                          title: 'Favorites',
-                          subtitle: 'Cars you have liked',
-                          onTap: widget.onFavoritesTap,
-                        ),
-                        _MenuTile(
-                          icon: Icons.explore_outlined,
-                          title: 'Explore Vehicles',
-                          subtitle: 'Find your next ride',
-                          onTap: widget.onExploreTap,
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 24.h),
 
                     // =====================================================
                     // SETTINGS
@@ -257,8 +225,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(height: 24.h),
 
                     // =====================================================
+                    // MY ACTIVITY
+                    // =====================================================
+                    _SectionTitle(title: 'My Activity'),
+
+                    SizedBox(height: 12.h),
+
+                    _MenuCard(
+                      children: [
+                        _MenuTile(
+                          icon: Icons.book_online_outlined,
+                          title: 'My Bookings',
+                          subtitle: 'View and manage bookings',
+                          onTap: widget.onBookingsTap,
+                        ),
+                        _MenuTile(
+                          icon: Icons.favorite_border_rounded,
+                          title: 'Favorites',
+                          subtitle: 'Cars you have liked',
+                          onTap: widget.onFavoritesTap,
+                        ),
+                        _MenuTile(
+                          icon: Icons.explore_outlined,
+                          title: 'Explore Vehicles',
+                          subtitle: 'Find your next ride',
+                          onTap: widget.onExploreTap,
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // =====================================================
                     // SUPPORT
                     // =====================================================
+                    /*
                     _SectionTitle(title: 'Support'),
 
                     SizedBox(height: 12.h),
@@ -287,6 +288,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
 
                     SizedBox(height: 20.h),
+
+                    */
 
                     // =====================================================
                     // LOGOUT
