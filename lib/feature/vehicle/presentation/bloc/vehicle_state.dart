@@ -28,3 +28,12 @@ class VehicleError extends VehicleState {
   @override
   List<Object?> get props => [message];
 }
+
+class VehicleSuccess extends VehicleState {
+  final String message;
+
+  const VehicleSuccess(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

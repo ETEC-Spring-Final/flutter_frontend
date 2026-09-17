@@ -39,4 +39,17 @@ class ApiEndpoints {
   static String bookingById(int id) {
     return '/bookings/$id';
   }
+
+  // ==========================================
+  // QR Code / Bakong (generate after booking)
+  // ==========================================
+
+  /// Payload: `{ "qr": "string", "md5": "string" }`
+  static const String qrImage = '/v1/bakong/qr-image';
+
+  /// Payload: the EMVCo QR data (`QrGenerateRequest`)
+  static const String generateQr = '/v1/bakong/generate-qr';
+
+  /// Payload: `{ "md5": "string" }`
+  static const String checkTransaction = '/v1/bakong/check-transaction';
 }

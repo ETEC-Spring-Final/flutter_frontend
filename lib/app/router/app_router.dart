@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:vehicle_rental_system/app/router/router_names.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/view/login_screen.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/view/register_screen.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart';
 import 'package:vehicle_rental_system/feature/notification/presentation/view/notification_screen.dart';
 
 import '../../feature/home/presentation/view/main_screen.dart';
@@ -13,6 +14,8 @@ import '../../feature/vehicle/presentation/view/booking_screen.dart';
 import '../../feature/vehicle/presentation/view/explore_screen.dart';
 import '../../feature/vehicle/presentation/view/favorite_screen.dart';
 import '../../feature/vehicle/presentation/view/vehicle_detial/vehicle_detail_screen.dart';
+import '../../feature/payment/presentation/screens/payment_screen.dart';
+import '../../feature/vehicle/presentation/view/vehicle_crud_screen.dart';
 import '../router/app_routes.dart';
 
 class AppRouter {
@@ -213,6 +216,38 @@ class AppRouter {
           final vehicle = state.extra;
 
           return VehicleDetailScreen(vehicle: vehicle as dynamic);
+        },
+      ),
+
+      // ============================================================
+      // PAYMENT
+      // ============================================================
+      GoRoute(
+        path: AppRoutes.payment,
+        name: RouterNames.payment,
+        builder: (context, state) {
+          final booking = state.extra is Booking
+              ? state.extra as Booking
+              : null;
+
+          if (booking == null) {
+            return const Scaffold(
+              body: Center(child: Text('Booking information not found')),
+            );
+          }
+
+          return PaymentScreen(booking: booking);
+        },
+      ),
+
+      // ============================================================
+      // VEHICLE CRUD (dev/test tool)
+      // ============================================================
+      GoRoute(
+        path: AppRoutes.vehicleCrud,
+        name: RouterNames.vehicleCrud,
+        builder: (context, state) {
+          return const VehicleCrudScreen();
         },
       ),
     ],

@@ -60,6 +60,9 @@ dependencies:
   flutter_screenutil: ^5.9.3 # Responsive
   animations: ^2.2.0
   equatable: ^2.1.0
+  qr_flutter: ^4.1.0 # QR code generator
+  mobile_scanner: ^6.0.2 # QR code scanner
+  crypto: ^3.0.6 # md5 hashing for QR transaction ids
 
 dev_dependencies:
   flutter_test:

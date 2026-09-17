@@ -5,6 +5,9 @@ import 'package:vehicle_rental_system/feature/booking/domain/repository/booking_
 import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/favorite/domain/repository/favorite_repository.dart';
 import 'package:vehicle_rental_system/feature/favorite/presentation/bloc/favorite_bloc.dart';
+import 'package:vehicle_rental_system/feature/payment/domain/usecases/check_payment_usecase.dart';
+import 'package:vehicle_rental_system/feature/payment/domain/usecases/create_qr_usecase.dart';
+import 'package:vehicle_rental_system/feature/payment/presentation/bloc/payment_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -30,4 +33,13 @@ void registerBlocs() {
   // Booking BLoC
 
   sl.registerFactory<BookingBloc>(() => BookingBloc(sl<BookingRepository>()));
+
+  // Payment BLoC
+
+  sl.registerFactory<PaymentBloc>(
+    () => PaymentBloc(
+      createQrUseCase: sl<CreateQrUseCase>(),
+      checkPaymentUseCase: sl<CheckPaymentUseCase>(),
+    ),
+  );
 }

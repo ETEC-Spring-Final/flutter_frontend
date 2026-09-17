@@ -3,7 +3,7 @@
 **Purpose of this document.** This guide is written for AI agents and new
 developers who need to understand this Flutter codebase quickly and correctly.
 It documents the *current, actual* state of the code (verified against the
-source on 2026-08-29), including the many stubs, mock data, and known issues.
+source on 2026-09-17), including the many stubs, mock data, and known issues.
 Do **not** trust `vehicle_guide.md` (it describes the older skeleton) or
 `README.md` (stock Flutter boilerplate) — trust this file and the code.
 
@@ -17,9 +17,12 @@ Do **not** trust `vehicle_guide.md` (it describes the older skeleton) or
 A **Flutter mobile app for renting vehicles**. Users browse vehicles (home or
 explore with search/brand filters), view vehicle details (photo carousel,
 specs, map location), see favorites, view booking categories, and change
-language/theme in profile. One commit hint at planned integration with a
-Spring Boot backend (`http://10.0.2.2:8000/api`), but **today the UI runs on
-hardcoded mock data** — no HTTP is actually used for vehicles/bookings.
+language/theme in profile. After a booking is confirmed the app can request a
+**Bakong (EMVCo) payment QR from the Spring Boot backend** and display/scan it
+(see §11). Integration with the Spring Boot backend
+(`http://10.0.2.2:8080/api`) exists for the QR flow, while **vehicle/booking
+data still runs on hardcoded mock data** — no HTTP is used for vehicles/bookings
+yet.
 
 **Domains:** Flutter-only client. Backend API is out of this repo.
 
@@ -39,6 +42,7 @@ hardcoded mock data** — no HTTP is actually used for vehicles/bookings.
 | Localization   | Flutter gen-l10n — **English + Khmer**                    |
 | Responsive     | `flutter_screenutil` (`ScreenUtilInit`, designSize 375x812) |
 | Maps           | `google_maps_flutter`, `flutter_map` + `latlong2`, `geolocator` |
+| QR Code        | `qr_flutter` (render generated QR), `mobile_scanner` (scan), `crypto` (md5) |
 | Other          | `cached_network_image`, `image_picker`, `table_calendar`, `carousel_slider`, `google_fonts` (Inter), `url_launcher`, `fpdart`, `intl` |
 
 App package name: `vehicle_rental_system`, version `1.0.0+1`.
@@ -63,6 +67,13 @@ entities (see §10). Some presentation-layer files use their own
 direct HTTP (e.g. the map / pickup-location service) instead of the DI-resolved
 `ApiClient`.
 
+**Exception — the QR Code feature is fully wired:** it has a real
+data/domain chain (`QrRemoteDataSource` → `QrCodeRepositoryImpl` →
+`GenerateQrCode`/`CheckQrTransaction` → `QrCodeBloc`) that talks to the Spring
+Boot Bakong endpoints through the DI-resolved `ApiClient`. It keeps an offline
+mock fallback so the screen still renders when the backend is unreachable. See
+§11 for the exact request/response shapes.
+
 ---
 
 ## 4. Folder Structure (lib/)
@@ -78,11 +89,12 @@ lib/
 │   └── theme/                    # colors, text styles, sizes, dimensions, light/dark ThemeData
 │       └── bloc/                 # ThemeBloc (light/dark toggle)
 ├── core/
-│   ├── constants/                # api_constants.dart (baseUrl), storage_keys, app_constants (mostly empty)
-│   ├── errors/                   # failure.dart?, error_handler, app_exception (mostly empty)
+│   ├── constants/                # api_constants.dart (baseUrl + endpoint list)
+│   ├── di/                       # all GetIt registration (see §7)
+│   ├── errors/                   # failure.dart (Failure subtypes)
 │   ├── extensions/               # empty
 │   ├── network/                  # api_client.dart (Dio wrapper), api_endpoints.dart, network_info.dart
-│   │   └── interceptors/         # auth_interceptor.dart, logging_interceptor.dart (STUBS)
+│   │   └── interceptors/         # auth_interceptor.dart, logging_interceptor.dart (implemented)
 │   ├── storage/                  # secure_storage_service.dart, secure_storage.dart, local_storage.dart (STUBS)
 │   ├── utils/                    # validators.dart, formatter.dart, helper.dart (empty)
 │   └── widgets/                  # 11 shared widgets (see §12)
@@ -99,9 +111,12 @@ lib/
 │   ├── booking/                  # empty skeleton (view/widget dirs)
 │   ├── payment/                  # empty skeleton
 │   ├── onboarding/               # splash_screen.dart, onboarding_screen.dart (placeholders)
+│   ├── qr_code/                  # Bakong QR payment (FULLY WIRED — see §11)
+│   │   ├── data/                 # datasource + model + mapper + repository impl
+│   │   ├── domain/               # entity, repository(abstract), usecase
+│   │   └── presentation/         # bloc + view(qr_code_screen.dart)
 │   ├── favorite/                 # empty skeleton
 │   └── shared/                   # shared/widgets (moved favorites/vehicle_card shared code)
-├── injection/                    # all GetIt registration in 6 files (see §6)
 └── l10n/                         # generated AppLocalizations (en + km)
 ```
 
@@ -130,8 +145,10 @@ feature/<name>/
 
 1. `main()` (`lib/main.dart`):
    - `WidgetsFlutterBinding.ensureInitialized()`
-   - `await configureDependencies()` (from `lib/injection/injection_container.dart`)
-   - `runApp(MultiBlocProvider([LocaleBloc, ThemeBloc], child: CarRentalApp()))`
+   - `await configureDependencies()` (from `lib/core/di/injection_container.dart`)
+   - `runApp(MultiBlocProvider([LocaleBloc, ThemeBloc, AuthBloc, FavoriteBloc,
+     BookingBloc, VehicleBloc, QrCodeBloc], child: CarRentalApp()))` — note all
+     are resolved from `sl<...>()` except Locale/Theme.
 2. `CarRentalApp` (`lib/app/app.dart`):
    - `ScreenUtilInit(designSize: Size(375,812), minTextAdapt: true, splitScreenMode: true)`
    - Nested `BlocBuilder<LocaleBloc>` + `BlocBuilder<ThemeBloc>`.
@@ -143,78 +160,80 @@ feature/<name>/
      - `supportedLocales: [Locale('en'), Locale('km')]`
      - `localizationsDelegates` incl. `AppLocalizations.delegate`
 
-**Note:** the app boots to the 5-tab `MainScreen` at `/` (no auth/splash gate
-is enforced yet).
+**Note:** `initialLocation` is `/splash`, and `SplashScreen` routes into the
+5-tab `MainScreen` (no auth gate is enforced yet).
 
 ---
 
 ## 6. Routing (`lib/app/router`)
 
 - **`app_routes.dart`** — `AppRoutes`: path constants:
-  - `/login`, `/signup`, `/forgotPassword`, `/splash`, `/onboarding`
+  - `/login`, `/register`, `/forgotPassword`, `/splash`, `/onboarding`
   - `/` (mainHome), `/home`, `/explore`, `/booking`, `/favorite`, `/profile`
   - `/detail` (used as `/detail/:id`)
+  - `qrCode` (`/qrCode`)
 - **`router_names.dart`** — `RouterNames`: names (`RouterNames.login`, ...).
 - **`app_router.dart`** — `AppRouter.router` (`GoRouter`),
-  `initialLocation: AppRoutes.mainHome` (`/`). Registered routes (all
+  `initialLocation: AppRoutes.splash` (`/splash`). Registered routes (all
   `builder: (c,s) => const XScreen()`):
 
 | Path            | Widget                        |
 | --------------- | ----------------------------- |
 | `/splash`       | `SplashScreen`                |
 | `/login`        | `LoginScreen`                 |
-| `/signup`       | `SignupScreen`                |
-| `/forgotPassword` | `ForgotPasswordScreen`      |
+| `/register`     | `RegisterScreen`              |
 | `/onboarding`   | `OnboardingScreen`            |
 | `/`             | `MainScreen(index: 0)`        |
-| `/home`         | `HomeScreen`                  |
+| `/notification` | `NotificationScreen`          |
 | `/explore`      | `ExploreScreen`               |
 | `/booking`      | `BookingScreen`               |
 | `/favorite`     | `FavoriteScreen`              |
 | `/profile`      | `ProfileScreen`               |
 | `/detail/:id`   | `VehicleDetailScreen(vehicle: state.extra as Vehicle)` |
+| `/qrCode`       | `QrCodeScreen(booking: state.extra as Booking?)` — pass a `Booking` via `extra` to auto-generate its payment QR |
 
 **Detail route gotcha:** `VehicleDetailScreen` receives its `Vehicle` via
 `GoRouterState.extra`, and URLs are `/detail/:id`. However, screens often
 navigate with `MaterialPageRoute` and/or `Navigator.push` directly instead of
 go_router — search before assuming a screen uses go_router.
 
+**QR route:** `context.push(AppRoutes.qrCode, extra: booking)` is used from the
+booking confirmation screen right after `BookingBloc` emits `BookingCreated`.
+If `extra` is null the QR screen falls back to a manual amount/bill form.
+
 ---
 
-## 7. Dependency Injection (`lib/injection`)
+## 7. Dependency Injection (`lib/core/di`)
 
-All files declare `final GetIt getIt = GetIt.instance;` (there is no registry
-singleton; `injection_container.dart` calls the 6 `register*()` functions in
-order). Responsibilities:
+All files declare `final sl = GetIt.instance;`. `injection_container.dart`
+calls the per-feature/per-layer registration functions in order. Order matters:
+`registerNetwork()` (Dio + ApiClient) must run before anything that resolves
+`ApiClient`, and `qrCodeInjection()` runs before `registerBlocs()` so
+`QrCodeBloc`'s use cases exist.
 
 | File                        | Registers                                                                 |
 | --------------------------- | ------------------------------------------------------------------------- |
-| `network_injection.dart`    | `Connectivity`, `NetworkInfo`/`NetworkInfoImpl`, `FlutterSecureStorage`, `SecureStorageService`, `AuthInterceptor`, `LoggingInterceptor`, `Dio`, `ApiClient` |
+| `network_injection.dart`    | `Connectivity`, `NetworkInfo`, `FlutterSecureStorage`, `SecureStorageService`, `AuthInterceptor`, `LoggingInterceptor`, `Dio`, `ApiClient` |
+| `datasource_injection.dart` | `LocationRemoteDataSource` (others commented out)                         |
+| `auth_injection.dart`       | Auth data source/repo/use cases (largely commented out)                   |
+| `vehicle_injection.dart`    | Vehicle data source/repo/use cases (partly commented out)                 |
+| `booking_injection.dart`    | `BookingRemoteDataSource`/`Impl`, `BookingRepository`, `GetBookings`, `CreateBooking` |
+| `favorite_injection.dart`   | Favorite repository/BLoC bits                                             |
+| `qr_code_injection.dart`    | `QrRemoteDataSource`/`Impl`, `QrCodeRepository`, `GenerateQrCode`, `CheckQrTransaction` |
 | `service_injection.dart`    | App services (mostly commented out)                                       |
-| `repository_injection.dart` | Repositories (mostly commented out)                                       |
-| `use_case_injection.dart`   | Use cases (mostly commented out)                                          |
-| `bloc_injection.dart`       | `LocaleBloc`, `ThemeBloc`                                                 |
+| `repository_injection.dart` | `FavoriteRepositoryImpl`, `LocationRepositoryImpl`                        |
+| `use_case_injection.dart`   | `GetLocationName` (others commented out)                                  |
+| `bloc_injection.dart`       | `LocaleBloc`, `ThemeBloc`, `FavoriteBloc`, `BookingBloc`, `QrCodeBloc`    |
 
-### Critical gotcha — Dio interceptor cast (`network_injection.dart:73-75`)
+### Dio config (`network_injection.dart`)
 
-```dart
-dio.interceptors.add(getIt<AuthInterceptor>() as Interceptor);
-```
-
-`AuthInterceptor` and `LoggingInterceptor` **do not extend dio's `Interceptor`**
-— so `as Interceptor` throws `TypeError` the moment the DI-resolved `Dio` is
-created. Today this is a **deferred landmine**: nothing in the active UI
-resolves `Dio`/`ApiClient` from GetIt (screens build their own HTTP), so the
-app runs. The moment vehicle/auth features start using `ApiClient`, it will
-crash. Fix: implement the interceptor stubs to extend `Interceptor`, then
-remove the casts.
-
-### Dio config (network_injection.dart:62-70)
-
-- `baseUrl: 'http://10.0.2.2:8000/api'` (host machine as seen from the Android
-  emulator; **duplicated** in `lib/core/constants/api_constants.dart` — keep both
-  in sync or centralize).
-- 30 s connect/receive/send timeouts; headers `Accept`/`Content-Type: application/json`.
+- `baseUrl: ApiConstants.baseUrl` = `http://10.0.2.2:8080/api` (host machine as
+  seen from the Android emulator). Also defined in
+  `lib/core/constants/api_constants.dart` — centralize or keep in sync.
+- 10 s connect/receive/send timeouts; headers `Accept`/`Content-Type: application/json`.
+- `AuthInterceptor` and `LoggingInterceptor` extend Dio's `Interceptor` and are
+  added **without** casts, so resolving `Dio`/`ApiClient` from GetIt is safe now
+  (the old `as Interceptor` crash has been fixed).
 
 ---
 
@@ -222,16 +241,21 @@ remove the casts.
 
 | File | Status |
 | --- | --- |
-| `api_client.dart` | Thin typed wrapper over Dio: `get/post/put/delete`. Implemented but **unused by active UI**. |
-| `api_endpoints.dart` | 9 endpoint constants (auth login, vehicles, customers, bookings, ...). Not referenced by live code. |
+| `api_client.dart` | Thin typed wrapper over Dio: `get/post/put/delete`. Used by the QR (and booking/location) data sources. |
+| `api_endpoints.dart` | Endpoint constants: auth, vehicles, customers, bookings, **plus `/v1/bakong/qr-image`, `/v1/bakong/generate-qr`, `/v1/bakong/check-transection`**. |
 | `network_info.dart` | `NetworkInfo` interface + `NetworkInfoImpl` over `connectivity_plus`. Implemented. |
-| `interceptors/auth_interceptor.dart` | **Stub** — constructor only; does not attach bearer tokens, does not extend dio `Interceptor`. |
-| `interceptors/logging_interceptor.dart` | **Empty class**. |
+| `interceptors/auth_interceptor.dart` | Implemented — extends Dio `Interceptor`, attaches bearer token from `SecureStorageService` (skips `/auth/`), 401 refresh is a documented TODO. |
+| `interceptors/logging_interceptor.dart` | Implemented — logs request/response/error. |
 | `api_exception.dart` | `ApiException(message, statusCode)`. |
 
-**Location (Nominatim) is the only *real* HTTP wiring:** the vehicle detail
-screen's pickup-location flow calls the public Nominatim geocoding API directly
-through a presentation-layer service (not through `ApiClient`).
+**Real HTTP wiring today:** (1) the QR feature's
+`QrRemoteDataSourceImpl` calls the Bakong endpoints through `ApiClient`; and
+(2) the vehicle detail screen's pickup-location flow calls the public Nominatim
+geocoding API directly through a presentation-layer service (not `ApiClient`).
+
+**Base URL:** `ApiConstants.baseUrl` (`http://10.0.2.2:8080/api`) is used by the
+DI `Dio`. Note `ApiConstants` also holds the Bakong paths under `// bakong`;
+`ApiEndpoints` is the canonical list used by data sources.
 
 ---
 
@@ -287,12 +311,14 @@ A hardcoded mock booking list (~10 bookings) and category tabs live in the
 
 ### When you add a real backend
 
-Expected shape: a Spring Boot API at `http://10.0.2.2:8000/api` with endpoints
-for auth (`/auth/login`), vehicles (`/vehicles`), customers, and bookings.
-A vehicle remote datasource already exists in
-`lib/feature/vehicle/data/datasource/` that does a Dio `GET /vehicles`, plus a
-repository impl and mapper — **but its DI chain is not registered and the
-BLoC call is commented out**. Wire it via `vehicle_injection` once the API is live.
+Expected shape: a Spring Boot API at `http://10.0.2.2:8080/api` with endpoints
+for auth (`/auth/login`), vehicles (`/vehicles`), customers, bookings, and the
+Bakong QR endpoints (`/v1/bakong/...`). A vehicle remote datasource already
+exists in `lib/feature/vehicle/data/datasource/` that does a Dio `GET /vehicles`,
+plus a repository impl and mapper — **but its DI chain is not registered and the
+BLoC call is commented out**. Wire it via `vehicle_injection` once the API is
+live. **The QR feature (`lib/feature/qr_code/`) is the working reference** for
+how a feature should be wired (datasource → repository → use case → BLoC → DI).
 
 ---
 
@@ -344,6 +370,77 @@ BLoC call is commented out**. Wire it via `vehicle_injection` once the API is li
 
 ### booking / payment / favorite folders
 - Empty skeletons (view/widget dirs only).
+
+### qr_code → Bakong QR payment (FULLY WIRED) — `lib/feature/qr_code/`
+
+The QR feature requests an EMVCo/KHQR payment code from the backend **after a
+booking** and displays/scans it. It follows the full clean-architecture chain
+and is the first feature wired end-to-end to `ApiClient`.
+
+**Flow:** `PaymentScreen._payNow` → `CreateBookingEvent` → `BookingBloc` emits
+`BookingCreated(booking)` → `BookingConfirmationScreen` shows a "Bakong QR
+Payment" card → taps push `/qrCode` with the `Booking` as `extra` →
+`QrCodeScreen` builds a `QrGenerateRequest.fromBooking(booking)` and dispatches
+`GenerateQrCodeEvent` → `QrCodeBloc` calls `GenerateQrCode` use case →
+`QrCodeRepositoryImpl.generateQr` → `QrRemoteDataSourceImpl.generateQr` →
+`POST /v1/bakong/generate-qr` → renders the returned `qr` string with
+`QrImageView`. A "I've Paid — Check" button sends the `md5` to
+`CheckQrTransactionEvent` → `POST /v1/bakong/check-transection`.
+
+**API contract (verify against backend before changing):**
+
+Request — `POST /v1/bakong/generate-qr` (EMVCo fields):
+```json
+{ "currency": "KHR", "amount": 0.1, "merchantName": "string",
+  "merchantCity": "string", "merchantId": "string", "acquiringBank": "string",
+  "upiAccountInformation": "string", "expirationTimestamp": 0,
+  "billNumber": "string", "storeLabel": "string", "terminalLabel": "string",
+  "mobileNumber": "string", "purposeOfTransaction": "string",
+  "merchantAlternateLanguagePreference": "string",
+  "merchantNameAlternateLanguage": "string",
+  "merchantCityAlternateLanguage": "string" }
+```
+Response:
+```json
+{ "qr": "string", "md5": "string" }
+```
+Check — `POST /v1/bakong/check-transection`:
+```json
+request:  { "md5": "string" }
+response: { "md5": "string" }
+```
+
+**Files:**
+- `domain/entity/qr_generate_request.dart` — request model; `fromBooking()` sets
+  `billNumber = booking.bookingNumber`, `amount = booking.totalPrice`,
+  `currency = 'KHR'`, 15-min expiry. Merchant fields are blank placeholders
+  until the Bakong merchant is provisioned.
+- `domain/entity/qr_generate_result.dart` — `qr` + `md5`.
+- `domain/entity/qr_transaction.dart` — `md5`; `isConfirmed => md5.isNotEmpty`.
+- `domain/repository/qr_code_repository.dart` — `generateQr`, `checkTransaction`.
+- `domain/usecase/generate_qr_code.dart`, `domain/usecase/check_qr_transaction.dart`.
+- `data/model/*` + `data/mapper/qr_mapper.dart` — models mirror the entities.
+- `data/datasource/qr_remote_data_source(_impl).dart` — `ApiClient` calls;
+  unwraps a possible `{ "data": ... }` envelope like the booking datasource.
+- `data/repository/qr_code_repository_impl.dart` — calls the remote source and,
+  on failure, falls back to a locally built payload (`crypto` md5) so the screen
+  works before the backend is live. **The fallbacks are marked `TODO` and must be
+  removed once the API is up.**
+- `presentation/bloc/qr_code_bloc.dart` (+ `_event`/`_state`) — events:
+  `GenerateQrCodeEvent(QrGenerateRequest)`, `ScanQrCodeEvent(String)`,
+  `CheckQrTransactionEvent(String md5)`, `ResetQrCodeEvent`. States:
+  `QrCodeInitial`, `QrCodeLoading`, `QrCodeGenerated(qrResult, request)`,
+  `QrCodeScanned(content)`, `QrTransactionChecked(transaction)`,
+  `QrCodeError(Failure)`. Constructor takes the two use cases.
+- `presentation/view/qr_code_screen.dart` — "Receive"/"Scan" toggle; renders the
+  backend `qr`; manual amount/bill form when opened without a booking; scan tab
+  uses `mobile_scanner`.
+
+**Other entry point:** Profile screen → "QR Code" menu tile
+(`context.push('/qrCode')`, no booking → manual form).
+
+**Permissions:** Android `CAMERA` (main manifest) and iOS
+`NSCameraUsageDescription` are required by `mobile_scanner`.
 
 ### `lib/feature/vehicle/presentation/bloc/`
 - `vehicle_bloc.dart`, `vehicle_state.dart`, `vehicle_event.dart` — sealed,
@@ -401,12 +498,13 @@ Feature-level shared widgets also exist: `lib/feature/vehicle/presentation/widge
 
 ## 15. Injection / GetIt — reading conventions
 
-- `getIt` alias is redeclared per file (same `GetIt.instance`). Follow suit.
-- `configureDependencies()` waits: it is `async` (main `await`s it). Current
-  registrations are all `registerLazySingleton`, so nothing heavy runs at boot.
-- When implementing a feature: register data source → repository → use case →
-  BLoC in the matching `injection/*.dart` file, and add it to the wiring in
-  `injection_container.dart` if needed.
+- `sl` alias is redeclared per file (same `GetIt.instance`). Follow suit.
+- `configureDependencies()` is `async` (main `await`s it). Most registrations
+  are `registerLazySingleton`, so nothing heavy runs at boot.
+- When implementing a feature: register data source → repository → use case in
+  a per-feature `core/di/*_injection.dart`, call it from
+  `injection_container.dart` **before** `registerBlocs()`, then add the BLoC to
+  `bloc_injection.dart`. The `qr_code` feature is the reference implementation.
 
 ---
 
@@ -418,27 +516,26 @@ flutter gen-l10n       # regenerate localization after editing .arb files
 flutter run            # run on device/emulator
 flutter analyze        # static analysis (see baseline below)
 flutter test           # WARNING: the current test fails (see Known Issues)
-flutter build apk --release   # Android release (networking broken — see Known Issues)
+flutter build apk --release   # Android release (main manifest now has INTERNET + CAMERA)
 ```
 
 ---
 
 ## 17. Known Issues & Gotchas (read before editing)
 
-1. **Dio interceptor `as Interceptor` casts** (`network_injection.dart:73,75`)
-   throw a `TypeError` as soon as the DI-resolved `Dio` is used, because
-   `AuthInterceptor`/`LoggingInterceptor` don't implement dio's `Interceptor`.
-   Deferred crash, not current startup crash — but fix it before wiring the API.
+1. **Dio interceptors are fixed** — `AuthInterceptor`/`LoggingInterceptor`
+   extend Dio's `Interceptor` and are added without casts, so resolving
+   `ApiClient` from GetIt no longer crashes. (This guide previously described a
+   `as Interceptor` landmine that has since been resolved.)
 2. **`test/widget_test.dart` is the stock counter test** and fails against
    `CarRentalApp`. Any run of `flutter test` fails today.
-3. **`android/app/src/main/AndroidManifest.xml` lacks the `INTERNET`
-   permission** (only in debug/profile manifests) → real networking breaks in
-   release builds. Also, the manifest label ("Auto Rent Premium Car") doesn't
-   match the app title.
-4. **All data is hardcoded mocks** (`vehicles`, `categories`, bookings) with
-   external Pinterest/Facebook image URLs — offline/no-network app behavior
-   falls back to these. Images require internet; no local assets exist
-   (`assets/` registered dirs are empty).
+3. **Android main manifest has `INTERNET` + `CAMERA` permissions** (CAMERA for
+   the QR scanner). iOS `Info.plist` has `NSCameraUsageDescription`. Manifest
+   label ("Auto Rent Premium Car") still doesn't match the app title.
+4. **Vehicle/booking data is still hardcoded mocks** (`vehicles`,
+   `categories`, bookings) with external Pinterest/Facebook image URLs — offline
+   behavior falls back to these. Images require internet; no local assets exist.
+   The **QR feature is the exception** (real API wiring + mock fallback).
 5. **Duplicate base URL** in `network_injection.dart` and
    `core/constants/api_constants.dart` — keep in sync or centralize.
 6. **`VehicleBloc/Event/State`** are empty stubs; the vehicle remote
@@ -446,33 +543,39 @@ flutter build apk --release   # Android release (networking broken — see Known
    commented out. So the BLoC's data path isn't active.
 7. **Roaming navigation styles:** screens mix go_router (`context.go/push`),
    `Navigator.push`, `MaterialPageRoute`, and `state.extra`. Check each file
-   before assuming.
-8. **Analyzer baseline: 14 issues, 0 errors** (as of last run). Includes
-   deprecated `withOpacity` (use `withValues`), deprecated
-   `Radio.groupValue`/`onChanged`, `library_private_types_in_public_api`
-   (mixing `_Widget` types in public APIs), `unimportant` infos
-   (`implementation_imports` in `vehicle_repository_impl.dart`,
-   `depend_on_referenced_packages` in `vehicle_bloc.dart`). Keep `flutter analyze`
-   at 0 errors.
+   before assuming. Note `Navigator.pushNamed('/booking')` in
+   `booking_confirmation_screen.dart` won't resolve under go_router.
+8. **Analyzer baseline: 43 issues, 0 errors** (as of 2026-09-17). Includes
+   unused imports in DI folder, deprecated `withOpacity` (use `withValues`),
+   deprecated `Radio.groupValue`/`onChanged`,
+   `library_private_types_in_public_api`, and `implementation_imports` in
+   `vehicle_repository_impl.dart`. Keep `flutter analyze` at 0 errors.
 9. **Locale/theme not persisted** across restarts.
 10. **Auth screens are placeholders**; there is no session/login enforcement —
-    the app opens straight into the tab shell.
-11. Recent refactors moved/deleted files (`bookng_screen.dart` → `booking_screen.dart`,
-    favorite/vehicle-card/badge widgets moved into `core/widgets/` or
-    `feature/shared/widgets/`). If a file is missing, search for its new home
-    before recreating it.
+    the app opens into the splash → tab shell.
+11. Recent refactors moved/deleted files (`bookng_screen.dart` →
+    `booking_screen.dart`, favorite/vehicle-card/badge widgets moved into
+    `core/widgets/` or `feature/shared/widgets/`). If a file is missing, search
+    for its new home before recreating it.
+12. **QR repository has temporary mock fallbacks**: `QrCodeRepositoryImpl`
+    returns a locally built payload/md5 when the Bakong API call throws. Remove
+    the fallbacks (search `TODO: remove the mock fallback`) once the backend is
+    live, and confirm the real endpoint paths/`data` envelope with the Spring
+    Boot team.
 
 ---
 
 ## 18. Where to Go Next (suggested order)
 
-1. Fix the `as Interceptor` casts + implement auth/logging interceptor stubs.
+1. Confirm the Bakong response contract with the backend, then delete the
+   `QrCodeRepositoryImpl` mock fallbacks and the `data`-envelope guesswork.
 2. Wire the vehicle feature end-to-end: register datasource → repository →
-   use case → BLoC in `injection/`, uncomment the BLoC calls in
-   `refreshData()`-style blocks, point baseUrl at the real Spring Boot API.
+   use case → BLoC in `core/di/`, uncomment the BLoC calls, point baseUrl at the
+   real Spring Boot API.
 3. Implement auth (login/signup/forgot) and persist the auth token via
    `SecureStorageService`/`AuthInterceptor`.
-4. Add `INTERNET` permission to the main Android manifest.
+4. Auto-poll `CheckQrTransactionEvent` after showing a QR until payment is
+   confirmed (replace the manual "I've Paid — Check" button).
 5. Replace `test/widget_test.dart` with a smoke test of `CarRentalApp`.
 6. Persist locale/theme (shared_preferences).
 7. Add real strings to both `.arb` files as screens grow past 9 keys.

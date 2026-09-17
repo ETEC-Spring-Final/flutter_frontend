@@ -55,35 +55,47 @@ class VehicleCardExplore extends StatelessWidget {
                       // ------------------------------------------------------
                       // CAR IMAGE
                       // ------------------------------------------------------
-                      Image.network(
-                        vehicle.images.first.fileUrl,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.high,
+                      if (vehicle.images.isNotEmpty)
+                        Image.network(
+                          vehicle.images.first.fileUrl,
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
 
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) {
-                            return child;
-                          }
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) {
+                              return child;
+                            }
 
-                          return Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          );
-                        },
+                            return Container(
+                              color: colorScheme.surfaceContainerHighest,
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          },
 
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Icon(
-                              Icons.directions_car_outlined,
-                              size: 50.r,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          );
-                        },
-                      ),
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: colorScheme.surfaceContainerHighest,
+                              child: Icon(
+                                Icons.directions_car_outlined,
+                                size: 50.r,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            );
+                          },
+                        )
+                      else
+                        Container(
+                          color: colorScheme.surfaceContainerHighest,
+                          child: Icon(
+                            Icons.directions_car_outlined,
+                            size: 50.r,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
 
                       // ------------------------------------------------------
                       // ELECTRIC BADGE

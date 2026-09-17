@@ -22,4 +22,13 @@ class AppRoutes {
 
   // Vehicle
   static const detail = "/detail";
+
+  // Vehicle CRUD (dev/test tool)
+  static const vehicleCrud = "/vehicleCrud";
+
+  // QR Code
+  static const qrCode = "/qrCode";
+
+  // Payment
+  static const payment = "/payment";
 }

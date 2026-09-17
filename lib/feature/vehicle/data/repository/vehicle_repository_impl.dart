@@ -1,4 +1,6 @@
-import 'package:fpdart/src/either.dart';
+import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
 import 'package:vehicle_rental_system/core/errors/failure.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/mapper/vehicle_mapper.dart';
@@ -30,6 +32,53 @@ class VehicleRepositoryImpl implements VehicleRepository {
       final vehicle = VehicleMapper.toEntity(model);
 
       return right(vehicle);
+    } catch (e) {
+      return left(ServiceFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Vehicle>> createVehicle(Vehicle vehicle) async {
+    try {
+      final model = await remote.createVehicle(VehicleMapper.toModel(vehicle));
+
+      return right(VehicleMapper.toEntity(model));
+    } catch (e) {
+      return left(ServiceFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Vehicle>> updateVehicle(Vehicle vehicle) async {
+    try {
+      final model = await remote.updateVehicle(VehicleMapper.toModel(vehicle));
+
+      return right(VehicleMapper.toEntity(model));
+    } catch (e) {
+      return left(ServiceFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deleteVehicle(int id) async {
+    try {
+      await remote.deleteVehicle(id);
+
+      return right(unit);
+    } catch (e) {
+      return left(ServiceFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> uploadVehicleImages(
+    int vehicleId,
+    List<File> images,
+  ) async {
+    try {
+      await remote.uploadVehicleImages(vehicleId, images);
+
+      return right(unit);
     } catch (e) {
       return left(ServiceFailure(e.toString()));
     }

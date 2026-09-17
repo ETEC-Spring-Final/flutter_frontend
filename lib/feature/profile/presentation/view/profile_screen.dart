@@ -257,6 +257,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(height: 24.h),
 
                     // =====================================================
+                    // DEVELOPER TOOLS
+                    // =====================================================
+                    _SectionTitle(title: 'Developer Tools'),
+
+                    SizedBox(height: 12.h),
+
+                    _MenuCard(
+                      children: [
+                        _MenuTile(
+                          icon: Icons.build_outlined,
+                          title: 'Vehicle CRUD (Test)',
+                          subtitle: 'Create, edit and delete vehicles',
+                          onTap: () => context.push(AppRoutes.vehicleCrud),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // =====================================================
                     // SUPPORT
                     // =====================================================
                     /*

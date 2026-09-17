@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_image_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
@@ -17,6 +19,70 @@ class VehicleRemoteDataSourceFake implements VehicleRemoteDataSource {
     return _fakeVehicles.firstWhere(
       (vehicle) => vehicle.id == id,
       orElse: () => throw Exception('Vehicle not found'),
+    );
+  }
+
+  @override
+  Future<VehicleModel> createVehicle(VehicleModel vehicle) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final nextId =
+        _fakeVehicles.fold<int>(0, (maxId, v) => v.id > maxId ? v.id : maxId) +
+        1;
+
+    final created = _copy(vehicle, id: nextId);
+    _fakeVehicles.add(created);
+
+    return created;
+  }
+
+  @override
+  Future<VehicleModel> updateVehicle(VehicleModel vehicle) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final index = _fakeVehicles.indexWhere((v) => v.id == vehicle.id);
+
+    if (index == -1) throw Exception('Vehicle not found');
+
+    final updated = _copy(vehicle);
+    _fakeVehicles[index] = updated;
+
+    return updated;
+  }
+
+  @override
+  Future<void> deleteVehicle(int id) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    _fakeVehicles.removeWhere((vehicle) => vehicle.id == id);
+  }
+
+  @override
+  Future<void> uploadVehicleImages(int vehicleId, List<File> images) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+  }
+
+  VehicleModel _copy(VehicleModel v, {int? id}) {
+    return VehicleModel(
+      id: id ?? v.id,
+      brand: v.brand,
+      model: v.model,
+      yearOfManufacture: v.yearOfManufacture,
+      licensePlate: v.licensePlate,
+      color: v.color,
+      type: v.type,
+      transmission: v.transmission,
+      fuelType: v.fuelType,
+      seats: v.seats,
+      doors: v.doors,
+      luggages: v.luggages,
+      pricePerDay: v.pricePerDay,
+      mileAge: v.mileAge,
+      description: v.description,
+      status: v.status,
+      images: v.images,
+      createdAt: v.createdAt,
+      updatedAt: v.updatedAt,
     );
   }
 }

@@ -45,30 +45,23 @@ class VehicleModel {
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
     return VehicleModel(
-      id: json['id'] ?? 0,
-      brand: json['brand'] ?? '',
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      brand: json['brandName'] ?? json['brand'] ?? '',
       model: json['model'] ?? '',
-      yearOfManufacture: json['yearOfManufacture'] ?? 0,
+      yearOfManufacture: (json['yearOfManufacture'] as num?)?.toInt() ?? 0,
       licensePlate: json['licensePlate'] ?? '',
       color: json['color'] ?? '',
-      type: json['type'] ?? '',
-      transmission: json['transmission'] ?? '',
-      fuelType: json['fuelType'] ?? '',
-      seats: json['seats'] ?? 0,
-      doors: json['doors'] ?? 0,
-      luggages: json['luggages'] ?? 0,
+      type: json['type']?.toString() ?? '',
+      transmission: json['transmission']?.toString() ?? '',
+      fuelType: json['fuelType']?.toString() ?? '',
+      seats: (json['seats'] as num?)?.toInt() ?? 0,
+      doors: (json['doors'] as num?)?.toInt() ?? 0,
+      luggages: (json['luggages'] as num?)?.toInt() ?? 0,
       pricePerDay: (json['pricePerDay'] as num?)?.toDouble() ?? 0.0,
-      mileAge: json['mileAge'] ?? 0,
+      mileAge: (json['mileAge'] as num?)?.toInt() ?? 0,
       description: json['description'] ?? '',
-      status: json['status'] ?? '',
-      images:
-          (json['images'] as List<dynamic>?)
-              ?.map(
-                (image) =>
-                    VehicleImageModel.fromJson(image as Map<String, dynamic>),
-              )
-              .toList() ??
-          [],
+      status: json['status']?.toString() ?? '',
+      images: _parseImages(json['images']),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,
@@ -76,6 +69,50 @@ class VehicleModel {
           ? DateTime.tryParse(json['updatedAt'])
           : null,
     );
+  }
+
+  static List<VehicleImageModel> _parseImages(dynamic raw) {
+    if (raw == null) return [];
+
+    if (raw is String) {
+      return [
+        VehicleImageModel(
+          id: 0,
+          fileUrl: raw,
+          isPrimary: true,
+          displayOrder: 0,
+        ),
+      ];
+    }
+
+    if (raw is List) {
+      return raw.map((image) {
+        if (image is String) {
+          return VehicleImageModel(
+            id: 0,
+            fileUrl: image,
+            isPrimary: false,
+            displayOrder: 0,
+          );
+        }
+
+        final map = image is Map<String, dynamic> ? image : <String, dynamic>{};
+        final attachment = map['attachment'];
+
+        if (attachment is Map<String, dynamic>) {
+          return VehicleImageModel(
+            id: map['id'] ?? 0,
+            fileUrl: attachment['fileUrl'] ?? '',
+            isPrimary: false,
+            displayOrder: 0,
+          );
+        }
+
+        return VehicleImageModel.fromJson(map);
+      }).toList();
+    }
+
+    return [];
   }
 
   Map<String, dynamic> toJson() {
@@ -100,5 +137,37 @@ class VehicleModel {
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
+  }
+
+  // ==========================================
+  // Create request body (no id / server-managed fields)
+  // ==========================================
+
+  Map<String, dynamic> toCreateRequest() {
+    return {
+      'brandName': brand,
+      'model': model,
+      'yearOfManufacture': yearOfManufacture,
+      'licensePlate': licensePlate,
+      'color': color,
+      'type': type,
+      'transmission': transmission,
+      'fuelType': fuelType,
+      'seats': seats,
+      'doors': doors,
+      'luggages': luggages,
+      'pricePerDay': pricePerDay,
+      'mileAge': mileAge,
+      'description': description,
+      'status': status,
+    };
+  }
+
+  // ==========================================
+  // Update request body (id included)
+  // ==========================================
+
+  Map<String, dynamic> toUpdateRequest() {
+    return {'id': id, ...toCreateRequest()};
   }
 }

@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
-import 'package:vehicle_rental_system/feature/booking/domain/entity/new_booking_request.dart';
-import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/booking_confirmation_screen.dart';
 
@@ -48,19 +45,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String selectedPayment = 'Visa';
 
   void _payNow() {
-    context.read<BookingBloc>().add(
-      CreateBookingEvent(
-        NewBookingRequest(
-          vehicleId: widget.vehicle.id,
-          startDate: widget.pickupDate,
-          endDate: widget.returnDate,
-          pickupLocation: widget.pickupLocation,
-          returnLocation: widget.returnLocation,
-          paymentMethod: selectedPayment,
-        ),
-      ),
-    );
-
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => BookingConfirmationScreen(
@@ -273,13 +257,21 @@ class _VehiclePaymentCard extends StatelessWidget {
               child: SizedBox(
                 width: 80.w,
                 height: 65.h,
-                child: Image.network(
-                  vehicle.images.first.fileUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) {
-                    return const Icon(Icons.directions_car_outlined);
-                  },
-                ),
+                child: vehicle.images.isNotEmpty
+                    ? Image.network(
+                        vehicle.images.first.fileUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) {
+                          return const Icon(Icons.directions_car_outlined);
+                        },
+                      )
+                    : Container(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          Icons.directions_car_outlined,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
               ),
             ),
 

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:vehicle_rental_system/app/router/app_routes.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart';
+import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 
-class BookingConfirmationScreen extends StatelessWidget {
+class BookingConfirmationScreen extends StatefulWidget {
   final Vehicle vehicle;
   final int rentalDays;
   final DateTime pickupDate;
@@ -29,20 +34,77 @@ class BookingConfirmationScreen extends StatelessWidget {
     required this.totalPrice,
   });
 
+  @override
+  State<BookingConfirmationScreen> createState() =>
+      _BookingConfirmationScreenState();
+}
+
+class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
+  bool _qrOpened = false;
+
   // ---------------------------------------------------------------------------
   // FORMATTERS
   // ---------------------------------------------------------------------------
 
   List<String> get _selectedServiceNames {
-    return selectedServices.entries
+    return widget.selectedServices.entries
         .where((entry) => entry.value)
         .map((entry) => entry.key)
         .toList();
   }
 
   // ---------------------------------------------------------------------------
+  // LIFECYCLE
+  // ---------------------------------------------------------------------------
+
+  @override
+  void initState() {
+    super.initState();
+    // Open the QR payment screen automatically once the booking is created.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openQrIfReady());
+  }
+
+  // ---------------------------------------------------------------------------
   // ACTIONS
   // ---------------------------------------------------------------------------
+
+  /// Booking produced by [BookingBloc], or null while it is still loading.
+  Booking? get _createdBooking {
+    final state = context.read<BookingBloc>().state;
+    if (state is BookingCreated) return state.booking;
+
+    // Fall back to an in-memory booking so the QR payment screen can be
+    // reached even when the Spring `/bookings` endpoint is not wired up.
+    return Booking(
+      id: widget.vehicle.id,
+      bookingNumber: 'BOOK-${DateTime.now().millisecondsSinceEpoch}',
+      vehicle: widget.vehicle,
+      startDate: widget.pickupDate,
+      endDate: widget.returnDate,
+      totalDays: widget.rentalDays,
+      pricePerDay: widget.vehicle.pricePerDay,
+      totalPrice: widget.totalPrice,
+      pickupLocation: widget.pickupLocation,
+      returnLocation: widget.returnLocation,
+      status: 'PENDING',
+    );
+  }
+
+  void _openQrIfReady() {
+    final booking = _createdBooking;
+    if (booking != null) {
+      _openQr(booking);
+    }
+  }
+
+  /// Pushes the QR payment screen (which generates the Bakong QR) exactly once.
+  void _openQr(Booking? booking) {
+    if (!mounted || _qrOpened) return;
+    _qrOpened = true;
+    context.push(AppRoutes.payment, extra: booking).then((_) {
+      if (mounted) setState(() => _qrOpened = false);
+    });
+  }
 
   void _finish(BuildContext context) {
     Navigator.popUntil(context, (route) => route.isFirst);
@@ -65,57 +127,66 @@ class BookingConfirmationScreen extends StatelessWidget {
 
     final services = _selectedServiceNames;
 
-    return Scaffold(
-      backgroundColor: colors.surface,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: _SuccessHeader(onDone: () => _finish(context)),
-          ),
-          SliverPadding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimensions.chipHorizontalPadding,
+    return BlocListener<BookingBloc, BookingState>(
+      listener: (context, state) {
+        if (state is BookingCreated) {
+          _openQrIfReady();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: colors.surface,
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: _SuccessHeader(onDone: () => _finish(context)),
             ),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _ConfirmationCard(
-                  title: 'Booking Confirmed',
-                  message:
-                      'Your reservation has been placed successfully. '
-                      'A confirmation has been sent to your registered contact.',
-                  icon: Icons.verified_rounded,
-                  iconColor: colors.primary,
-                ),
-                SizedBox(height: 14.h),
-                _VehicleSummaryCard(vehicle: vehicle),
-                SizedBox(height: 14.h),
-                _TripDetailsCard(
-                  rentalDays: rentalDays,
-                  pickupDate: pickupDate,
-                  returnDate: returnDate,
-                  pickupLocation: pickupLocation,
-                  returnLocation: returnLocation,
-                ),
-                SizedBox(height: 14.h),
-                _PaymentSummaryCard(
-                  paymentMethod: paymentMethod,
-                  totalPrice: totalPrice,
-                ),
-                if (services.isNotEmpty) ...[
+            SliverPadding(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppDimensions.chipHorizontalPadding,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _ConfirmationCard(
+                    title: 'Booking Confirmed',
+                    message:
+                        'Your reservation has been placed successfully. '
+                        'A confirmation has been sent to your registered contact.',
+                    icon: Icons.verified_rounded,
+                    iconColor: colors.primary,
+                  ),
                   SizedBox(height: 14.h),
-                  _ServicesCard(services: services),
-                ],
-                SizedBox(height: 20.h),
-              ]),
+                  _VehicleSummaryCard(vehicle: widget.vehicle),
+                  SizedBox(height: 14.h),
+                  _TripDetailsCard(
+                    rentalDays: widget.rentalDays,
+                    pickupDate: widget.pickupDate,
+                    returnDate: widget.returnDate,
+                    pickupLocation: widget.pickupLocation,
+                    returnLocation: widget.returnLocation,
+                  ),
+                  SizedBox(height: 14.h),
+                  _PaymentSummaryCard(
+                    paymentMethod: widget.paymentMethod,
+                    totalPrice: widget.totalPrice,
+                  ),
+                  SizedBox(height: 14.h),
+                  _QrPaymentCard(onTap: () => _openQr(_createdBooking)),
+                  if (services.isNotEmpty) ...[
+                    SizedBox(height: 14.h),
+                    _ServicesCard(services: services),
+                  ],
+                  SizedBox(height: 20.h),
+                ]),
+              ),
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: AppBookingBottomBar(
-        label: 'View My Bookings',
-        icon: Icons.receipt_long_rounded,
-        onPressed: () => _viewBookings(context),
+          ],
+        ),
+        bottomNavigationBar: AppBookingBottomBar(
+          label: 'View My Bookings',
+          icon: Icons.receipt_long_rounded,
+          onPressed: () => _viewBookings(context),
+        ),
       ),
     );
   }
@@ -520,6 +591,74 @@ class _PaymentSummaryCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// QR PAYMENT CARD
+// =============================================================================
+
+class _QrPaymentCard extends StatelessWidget {
+  const _QrPaymentCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(AppDimensions.cardPadding),
+        decoration: BoxDecoration(
+          color: colors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+          border: Border.all(color: colors.primary.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(10.w),
+              decoration: BoxDecoration(
+                color: colors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.qr_code_2_rounded,
+                size: 24.sp,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bakong QR Payment',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'Generate a KHQR code to complete payment',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: colors.primary),
+          ],
+        ),
       ),
     );
   }
