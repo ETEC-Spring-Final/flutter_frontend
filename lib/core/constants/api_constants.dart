@@ -42,6 +42,7 @@ class ApiConstants {
   static String vehicleById(int id) => '/vehicles/$id';
   static String updateVehicle(int id) => '/vehicles/$id';
   static String deleteVehicle(int id) => '/vehicles/$id';
+  static String vehicleBookedDates(int id) => '/vehicles/$id/booked-dates';
 
   //
 

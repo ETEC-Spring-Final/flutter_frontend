@@ -6,6 +6,7 @@ import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_re
 import 'package:vehicle_rental_system/feature/vehicle/data/model/brand_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_image_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_model.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/booked_date.dart';
 
 class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
   final Dio dio;
@@ -61,6 +62,17 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     }
 
     return vehicle;
+  }
+
+  @override
+  Future<List<BookedDate>> getVehicleBookedDates(int vehicleId) async {
+    final response = await dio.get(ApiConstants.vehicleBookedDates(vehicleId));
+
+    final data = response.data as List;
+
+    return data
+        .map((json) => BookedDate.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   @override

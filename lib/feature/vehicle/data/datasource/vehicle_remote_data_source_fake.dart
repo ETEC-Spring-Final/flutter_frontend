@@ -4,6 +4,7 @@ import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_re
 import 'package:vehicle_rental_system/feature/vehicle/data/model/brand_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_image_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_model.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/booked_date.dart';
 
 class VehicleRemoteDataSourceFake implements VehicleRemoteDataSource {
   @override
@@ -20,6 +21,29 @@ class VehicleRemoteDataSourceFake implements VehicleRemoteDataSource {
       for (var i = 0; i < names.length; i++)
         BrandModel(id: i + 1, name: names[i]),
     ];
+  }
+
+  @override
+  Future<List<BookedDate>> getVehicleBookedDates(int vehicleId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Demo data: simulate an active reservation on the Fortuner (id 2).
+    if (vehicleId == 2) {
+      final now = DateTime.now();
+
+      return [
+        BookedDate(
+          startDate: now.add(const Duration(days: 5)),
+          endDate: now.add(const Duration(days: 8)),
+        ),
+        BookedDate(
+          startDate: now.add(const Duration(days: 15)),
+          endDate: now.add(const Duration(days: 17)),
+        ),
+      ];
+    }
+
+    return const [];
   }
   @override
   Future<List<VehicleModel>> getVehicles() async {

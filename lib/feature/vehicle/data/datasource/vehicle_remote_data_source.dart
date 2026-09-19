@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/brand_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_image_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_model.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/booked_date.dart';
 
 abstract class VehicleRemoteDataSource {
   Future<List<VehicleModel>> getVehicles();
   Future<List<BrandModel>> getBrands();
   Future<VehicleModel> getVehicleById(int id);
+  Future<List<BookedDate>> getVehicleBookedDates(int vehicleId);
   Future<VehicleModel> createVehicle(VehicleModel vehicle);
   Future<VehicleModel> updateVehicle(VehicleModel vehicle);
   Future<void> deleteVehicle(int id);

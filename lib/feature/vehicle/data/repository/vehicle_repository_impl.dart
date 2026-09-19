@@ -6,6 +6,7 @@ import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_re
 import 'package:vehicle_rental_system/feature/vehicle/data/mapper/brand_mapper.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/mapper/vehicle_image_mapper.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/mapper/vehicle_mapper.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/booked_date.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/brand.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_image.dart';
@@ -47,6 +48,17 @@ class VehicleRepositoryImpl implements VehicleRepository {
       final vehicle = VehicleMapper.toEntity(model);
 
       return right(vehicle);
+    } catch (e) {
+      return left(ServiceFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<BookedDate>>> getVehicleBookedDates(int id) async {
+    try {
+      final dates = await remote.getVehicleBookedDates(id);
+
+      return right(dates);
     } catch (e) {
       return left(ServiceFailure(e.toString()));
     }
