@@ -156,7 +156,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
-              child: _SuccessHeader(onDone: () => _finish(context)),
+              child: _isPaid
+                  ? _SuccessHeader(onDone: () => _finish(context))
+                  : _PaymentPromptHeader(onPay: () => _openQr(_createdBooking)),
             ),
             SliverPadding(
               padding: EdgeInsets.symmetric(
@@ -165,11 +167,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _ConfirmationCard(
-                    title: 'Booking Confirmed',
-                    message:
-                        'Your reservation has been placed successfully. '
-                        'A confirmation has been sent to your registered contact.',
-                    icon: Icons.verified_rounded,
+                    title: _isPaid ? 'Booking Confirmed' : 'Booking Placed',
+                    message: _isPaid
+                        ? 'Your reservation has been placed successfully. '
+                            'A confirmation has been sent to your registered contact.'
+                        : 'We received your booking. Complete the QR payment to confirm it.',
+                    icon: _isPaid
+                        ? Icons.verified_rounded
+                        : Icons.schedule_rounded,
                     iconColor: colors.primary,
                   ),
                   SizedBox(height: 14.h),
@@ -201,20 +206,13 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
           ],
         ),
         bottomNavigationBar: AppBookingBottomBar(
-          label: 'View My Bookings',
-          icon: Icons.receipt_long_rounded,
-          //onPressed: () => _viewBookings(context),
-          onPressed: () {
-            if (!mounted) return;
-
-            // Refresh the booking list.
-            context.read<BookingBloc>().add(
-              const LoadBookingsEvent(refresh: true),
-            );
-
-            // Switch to the Bookings tab in MainScreen.
-            widget.onBookingTap?.call();
-          },
+          label: _isPaid ? 'View My Bookings' : 'Pay Now',
+          icon: _isPaid
+              ? Icons.receipt_long_rounded
+              : Icons.qr_code_2_rounded,
+          onPressed: _isPaid
+              ? () => _viewBookings(context)
+              : () => _openQr(_createdBooking),
         ),
       ),
     );
@@ -273,6 +271,80 @@ class _SuccessHeader extends StatelessWidget {
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.9),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// PAYMENT PROMPT HEADER (shown until the user completes the QR scan)
+// =============================================================================
+
+class _PaymentPromptHeader extends StatelessWidget {
+  const _PaymentPromptHeader({required this.onPay});
+
+  final VoidCallback onPay;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 32.h),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colors.primary, colors.tertiary],
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32.r),
+          bottomRight: Radius.circular(32.r),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(18.w),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.qr_code_2_rounded,
+              size: 56.sp,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 20.h),
+          Text(
+            'Almost There!',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            'Complete the QR payment to confirm your booking',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ),
+          SizedBox(height: 18.h),
+          FilledButton.icon(
+            onPressed: onPay,
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: colors.primary,
+            ),
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            label: const Text('Pay Now'),
           ),
         ],
       ),
