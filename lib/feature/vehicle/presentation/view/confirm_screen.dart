@@ -105,11 +105,9 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
       return;
     }
 
-    // Payment succeeded -> go straight to the booking confirmation screen and
-    // create the real booking on the backend in the background so it appears
-    // under the Booking tab.
-    _openConfirmation(provisional);
-
+    // The QR was scanned successfully. Only now create the real booking; the
+    // confirmation screen is shown once the reservation actually exists, so a
+    // booking can never be created without a successful payment.
     context.read<BookingBloc>().add(
       CreateBookingEvent(
         NewBookingRequest(
@@ -150,8 +148,15 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
 
     return BlocListener<BookingBloc, BookingState>(
       listener: (context, state) {
-        if (state is BookingError && _isCreating) {
+        if (!_isCreating) return;
+
+        if (state is BookingCreated) {
+          _openConfirmation(state.booking);
+        } else if (state is BookingError) {
           setState(() => _isCreating = false);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.failure.message)));
         }
       },
       child: Scaffold(
