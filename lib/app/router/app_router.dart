@@ -147,7 +147,10 @@ class AppRouter {
         path: AppRoutes.home,
         name: RouterNames.home,
         builder: (context, state) {
-          return const MainScreen(index: 0);
+          // `state.extra` may carry the initial tab index (e.g. 2 = Booking).
+          final index = state.extra is int ? state.extra as int : 0;
+
+          return MainScreen(index: index);
         },
       ),
 

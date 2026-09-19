@@ -138,10 +138,11 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
     if (!mounted) return;
 
     // Make sure the booking list reflects the newly created booking, then
-    // open the Booking tab list.
+    // open the Booking tab inside the main shell so the bottom navigation
+    // (Home / Booking / Profile...) stays available.
     context.read<BookingBloc>().add(const LoadBookingsEvent(refresh: true));
     widget.onBookingTap?.call();
-    context.go(AppRoutes.booking);
+    context.go(AppRoutes.home, extra: 2);
   }
 
   // ---------------------------------------------------------------------------
