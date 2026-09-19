@@ -65,4 +65,25 @@ class ApiEndpoints {
 
   /// Payload: `{ "md5": "string" }`
   static const String checkTransaction = '/v1/bakong/check-transaction';
+
+  // ==========================================
+  // Notifications
+  // ==========================================
+
+  /// Current user's notifications, newest first.
+  static const String notificationsInbox = '/notifications/me/inbox';
+
+  /// Unread count for the notification badge.
+  static const String notificationsUnreadCount = '/notifications/me/unread-count';
+
+  /// Mark every notification of the current user as read.
+  static const String notificationsReadAll = '/notifications/me/read-all';
+
+  static String notificationRead(int id) {
+    return '/notifications/$id/read';
+  }
+
+  static String notificationById(int id) {
+    return '/notifications/$id';
+  }
 }

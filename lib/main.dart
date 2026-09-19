@@ -5,6 +5,7 @@ import 'package:vehicle_rental_system/app/theme/bloc/theme_bloc.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
 import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/favorite/presentation/bloc/favorite_bloc.dart';
+import 'package:vehicle_rental_system/feature/notification/presentation/bloc/notification_bloc.dart';
 import 'package:vehicle_rental_system/feature/payment/presentation/bloc/payment_bloc.dart';
 import 'package:vehicle_rental_system/feature/rental/presentation/bloc/rental_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
@@ -26,6 +27,7 @@ void main() async {
         BlocProvider<VehicleBloc>(create: (_) => sl<VehicleBloc>()),
         BlocProvider<PaymentBloc>(create: (_) => sl<PaymentBloc>()),
         BlocProvider<RentalBloc>(create: (_) => sl<RentalBloc>()),
+        BlocProvider<NotificationBloc>(create: (_) => sl<NotificationBloc>()),
       ],
       child: const CarRentalApp(),
     ),

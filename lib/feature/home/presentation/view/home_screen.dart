@@ -17,6 +17,8 @@ import 'package:vehicle_rental_system/feature/home/presentation/widgets/animated
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/home_banner_slider.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/popular_cars_section.dart';
 
+import 'package:vehicle_rental_system/feature/notification/presentation/bloc/notification_bloc.dart';
+
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_category.dart';
 
@@ -156,10 +158,20 @@ class _HomeScreenState extends State<HomeScreen>
                   onTap: () {
                     context.go(AppRoutes.notification);
                   },
-                  child: AppNotification(
-                    notificationCount: 5,
-                    onTap: () {
-                      context.go(AppRoutes.notification);
+                  child: BlocBuilder<NotificationBloc, NotificationState>(
+                    builder: (context, state) {
+                      final unreadCount = state is NotificationLoaded
+                          ? state.notifications
+                                .where((n) => !n.isRead)
+                                .length
+                          : 0;
+
+                      return AppNotification(
+                        notificationCount: unreadCount,
+                        onTap: () {
+                          context.go(AppRoutes.notification);
+                        },
+                      );
                     },
                   ),
                 ),
