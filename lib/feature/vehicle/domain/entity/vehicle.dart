@@ -2,6 +2,7 @@ import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_imag
 
 class Vehicle {
   final int id;
+  final int brandId;
   final String brand;
   final String model;
   final int yearOfManufacture;
@@ -23,6 +24,7 @@ class Vehicle {
 
   const Vehicle({
     required this.id,
+    this.brandId = 0,
     required this.brand,
     required this.model,
     required this.yearOfManufacture,
@@ -45,6 +47,7 @@ class Vehicle {
 
   Vehicle copyWith({
     int? id,
+    int? brandId,
     String? brand,
     String? model,
     int? yearOfManufacture,
@@ -66,6 +69,7 @@ class Vehicle {
   }) {
     return Vehicle(
       id: id ?? this.id,
+      brandId: brandId ?? this.brandId,
       brand: brand ?? this.brand,
       model: model ?? this.model,
       yearOfManufacture: yearOfManufacture ?? this.yearOfManufacture,

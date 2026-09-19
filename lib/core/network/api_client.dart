@@ -58,6 +58,24 @@ class ApiClient {
   }
 
   // ==========================================
+  // PATCH
+  // ==========================================
+
+  Future<Response<T>> patch<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return await _dio.patch<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  // ==========================================
   // DELETE
   // ==========================================
 

@@ -91,14 +91,14 @@ class _HeaderImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final imageUrl = vehicle.images.isNotEmpty ? vehicle.images.first : '';
+    final imageUrl = vehicle.images.isNotEmpty ? vehicle.images.first.fileUrl : '';
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        imageUrl.toString().isNotEmpty
+        imageUrl.isNotEmpty
             ? Image.network(
-                imageUrl.toString(),
+                imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, e) => _Placeholder(theme),
                 loadingBuilder: (context, child, loadingProgress) {

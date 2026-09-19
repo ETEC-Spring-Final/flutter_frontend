@@ -5,7 +5,7 @@ import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/payment_screen.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/confirm_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 
 class AdditionalServicesScreen extends StatefulWidget {
@@ -17,6 +17,9 @@ class AdditionalServicesScreen extends StatefulWidget {
   final TimeOfDay pickupTime;
   final TimeOfDay returnTime;
 
+  final int pickupLocationId;
+  final int returnLocationId;
+
   final String pickupLocation;
   final String returnLocation;
 
@@ -27,6 +30,8 @@ class AdditionalServicesScreen extends StatefulWidget {
     required this.returnDate,
     required this.pickupTime,
     required this.returnTime,
+    required this.pickupLocationId,
+    required this.returnLocationId,
     required this.pickupLocation,
     required this.returnLocation,
   });
@@ -93,7 +98,7 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PaymentScreen(
+        builder: (_) => ConfirmScreen(
           vehicle: widget.vehicle,
           rentalDays: rentalDays,
           rentalPrice: rentalPrice,
@@ -102,6 +107,10 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
           selectedServices: selectedServices,
           pickupDate: widget.pickupDate,
           returnDate: widget.returnDate,
+          pickupTime: widget.pickupTime,
+          returnTime: widget.returnTime,
+          pickUpLocationId: widget.pickupLocationId,
+          returnLocationId: widget.returnLocationId,
           pickupLocation: widget.pickupLocation,
           returnLocation: widget.returnLocation,
         ),

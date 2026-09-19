@@ -2,6 +2,7 @@ import 'vehicle_image_model.dart';
 
 class VehicleModel {
   final int id;
+  final int brandId;
   final String brand;
   final String model;
   final int yearOfManufacture;
@@ -23,6 +24,7 @@ class VehicleModel {
 
   const VehicleModel({
     required this.id,
+    this.brandId = 0,
     required this.brand,
     required this.model,
     required this.yearOfManufacture,
@@ -43,9 +45,34 @@ class VehicleModel {
     this.updatedAt,
   });
 
-  factory VehicleModel.fromJson(Map<String, dynamic> json) {
+  /// Minimal placeholder used when a referenced vehicle cannot be resolved
+  /// (e.g. a reservation points at a deleted/unreachable vehicle).
+  factory VehicleModel.placeholder(int id) {
     return VehicleModel(
+      id: id,
+      brandId: 0,
+      brand: 'Vehicle',
+      model: '',
+      yearOfManufacture: 0,
+      licensePlate: '',
+      color: '',
+      type: '',
+      transmission: '',
+      fuelType: '',
+      seats: 0,
+      doors: 0,
+      luggages: 0,
+      pricePerDay: 0,
+      mileAge: 0,
+      description: '',
+      status: '',
+      images: const [],
+    );
+  }
+
+  factory VehicleModel.fromJson(Map<String, dynamic> json) {    return VehicleModel(
       id: (json['id'] as num?)?.toInt() ?? 0,
+      brandId: (json['brandId'] as num?)?.toInt() ?? 0,
       brand: json['brandName'] ?? json['brand'] ?? '',
       model: json['model'] ?? '',
       yearOfManufacture: (json['yearOfManufacture'] as num?)?.toInt() ?? 0,
@@ -102,9 +129,11 @@ class VehicleModel {
         if (attachment is Map<String, dynamic>) {
           return VehicleImageModel(
             id: map['id'] ?? 0,
+            vehicleId: (map['vehicleId'] as num?)?.toInt() ?? 0,
+            attachmentId: attachment['id'] ?? 0,
             fileUrl: attachment['fileUrl'] ?? '',
-            isPrimary: false,
-            displayOrder: 0,
+            isPrimary: attachment['isPrimary'] ?? false,
+            displayOrder: attachment['displayOrder'] ?? 0,
           );
         }
 
@@ -118,6 +147,7 @@ class VehicleModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'brandId': brandId,
       'brand': brand,
       'model': model,
       'yearOfManufacture': yearOfManufacture,
@@ -145,7 +175,7 @@ class VehicleModel {
 
   Map<String, dynamic> toCreateRequest() {
     return {
-      'brandName': brand,
+      'brandId': brandId,
       'model': model,
       'yearOfManufacture': yearOfManufacture,
       'licensePlate': licensePlate,

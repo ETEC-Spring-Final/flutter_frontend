@@ -11,6 +11,8 @@ import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
+  final VoidCallback? onBookingTap;
+  final Booking? createdBooking;
   final Vehicle vehicle;
   final int rentalDays;
   final DateTime pickupDate;
@@ -23,6 +25,8 @@ class BookingConfirmationScreen extends StatefulWidget {
 
   const BookingConfirmationScreen({
     super.key,
+    this.onBookingTap,
+    this.createdBooking,
     required this.vehicle,
     required this.rentalDays,
     required this.pickupDate,
@@ -41,6 +45,8 @@ class BookingConfirmationScreen extends StatefulWidget {
 
 class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   bool _qrOpened = false;
+
+  bool _isPaid = false;
 
   // ---------------------------------------------------------------------------
   // FORMATTERS
@@ -70,6 +76,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
   /// Booking produced by [BookingBloc], or null while it is still loading.
   Booking? get _createdBooking {
+    if (widget.createdBooking != null) return widget.createdBooking;
+
     final state = context.read<BookingBloc>().state;
     if (state is BookingCreated) return state.booking;
 
@@ -98,11 +106,17 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   /// Pushes the QR payment screen (which generates the Bakong QR) exactly once.
+  /// When the user completes the scan and payment succeeds, the payment screen
+  /// pops back with `true` so the booking is marked as paid.
   void _openQr(Booking? booking) {
     if (!mounted || _qrOpened) return;
     _qrOpened = true;
-    context.push(AppRoutes.payment, extra: booking).then((_) {
-      if (mounted) setState(() => _qrOpened = false);
+    context.push(AppRoutes.payment, extra: booking).then((result) {
+      if (!mounted) return;
+      setState(() {
+        if (result == true) _isPaid = true;
+        _qrOpened = false;
+      });
     });
   }
 
@@ -111,9 +125,12 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   void _viewBookings(BuildContext context) {
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil('/booking', (route) => route.isFirst);
+    if (!mounted) return;
+
+    // Make sure the booking list reflects the newly created booking.
+    context.read<BookingBloc>().add(const LoadBookingsEvent(refresh: true));
+    widget.onBookingTap?.call();
+    //context.go(AppRoutes.booking);
   }
 
   // ---------------------------------------------------------------------------
@@ -169,6 +186,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                   _PaymentSummaryCard(
                     paymentMethod: widget.paymentMethod,
                     totalPrice: widget.totalPrice,
+                    isPaid: _isPaid,
                   ),
                   SizedBox(height: 14.h),
                   _QrPaymentCard(onTap: () => _openQr(_createdBooking)),
@@ -185,7 +203,18 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         bottomNavigationBar: AppBookingBottomBar(
           label: 'View My Bookings',
           icon: Icons.receipt_long_rounded,
-          onPressed: () => _viewBookings(context),
+          //onPressed: () => _viewBookings(context),
+          onPressed: () {
+            if (!mounted) return;
+
+            // Refresh the booking list.
+            context.read<BookingBloc>().add(
+              const LoadBookingsEvent(refresh: true),
+            );
+
+            // Switch to the Bookings tab in MainScreen.
+            widget.onBookingTap?.call();
+          },
         ),
       ),
     );
@@ -545,10 +574,12 @@ class _PaymentSummaryCard extends StatelessWidget {
   const _PaymentSummaryCard({
     required this.paymentMethod,
     required this.totalPrice,
+    required this.isPaid,
   });
 
   final String paymentMethod;
   final double totalPrice;
+  final bool isPaid;
 
   @override
   Widget build(BuildContext context) {
@@ -582,11 +613,33 @@ class _PaymentSummaryCard extends StatelessWidget {
           SizedBox(height: 4.h),
           Align(
             alignment: Alignment.centerRight,
-            child: Text(
-              'Paid',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.primary,
-                fontWeight: FontWeight.w700,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: (isPaid ? colors.primary : colors.error).withValues(
+                  alpha: 0.1,
+                ),
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isPaid
+                        ? Icons.check_circle_rounded
+                        : Icons.schedule_rounded,
+                    size: 14.sp,
+                    color: isPaid ? colors.primary : colors.error,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    isPaid ? 'Paid' : 'Payment Pending',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isPaid ? colors.primary : colors.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:vehicle_rental_system/feature/booking/data/mapper/booking_mapper
 import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/entity/new_booking_request.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/repository/booking_repository.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/rental_location.dart';
 
 class BookingRepositoryImpl implements BookingRepository {
   final BookingRemoteDataSource remote;
@@ -43,6 +44,17 @@ class BookingRepositoryImpl implements BookingRepository {
       final model = await remote.cancelBooking(id);
 
       return Right(BookingMapper.toEntity(model));
+    } catch (e) {
+      return Left(ServiceFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<RentalLocation>>> getLocations() async {
+    try {
+      final locations = await remote.getLocations();
+
+      return Right(locations);
     } catch (e) {
       return Left(ServiceFailure(e.toString()));
     }

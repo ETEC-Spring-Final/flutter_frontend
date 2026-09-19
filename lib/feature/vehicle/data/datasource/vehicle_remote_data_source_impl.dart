@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:vehicle_rental_system/core/constants/api_constants.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
+import 'package:vehicle_rental_system/feature/vehicle/data/model/brand_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_image_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_model.dart';
 
@@ -10,6 +11,18 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
   final Dio dio;
 
   VehicleRemoteDataSourceImpl(this.dio);
+
+  @override
+  Future<List<BrandModel>> getBrands() async {
+    // Spring Boot returns a raw JSON list (not wrapped in { data: ... }).
+    final response = await dio.get(ApiConstants.brands);
+
+    final data = response.data as List;
+
+    return data
+        .map((json) => BrandModel.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
 
   @override
   Future<List<VehicleModel>> getVehicles() async {
@@ -84,17 +97,65 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
   }
 
   @override
-  Future<void> uploadVehicleImages(int vehicleId, List<File> images) async {
+  Future<List<VehicleImageModel>> uploadVehicleImages(
+    int vehicleId,
+    List<File> images,
+  ) async {
+    final created = <VehicleImageModel>[];
+
     for (final image in images) {
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(image.path),
+        'documentType': 'VEHICLE_IMAGE',
       });
 
-      await dio.post(
-        ApiConstants.uploadVehicleImages(vehicleId),
+      final uploadResponse = await dio.post(
+        ApiConstants.attachmentsUpload,
         data: formData,
       );
+      final uploadData = uploadResponse.data as Map<String, dynamic>;
+      final attachmentId = (uploadData['id'] as num?)?.toInt() ?? 0;
+
+      final linkResponse = await dio.post(
+        ApiConstants.vehicleImages,
+        data: {
+          'vehicleId': vehicleId,
+          'attachmentId': attachmentId,
+          'isPrimary': false,
+          'displayOrder': 0,
+        },
+      );
+
+      created.add(
+        VehicleImageModel.fromJson(linkResponse.data as Map<String, dynamic>),
+      );
     }
+
+    return created;
+  }
+
+  @override
+  Future<void> deleteVehicleImage(int vehicleImageId) async {
+    await dio.delete(ApiConstants.deleteVehicleImage(vehicleImageId));
+  }
+
+  @override
+  Future<void> updateVehicleImage(
+    int vehicleImageId, {
+    required int vehicleId,
+    required int attachmentId,
+    required bool isPrimary,
+    required int displayOrder,
+  }) async {
+    await dio.put(
+      ApiConstants.updateVehicleImage(vehicleImageId),
+      data: {
+        'vehicleId': vehicleId,
+        'attachmentId': attachmentId,
+        'isPrimary': isPrimary,
+        'displayOrder': displayOrder,
+      },
+    );
   }
 
   Future<void> _attachImages(VehicleModel vehicle) async {
@@ -119,9 +180,11 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
 
         return VehicleImageModel(
           id: map['id'] ?? 0,
+          vehicleId: (map['vehicleId'] as num?)?.toInt() ?? 0,
+          attachmentId: attachment?['id'] ?? 0,
           fileUrl: attachment?['fileUrl'] ?? '',
-          isPrimary: false,
-          displayOrder: 0,
+          isPrimary: attachment?['isPrimary'] ?? false,
+          displayOrder: attachment?['displayOrder'] ?? 0,
         );
       }).toList();
     } catch (_) {

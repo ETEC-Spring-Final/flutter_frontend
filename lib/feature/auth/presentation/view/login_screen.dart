@@ -204,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // ==================================================
                 BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
-                    if (state is AuthSuccess) {
+                    if (state is AuthSuccess || state is AuthAuthenticated) {
                       return context.go(AppRoutes.mainHome);
                     }
 

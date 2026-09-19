@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart';
 import 'package:vehicle_rental_system/feature/rental/presentation/bloc/rental_bloc.dart';
 import 'package:vehicle_rental_system/feature/rental/presentation/bloc/rental_event.dart';
@@ -27,12 +29,16 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   Timer? _timer;
 
+  Timer? _checkTimer;
+
   int _remainingSeconds = 300;
 
   String? _qr;
   String? _md5;
 
   bool _paymentSuccess = false;
+
+  bool _manualCheckRequested = false;
 
   @override
   void initState() {
@@ -43,9 +49,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
 
     // Fetch the vehicle + rental details from the Spring Boot API.
-    context
-        .read<VehicleBloc>()
-        .add(GetVehicleById(widget.booking.vehicle.id));
+    context.read<VehicleBloc>().add(GetVehicleById(widget.booking.vehicle.id));
 
     context.read<RentalBloc>().add(const GetUserRentalsEvent());
 
@@ -56,6 +60,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds <= 0) {
         timer.cancel();
+        _checkTimer?.cancel();
         return;
       }
 
@@ -75,8 +80,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
         '${seconds.toString().padLeft(2, '0')}';
   }
 
-  void _checkPayment() {
-    if (_md5 == null) return;
+  /// Polls the backend automatically once the QR is generated so the booking
+  /// is marked as paid as soon as the user completes the scan in the Bakong
+  /// app, without requiring them to tap "Check Payment".
+  void _startAutoCheck() {
+    _checkTimer?.cancel();
+
+    _checkPayment(auto: true);
+
+    _checkTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _checkPayment(auto: true);
+    });
+  }
+
+  void _checkPayment({bool auto = false}) {
+    if (_md5 == null || _paymentSuccess || _remainingSeconds <= 0) return;
+
+    _manualCheckRequested = !auto;
 
     context.read<PaymentBloc>().add(CheckPaymentEvent(md5: _md5!));
   }
@@ -84,6 +104,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _checkTimer?.cancel();
     super.dispose();
   }
 
@@ -92,7 +113,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Payment'), centerTitle: true),
+      appBar: AppBar(
+        leading: AppBackButton(),
+        title: const Text('Payment'),
+        centerTitle: true,
+      ),
       body: BlocConsumer<PaymentBloc, PaymentState>(
         listener: (context, state) {
           if (state is QrCreated) {
@@ -100,6 +125,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
               _qr = state.response.qr;
               _md5 = state.response.md5;
             });
+
+            // Auto-detect when the user completes the scan.
+            _startAutoCheck();
           }
 
           if (state is PaymentSuccess) {
@@ -107,15 +135,33 @@ class _PaymentScreenState extends State<PaymentScreen> {
               _paymentSuccess = true;
             });
 
+            _timer?.cancel();
+            _checkTimer?.cancel();
+
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('Payment successful')));
+
+            // Auto-navigate back to the booking confirmation screen and
+            // mark the booking as paid.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) context.pop(true);
+            });
+          }
+
+          if (state is PaymentSuccess) {
+            _manualCheckRequested = false;
           }
 
           if (state is PaymentFailure) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            // Polling failures are expected while the user hasn't completed
+            // the scan yet, so stay silent unless the user tapped the button.
+            if (_manualCheckRequested) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
+            }
+            _manualCheckRequested = false;
           }
         },
         builder: (context, state) {
@@ -131,15 +177,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
                 SizedBox(height: 20.h),
 
-                _buildDetails(theme),
-
-                SizedBox(height: 20.h),
-
                 _buildAmount(theme),
 
                 SizedBox(height: 20.h),
 
                 _buildQrCard(theme),
+
+                SizedBox(height: 20.h),
+
+                _buildDetails(theme),
 
                 SizedBox(height: 20.h),
 
@@ -193,8 +239,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget _buildDetails(ThemeData theme) {
     return BlocBuilder<VehicleBloc, VehicleState>(
       builder: (context, vehicleState) {
-        final vehicle = vehicleState is VehicleLoaded &&
-                vehicleState.vehicles.isNotEmpty
+        final vehicle =
+            vehicleState is VehicleLoaded && vehicleState.vehicles.isNotEmpty
             ? vehicleState.vehicles.first
             : widget.booking.vehicle;
 
@@ -258,7 +304,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ),
                       ),
                       Text(
-                        '${vehicle.pricePerDay.toStringAsFixed(0)} KHR/day',
+                        '\$${vehicle.pricePerDay.toStringAsFixed(0)} /day',
                         style: theme.textTheme.labelLarge?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w700,
@@ -283,7 +329,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         child: SizedBox(
                           height: 18.w,
                           width: 18.w,
-                          child: const CircularProgressIndicator(strokeWidth: 2),
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
                         ),
                       ),
                     )
@@ -319,7 +367,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         _detailRow(
           theme,
           'Total',
-          '${rental.totalPrice.toStringAsFixed(2)} KHR',
+          '\$\${rental.totalPrice.toStringAsFixed(2)}',
           emphasize: true,
         ),
       ],
@@ -337,7 +385,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         _detailRow(
           theme,
           'Total',
-          '${booking.totalPrice.toStringAsFixed(2)} KHR',
+          '\$${booking.totalPrice.toStringAsFixed(2)}',
           emphasize: true,
         ),
       ],
@@ -415,7 +463,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           SizedBox(height: 5.h),
 
           Text(
-            '${widget.booking.totalPrice.toStringAsFixed(2)} KHR',
+            '\$${widget.booking.totalPrice.toStringAsFixed(2)}',
             style: theme.textTheme.headlineMedium?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -433,15 +481,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: theme.dividerColor),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         children: [
           Text(
             expired ? 'QR Code Expired' : 'Scan QR Code',
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 16.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -451,16 +501,39 @@ class _PaymentScreenState extends State<PaymentScreen> {
           if (_qr != null)
             Opacity(
               opacity: expired ? 0.3 : 1,
-              child: QrImageView(
-                data: _qr!,
-                size: 250.w,
-                version: QrVersions.auto,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  QrImageView(
+                    data: _qr!,
+                    size: 250.w,
+                    version: QrVersions.auto,
+                    backgroundColor: Colors.white,
+                  ),
+
+                  // Bakong logo
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(50.r),
+                    child: Container(
+                      width: 45.w,
+                      height: 45.w,
+                      padding: EdgeInsets.all(3.w),
+                      color: Colors.white,
+                      child: Image.network(
+                        'https://api.nuget.org/v3-flatcontainer/kh.gov.nbc.bakongkhqr/1.0.0.15/icon',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             )
           else
             SizedBox(
               height: 250.w,
-              child: const Center(child: CircularProgressIndicator()),
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.blue),
+              ),
             ),
 
           SizedBox(height: 15.h),
@@ -468,17 +541,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.timer_outlined,
-                size: 20.sp,
-                color: theme.colorScheme.primary,
-              ),
+              Icon(Icons.timer_outlined, size: 20.sp, color: Colors.blue),
 
               SizedBox(width: 6.w),
 
               Text(
                 expired ? 'Expired' : 'Expires in $_remainingTime',
-                style: theme.textTheme.bodyMedium?.copyWith(
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -605,7 +676,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         child: ElevatedButton(
           onPressed: _md5 == null || _paymentSuccess || _remainingSeconds <= 0
               ? null
-              : _checkPayment,
+              : () => _checkPayment(auto: false),
           child: _paymentSuccess
               ? const Text('Payment Completed')
               : const Text('Check Payment'),

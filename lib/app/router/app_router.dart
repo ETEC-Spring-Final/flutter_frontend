@@ -14,7 +14,7 @@ import '../../feature/vehicle/presentation/view/booking_screen.dart';
 import '../../feature/vehicle/presentation/view/explore_screen.dart';
 import '../../feature/vehicle/presentation/view/favorite_screen.dart';
 import '../../feature/vehicle/presentation/view/vehicle_detial/vehicle_detail_screen.dart';
-import '../../feature/payment/presentation/screens/payment_screen.dart';
+import '../../feature/payment/presentation/view/payment_screen.dart';
 import '../../feature/vehicle/presentation/view/vehicle_crud_screen.dart';
 import '../router/app_routes.dart';
 

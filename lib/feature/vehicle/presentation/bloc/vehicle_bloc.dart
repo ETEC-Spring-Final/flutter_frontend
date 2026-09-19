@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/brand.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_image.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/repository/vehicle_repository.dart';
 
 part 'vehicle_event.dart';
@@ -11,9 +13,13 @@ part 'vehicle_state.dart';
 class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
   final VehicleRepository repository;
 
+  List<Vehicle> _vehicles = const [];
+  List<Brand> _brands = const [];
+
   VehicleBloc(this.repository) : super(VehicleInitial()) {
     on<GetVehicles>(_onGetVehicles);
     on<GetVehicleById>(_onGetVehicleById);
+    on<GetBrands>(_onGetBrands);
     on<CreateVehicleEvent>(_onCreateVehicle);
     on<UpdateVehicleEvent>(_onUpdateVehicle);
     on<DeleteVehicleEvent>(_onDeleteVehicle);
@@ -29,7 +35,27 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
 
     result.fold(
       (failure) => emit(VehicleError(failure.message)),
-      (vehicles) => emit(VehicleLoaded(vehicles)),
+      (vehicles) {
+        _vehicles = vehicles;
+        emit(VehicleLoaded(_vehicles, _brands));
+      },
+    );
+  }
+
+  Future<void> _onGetBrands(
+    GetBrands event,
+    Emitter<VehicleState> emit,
+  ) async {
+    final result = await repository.getBrands();
+
+    result.fold(
+      (failure) {
+        if (_vehicles.isEmpty) emit(VehicleError(failure.message));
+      },
+      (brands) {
+        _brands = brands;
+        emit(VehicleLoaded(_vehicles, _brands));
+      },
     );
   }
 
@@ -43,7 +69,10 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
 
     result.fold(
       (failure) => emit(VehicleError(failure.message)),
-      (vehicle) => emit(VehicleLoaded([vehicle])),
+      (vehicle) {
+        _vehicles = [vehicle];
+        emit(VehicleLoaded(_vehicles, _brands));
+      },
     );
   }
 
@@ -61,14 +90,35 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
     }
 
     final created = result.getRight().toNullable()!;
-    final images = event.images;
+    final edits = event.imageEdits;
 
-    if (images != null && images.isNotEmpty) {
-      final upload = await repository.uploadVehicleImages(created.id, images);
+    if (edits != null && edits.newImages.isNotEmpty) {
+      final upload = await repository.uploadVehicleImages(created.id, edits.newImages);
 
       if (upload.isLeft()) {
         emit(VehicleError(upload.getLeft().toNullable()!.message));
         return;
+      }
+
+      final links = upload.getRight().toNullable()!;
+      final primaryIndex = edits.primaryNewImageIndex;
+      final primaryLink = primaryIndex != null && links.length > primaryIndex
+          ? links[primaryIndex]
+          : (links.isNotEmpty ? links.first : null);
+
+      if (primaryLink != null) {
+        final primary = await repository.updateVehicleImage(
+          primaryLink.id,
+          vehicleId: created.id,
+          attachmentId: primaryLink.attachmentId,
+          isPrimary: true,
+          displayOrder: primaryLink.displayOrder,
+        );
+
+        if (primary.isLeft()) {
+          emit(VehicleError(primary.getLeft().toNullable()!.message));
+          return;
+        }
       }
     }
 
@@ -89,14 +139,69 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
     }
 
     final updated = result.getRight().toNullable()!;
-    final images = event.images;
+    final edits = event.imageEdits;
 
-    if (images != null && images.isNotEmpty) {
-      final upload = await repository.uploadVehicleImages(updated.id, images);
+    if (edits != null && !edits.isEmpty) {
+      for (final id in edits.removeImageIds) {
+        final removed = await repository.deleteVehicleImage(id);
 
-      if (upload.isLeft()) {
-        emit(VehicleError(upload.getLeft().toNullable()!.message));
-        return;
+        if (removed.isLeft()) {
+          emit(VehicleError(removed.getLeft().toNullable()!.message));
+          return;
+        }
+      }
+
+      List<VehicleImage> links = const [];
+      if (edits.newImages.isNotEmpty) {
+        final upload =
+            await repository.uploadVehicleImages(updated.id, edits.newImages);
+
+        if (upload.isLeft()) {
+          emit(VehicleError(upload.getLeft().toNullable()!.message));
+          return;
+        }
+        links = upload.getRight().toNullable()!;
+      }
+
+      if (edits.primaryNewImageIndex != null && links.isNotEmpty) {
+        final index = edits.primaryNewImageIndex!;
+        final link = links.length > index ? links[index] : links.first;
+
+        final primary = await repository.updateVehicleImage(
+          link.id,
+          vehicleId: updated.id,
+          attachmentId: link.attachmentId,
+          isPrimary: true,
+          displayOrder: link.displayOrder,
+        );
+
+        if (primary.isLeft()) {
+          emit(VehicleError(primary.getLeft().toNullable()!.message));
+          return;
+        }
+      } else if (edits.primaryImageId != null) {
+        VehicleImage? target;
+        for (final image in event.vehicle.images) {
+          if (image.id == edits.primaryImageId) {
+            target = image;
+            break;
+          }
+        }
+
+        if (target != null) {
+          final primary = await repository.updateVehicleImage(
+            target.id,
+            vehicleId: updated.id,
+            attachmentId: target.attachmentId,
+            isPrimary: true,
+            displayOrder: target.displayOrder,
+          );
+
+          if (primary.isLeft()) {
+            emit(VehicleError(primary.getLeft().toNullable()!.message));
+            return;
+          }
+        }
       }
     }
 

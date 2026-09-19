@@ -1,10 +1,26 @@
 import 'dart:io';
 
+import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
+import 'package:vehicle_rental_system/feature/vehicle/data/model/brand_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_image_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_model.dart';
-import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
 
 class VehicleRemoteDataSourceFake implements VehicleRemoteDataSource {
+  @override
+  Future<List<BrandModel>> getBrands() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final names = _fakeVehicles
+        .map((v) => v.brand)
+        .where((n) => n.isNotEmpty)
+        .toSet()
+        .toList();
+
+    return [
+      for (var i = 0; i < names.length; i++)
+        BrandModel(id: i + 1, name: names[i]),
+    ];
+  }
   @override
   Future<List<VehicleModel>> getVehicles() async {
     await Future.delayed(const Duration(milliseconds: 500));
@@ -58,8 +74,28 @@ class VehicleRemoteDataSourceFake implements VehicleRemoteDataSource {
   }
 
   @override
-  Future<void> uploadVehicleImages(int vehicleId, List<File> images) async {
+  Future<List<VehicleImageModel>> uploadVehicleImages(
+    int vehicleId,
+    List<File> images,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 400));
+    return const [];
+  }
+
+  @override
+  Future<void> deleteVehicleImage(int vehicleImageId) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+  }
+
+  @override
+  Future<void> updateVehicleImage(
+    int vehicleImageId, {
+    required int vehicleId,
+    required int attachmentId,
+    required bool isPrimary,
+    required int displayOrder,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 200));
   }
 
   VehicleModel _copy(VehicleModel v, {int? id}) {

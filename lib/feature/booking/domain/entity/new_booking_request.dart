@@ -1,31 +1,54 @@
-/// Payload used to create a new booking.
+/// Payload used to create a new reservation/booking.
 ///
-/// Matches the shape expected by the Spring Boot `/bookings` POST endpoint.
+/// Matches the Spring Boot `ReservationRequestDTO` shape accepted by
+/// `POST /api/reservations`.
 class NewBookingRequest {
   final int vehicleId;
-  final DateTime startDate;
-  final DateTime endDate;
-  final String pickupLocation;
-  final String returnLocation;
-  final String? paymentMethod;
+
+  final int pickUpLocationId;
+  final int returnLocationId;
+
+  final DateTime pickUpDateTime;
+  final DateTime returnDateTime;
+
+  final double? depositAmount;
+  final double? discountAmount;
+  final double? additionalCharges;
+  final String? notes;
 
   const NewBookingRequest({
     required this.vehicleId,
-    required this.startDate,
-    required this.endDate,
-    required this.pickupLocation,
-    required this.returnLocation,
-    this.paymentMethod,
+    required this.pickUpLocationId,
+    required this.returnLocationId,
+    required this.pickUpDateTime,
+    required this.returnDateTime,
+    this.depositAmount,
+    this.discountAmount,
+    this.additionalCharges,
+    this.notes,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'vehicle_id': vehicleId,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate.toIso8601String(),
-      'pickup_location': pickupLocation,
-      'return_location': returnLocation,
-      if (paymentMethod != null) 'payment_method': paymentMethod,
+      'vehicleId': vehicleId,
+      'pickUpLocationId': pickUpLocationId,
+      'returnLocationId': returnLocationId,
+      'pickUpDateTime': _format(pickUpDateTime),
+      'returnDateTime': _format(returnDateTime),
+      if (depositAmount != null) 'depositAmount': depositAmount,
+      if (discountAmount != null) 'discountAmount': discountAmount,
+      if (additionalCharges != null) 'additionalCharges': additionalCharges,
+      if (notes != null) 'notes': notes,
     };
+  }
+
+  /// Spring's `LocalDateTime` expects an ISO-8601 string without a timezone
+  /// suffix (e.g. `2026-09-18T09:00:00`).
+  static String _format(DateTime value) {
+    final local = value.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+
+    return '${local.year}-${two(local.month)}-${two(local.day)}'
+        'T${two(local.hour)}:${two(local.minute)}:${two(local.second)}';
   }
 }

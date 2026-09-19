@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
+import 'package:vehicle_rental_system/core/di/injection_container.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_locations.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/rental_location.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/additional_services_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_date_time_field.dart';
@@ -28,8 +31,53 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
   TimeOfDay? _pickupTime;
   TimeOfDay? _returnTime;
 
-  String _pickupLocation = 'Phnom Penh International Airport';
-  String _returnLocation = 'Phnom Penh International Airport';
+  List<RentalLocation> _locations = const [];
+  RentalLocation? _pickupLocation;
+  RentalLocation? _returnLocation;
+
+  bool _isLoadingLocations = true;
+  String? _locationsError;
+
+  // ===========================================================================
+  // LIFECYCLE
+  // ===========================================================================
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    setState(() {
+      _isLoadingLocations = true;
+      _locationsError = null;
+    });
+
+    final result = await sl<GetLocations>().call();
+
+    if (!mounted) return;
+
+    result.fold(
+      (failure) {
+        setState(() {
+          _isLoadingLocations = false;
+          _locationsError = failure.message;
+        });
+      },
+      (locations) {
+        setState(() {
+          _isLoadingLocations = false;
+          _locations = locations;
+
+          if (locations.isNotEmpty) {
+            _pickupLocation ??= locations.first;
+            _returnLocation ??= locations.first;
+          }
+        });
+      },
+    );
+  }
 
   // ===========================================================================
   // DATE
@@ -164,7 +212,8 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
     return (difference.inMinutes / (24 * 60)).ceil();
   }
 
-  bool get _canContinue => _rentalDays > 0;
+  bool get _canContinue =>
+      _rentalDays > 0 && _pickupLocation != null && _returnLocation != null;
 
   // ===========================================================================
   // CONTINUE
@@ -181,6 +230,11 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
       return;
     }
 
+    if (_pickupLocation == null || _returnLocation == null) {
+      _showMessage('Please select your pick-up and return locations.');
+      return;
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => AdditionalServicesScreen(
@@ -189,8 +243,10 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
           returnDate: _returnDate!,
           pickupTime: _pickupTime!,
           returnTime: _returnTime!,
-          pickupLocation: _pickupLocation,
-          returnLocation: _returnLocation,
+          pickupLocationId: _pickupLocation!.id,
+          returnLocationId: _returnLocation!.id,
+          pickupLocation: _pickupLocation!.displayName,
+          returnLocation: _returnLocation!.displayName,
         ),
       ),
     );
@@ -382,27 +438,89 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
 
           SizedBox(height: 20.h),
 
-          RentalLocationDropdown(
-            label: 'Pick-up Location',
-            value: _pickupLocation,
-            onChanged: (value) {
-              setState(() {
-                _pickupLocation = value;
-              });
-            },
-          ),
+          if (_isLoadingLocations)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 20.h),
+              child: const Center(child: CircularProgressIndicator()),
+            )
+          else if (_locationsError != null)
+            _LocationError(message: _locationsError!, onRetry: _loadLocations)
+          else ...[
+            RentalLocationDropdown(
+              label: 'Pick-up Location',
+              locations: _locations,
+              value: _pickupLocation,
+              onChanged: (value) {
+                setState(() {
+                  _pickupLocation = value;
+                });
+              },
+            ),
 
-          SizedBox(height: 16.h),
+            SizedBox(height: 16.h),
 
-          RentalLocationDropdown(
-            label: 'Return Location',
-            value: _returnLocation,
-            onChanged: (value) {
-              setState(() {
-                _returnLocation = value;
-              });
-            },
+            RentalLocationDropdown(
+              label: 'Return Location',
+              locations: _locations,
+              value: _returnLocation,
+              onChanged: (value) {
+                setState(() {
+                  _returnLocation = value;
+                });
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// LOCATION ERROR
+// =============================================================================
+
+class _LocationError extends StatelessWidget {
+  const _LocationError({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: theme.colorScheme.outline),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.location_off_rounded,
+            color: theme.colorScheme.error,
+            size: 32.sp,
           ),
+          SizedBox(height: 8.h),
+          Text(
+            'Could not load locations.',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall,
+          ),
+          SizedBox(height: 10.h),
+          OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
         ],
       ),
     );

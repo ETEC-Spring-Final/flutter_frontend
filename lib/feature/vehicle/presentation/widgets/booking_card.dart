@@ -22,7 +22,7 @@ class BookingCard extends StatelessWidget {
 
     final vehicleName = '${vehicle.brand} ${vehicle.model}';
 
-    final imageUrl = vehicle.images.isNotEmpty ? vehicle.images.first : '';
+    final imageUrl = vehicle.images.isNotEmpty ? vehicle.images.first.fileUrl : '';
 
     final startDate = DateFormat('MMM dd, yyyy').format(booking.startDate);
 
@@ -57,9 +57,9 @@ class BookingCard extends StatelessWidget {
                       // ------------------------------------------------------
                       // VEHICLE IMAGE
                       // ------------------------------------------------------
-                      imageUrl.toString().isNotEmpty
+                      imageUrl.isNotEmpty
                           ? Image.network(
-                              imageUrl.toString(),
+                              imageUrl,
                               fit: BoxFit.cover,
                               filterQuality: FilterQuality.high,
                               loadingBuilder:

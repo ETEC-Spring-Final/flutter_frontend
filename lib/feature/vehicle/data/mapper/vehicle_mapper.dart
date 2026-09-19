@@ -10,6 +10,7 @@ class VehicleMapper {
   static Vehicle toEntity(VehicleModel model) {
     return Vehicle(
       id: model.id,
+      brandId: model.brandId,
       brand: model.brand,
       model: model.model,
       yearOfManufacture: model.yearOfManufacture,
@@ -30,6 +31,8 @@ class VehicleMapper {
           .map(
             (image) => VehicleImage(
               id: image.id,
+              vehicleId: image.vehicleId,
+              attachmentId: image.attachmentId,
               fileUrl: image.fileUrl,
               isPrimary: image.isPrimary,
               displayOrder: image.displayOrder,
@@ -46,6 +49,7 @@ class VehicleMapper {
   static VehicleModel toModel(Vehicle entity) {
     return VehicleModel(
       id: entity.id,
+      brandId: entity.brandId,
       brand: entity.brand,
       model: entity.model,
       yearOfManufacture: entity.yearOfManufacture,
@@ -66,6 +70,8 @@ class VehicleMapper {
           .map(
             (image) => VehicleImageModel(
               id: image.id,
+              vehicleId: image.vehicleId,
+              attachmentId: image.attachmentId,
               fileUrl: image.fileUrl,
               isPrimary: image.isPrimary,
               displayOrder: image.displayOrder,

@@ -3,14 +3,29 @@ import 'dart:io';
 import 'package:fpdart/fpdart.dart';
 import 'package:vehicle_rental_system/core/errors/failure.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
+import 'package:vehicle_rental_system/feature/vehicle/data/mapper/brand_mapper.dart';
+import 'package:vehicle_rental_system/feature/vehicle/data/mapper/vehicle_image_mapper.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/mapper/vehicle_mapper.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/brand.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_image.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/repository/vehicle_repository.dart';
 
 class VehicleRepositoryImpl implements VehicleRepository {
   final VehicleRemoteDataSource remote;
 
   VehicleRepositoryImpl(this.remote);
+
+  @override
+  Future<Either<Failure, List<Brand>>> getBrands() async {
+    try {
+      final models = await remote.getBrands();
+
+      return Right(models.map(BrandMapper.toEntity).toList());
+    } catch (e) {
+      return Left(ServiceFailure(e.toString()));
+    }
+  }
 
   @override
   Future<Either<Failure, List<Vehicle>>> getVehicles() async {
@@ -71,12 +86,46 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> uploadVehicleImages(
+  Future<Either<Failure, List<VehicleImage>>> uploadVehicleImages(
     int vehicleId,
     List<File> images,
   ) async {
     try {
-      await remote.uploadVehicleImages(vehicleId, images);
+      final models = await remote.uploadVehicleImages(vehicleId, images);
+
+      return right(models.map(VehicleImageMapper.toEntity).toList());
+    } catch (e) {
+      return left(ServiceFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deleteVehicleImage(int vehicleImageId) async {
+    try {
+      await remote.deleteVehicleImage(vehicleImageId);
+
+      return right(unit);
+    } catch (e) {
+      return left(ServiceFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> updateVehicleImage(
+    int vehicleImageId, {
+    required int vehicleId,
+    required int attachmentId,
+    required bool isPrimary,
+    required int displayOrder,
+  }) async {
+    try {
+      await remote.updateVehicleImage(
+        vehicleImageId,
+        vehicleId: vehicleId,
+        attachmentId: attachmentId,
+        isPrimary: isPrimary,
+        displayOrder: displayOrder,
+      );
 
       return right(unit);
     } catch (e) {

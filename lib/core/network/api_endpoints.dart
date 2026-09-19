@@ -31,14 +31,27 @@ class ApiEndpoints {
   }
 
   // ==========================================
-  // Bookings
+  // Reservations (the backend "booking" resource)
   // ==========================================
 
-  static const String bookings = '/bookings';
+  static const String reservations = '/reservations';
 
-  static String bookingById(int id) {
-    return '/bookings/$id';
+  /// Current user's reservations.
+  static const String myReservations = '/reservations/my-reservations';
+
+  static String reservationById(int id) {
+    return '/reservations/$id';
   }
+
+  static String cancelReservation(int id) {
+    return '/reservations/$id/cancel';
+  }
+
+  // ==========================================
+  // Locations (pick-up / return points)
+  // ==========================================
+
+  static const String locations = '/locations';
 
   // ==========================================
   // QR Code / Bakong (generate after booking)

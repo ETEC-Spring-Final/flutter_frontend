@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/brand.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_image.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
@@ -21,11 +22,15 @@ class _VehicleCrudScreenState extends State<VehicleCrudScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<VehicleBloc>().add(const GetVehicles());
+    context.read<VehicleBloc>()
+      ..add(const GetVehicles())
+      ..add(const GetBrands());
   }
 
   Future<void> _refresh() async {
-    context.read<VehicleBloc>().add(const GetVehicles());
+    context.read<VehicleBloc>()
+      ..add(const GetVehicles())
+      ..add(const GetBrands());
   }
 
   Future<void> _openForm([Vehicle? vehicle]) async {
@@ -37,11 +42,11 @@ class _VehicleCrudScreenState extends State<VehicleCrudScreen> {
 
     if (vehicle == null) {
       context.read<VehicleBloc>().add(
-        CreateVehicleEvent(result.vehicle, result.newImages),
+        CreateVehicleEvent(result.vehicle, result.imageEdits),
       );
     } else {
       context.read<VehicleBloc>().add(
-        UpdateVehicleEvent(result.vehicle, result.newImages),
+        UpdateVehicleEvent(result.vehicle, result.imageEdits),
       );
     }
   }
@@ -403,9 +408,9 @@ class _Thumbnail extends StatelessWidget {
 
 class _VehicleFormResult {
   final Vehicle vehicle;
-  final List<File> newImages;
+  final VehicleImageEdits imageEdits;
 
-  const _VehicleFormResult({required this.vehicle, required this.newImages});
+  const _VehicleFormResult({required this.vehicle, required this.imageEdits});
 }
 
 // =====================================================================
@@ -424,8 +429,17 @@ class _VehicleFormScreen extends StatefulWidget {
 class _VehicleFormScreenState extends State<_VehicleFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final List<File> _pickedImages = [];
+  final Set<int> _removedImageIds = {};
 
-  late final TextEditingController _brand;
+  /// Maps an existing image id to the replacement file picked by the user.
+  final Map<int, File> _replaceMap = {};
+
+  /// Existing image id that should become the primary/cover photo.
+  int? _primaryExistingId;
+
+  /// Index into [_pickedImages] that should become the primary/cover photo.
+  int? _primaryNewImageIndex;
+
   late final TextEditingController _model;
   late final TextEditingController _year;
   late final TextEditingController _licensePlate;
@@ -446,6 +460,8 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
   late String _transmission;
   late String _fuelType;
   late String _status;
+
+  int _brandId = 0;
 
   static const List<String> _defaultTypes = [
     'SUV',
@@ -474,13 +490,22 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
 
   bool get _isEditing => widget.vehicle != null;
 
+  /// Resolves the selected brand's display name from the current BLoC state.
+  String? get _brandName {
+    final state = context.read<VehicleBloc>().state;
+    if (state is! VehicleLoaded) return null;
+    for (final brand in state.brands) {
+      if (brand.id == _brandId) return brand.name;
+    }
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
 
     final v = widget.vehicle;
 
-    _brand = TextEditingController(text: v?.brand ?? '');
     _model = TextEditingController(text: v?.model ?? '');
     _year = TextEditingController(
       text: v != null ? v.yearOfManufacture.toString() : '',
@@ -513,6 +538,34 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
         ? v!.fuelType
         : _fuelTypes.first;
     _status = _statuses.contains(v?.status) ? v!.status : _statuses.first;
+
+    _brandId = _resolveInitialBrandId(v);
+
+    if (v != null) {
+      for (final image in v.images) {
+        if (image.isPrimary) {
+          _primaryExistingId = image.id;
+          break;
+        }
+      }
+    }
+
+    final state = context.read<VehicleBloc>().state;
+    if (state is! VehicleLoaded || state.brands.isEmpty) {
+      context.read<VehicleBloc>().add(const GetBrands());
+    }
+  }
+
+  int _resolveInitialBrandId(Vehicle? v) {
+    if (v == null) return 0;
+    if (v.brandId != 0) return v.brandId;
+
+    final state = context.read<VehicleBloc>().state;
+    final brands = state is VehicleLoaded ? state.brands : const <Brand>[];
+    for (final brand in brands) {
+      if (brand.name == v.brand) return brand.id;
+    }
+    return 0;
   }
 
   static List<String> _withFallback(List<String> options, String? value) {
@@ -529,7 +582,6 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
 
   @override
   void dispose() {
-    _brand.dispose();
     _model.dispose();
     _year.dispose();
     _licensePlate.dispose();
@@ -550,7 +602,8 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
 
     final vehicle = Vehicle(
       id: current?.id ?? 0,
-      brand: _brand.text.trim(),
+      brandId: _brandId,
+      brand: _brandName ?? '',
       model: _model.text.trim(),
       yearOfManufacture: int.parse(_year.text.trim()),
       licensePlate: _licensePlate.text.trim(),
@@ -573,7 +626,12 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
     Navigator.of(context).pop(
       _VehicleFormResult(
         vehicle: vehicle,
-        newImages: List.unmodifiable(_pickedImages),
+        imageEdits: VehicleImageEdits(
+          newImages: List.unmodifiable(_pickedImages),
+          removeImageIds: Set.unmodifiable(_removedImageIds),
+          primaryImageId: _isEditing ? _primaryExistingId : null,
+          primaryNewImageIndex: _primaryNewImageIndex,
+        ),
       ),
     );
   }
@@ -590,12 +648,93 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
   }
 
   void _removePickedImage(int index) {
-    setState(() => _pickedImages.removeAt(index));
+    final file = _pickedImages[index];
+
+    setState(() {
+      _pickedImages.removeAt(index);
+
+      int? replacedId;
+      for (final entry in _replaceMap.entries) {
+        if (entry.value.path == file.path) {
+          replacedId = entry.key;
+          break;
+        }
+      }
+      if (replacedId != null) {
+        _replaceMap.remove(replacedId);
+        _removedImageIds.remove(replacedId);
+      }
+
+      if (_primaryNewImageIndex == index) {
+        _primaryNewImageIndex = null;
+      } else if (_primaryNewImageIndex != null &&
+          _primaryNewImageIndex! > index) {
+        _primaryNewImageIndex = _primaryNewImageIndex! - 1;
+      }
+    });
+  }
+
+  List<VehicleImage> get _visibleExistingImages {
+    final current = widget.vehicle;
+    if (current == null) return const [];
+
+    return current.images
+        .where((image) => !_removedImageIds.contains(image.id))
+        .toList();
+  }
+
+  void _setPrimaryOnExisting(VehicleImage image) {
+    setState(() {
+      _primaryExistingId = image.id;
+      _primaryNewImageIndex = null;
+    });
+  }
+
+  void _setPrimaryOnNew(int index) {
+    setState(() {
+      _primaryNewImageIndex = index;
+      _primaryExistingId = null;
+    });
+  }
+
+  void _deleteExistingImage(VehicleImage image) {
+    setState(() {
+      _removedImageIds.add(image.id);
+      _replaceMap.remove(image.id);
+      if (_primaryExistingId == image.id) _primaryExistingId = null;
+    });
+  }
+
+  Future<void> _replaceExistingImage(VehicleImage image) async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (picked == null || !mounted) return;
+
+    setState(() {
+      _removedImageIds.add(image.id);
+      _replaceMap[image.id] = File(picked.path);
+      _pickedImages.add(File(picked.path));
+
+      if (_primaryExistingId == image.id) {
+        _primaryExistingId = null;
+        _primaryNewImageIndex = _pickedImages.length - 1;
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final existingImages = _visibleExistingImages;
+
+    final brands = context.select<VehicleBloc, List<Brand>>(
+      (bloc) {
+        final state = bloc.state;
+        return state is VehicleLoaded ? state.brands : const <Brand>[];
+      },
+    );
+    final selectedBrandId =
+        _brandId != 0 && brands.any((b) => b.id == _brandId) ? _brandId : null;
 
     return Scaffold(
       appBar: AppBar(title: Text(_isEditing ? 'Edit Vehicle' : 'Add Vehicle')),
@@ -615,11 +754,10 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
             ),
             SizedBox(height: 16.h),
 
-            _TextForm(
-              controller: _brand,
-              label: 'Brand',
-              hint: 'e.g. Toyota',
-              validator: _required,
+            _BrandDropdown(
+              brands: brands,
+              value: selectedBrandId,
+              onChanged: (value) => setState(() => _brandId = value ?? 0),
             ),
             SizedBox(height: 12.h),
 
@@ -790,19 +928,22 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
             ),
             SizedBox(height: 4.h),
             Text(
-              _isEditing
-                  ? 'Existing images stay attached. Uploaded images are '
-                        'added to this vehicle.'
-                  : 'Select one or more images. They are uploaded to the '
-                        'vehicle right after creation.',
+              'Tap the star to set the cover photo. Use the trash icon to '
+              'remove an existing photo, or the swap icon to replace it.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             SizedBox(height: 12.h),
 
-            if (_isEditing && widget.vehicle!.images.isNotEmpty) ...[
-              _ExistingImages(images: widget.vehicle!.images),
+            if (_isEditing && existingImages.isNotEmpty) ...[
+              _EditableExistingImages(
+                images: existingImages,
+                primaryId: _primaryExistingId,
+                onSetPrimary: _setPrimaryOnExisting,
+                onDelete: _deleteExistingImage,
+                onReplace: _replaceExistingImage,
+              ),
               SizedBox(height: 12.h),
             ],
 
@@ -817,6 +958,8 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
                   for (var i = 0; i < _pickedImages.length; i++)
                     _PickedImageTile(
                       file: _pickedImages[i],
+                      isPrimary: _primaryNewImageIndex == i,
+                      onSetPrimary: () => _setPrimaryOnNew(i),
                       onRemove: () => _removePickedImage(i),
                     ),
                 ],
@@ -962,18 +1105,67 @@ class _DropdownForm<T> extends StatelessWidget {
 }
 
 // =====================================================================
-// EXISTING UPLOADED IMAGES (edit mode - read only)
+// BRAND DROPDOWN (loaded from the backend /vehicle/brands)
 // =====================================================================
 
-class _ExistingImages extends StatelessWidget {
-  final List<VehicleImage> images;
+class _BrandDropdown extends StatelessWidget {
+  final List<Brand> brands;
+  final int? value;
+  final ValueChanged<int?> onChanged;
 
-  const _ExistingImages({required this.images});
+  const _BrandDropdown({
+    required this.brands,
+    required this.value,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final enabled = brands.isNotEmpty;
+    final selected = enabled && brands.any((b) => b.id == value) ? value : null;
+
+    return DropdownButtonFormField<int>(
+      initialValue: selected,
+      items: [
+        for (final brand in brands)
+          DropdownMenuItem<int>(
+            value: brand.id,
+            child: Text(brand.name, overflow: TextOverflow.ellipsis),
+          ),
+      ],
+      onChanged: enabled ? onChanged : null,
+      decoration: InputDecoration(
+        labelText: 'Brand',
+        hintText: brands.isEmpty ? 'Loading brands…' : null,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+      ),
+      validator: (value) => value == null ? 'Required' : null,
+    );
+  }
+}
+
+// =====================================================================
+// EDITABLE EXISTING IMAGES (edit mode — star / delete / replace)
+// =====================================================================
+
+class _EditableExistingImages extends StatelessWidget {
+  final List<VehicleImage> images;
+  final int? primaryId;
+  final ValueChanged<VehicleImage> onSetPrimary;
+  final ValueChanged<VehicleImage> onDelete;
+  final ValueChanged<VehicleImage> onReplace;
+
+  const _EditableExistingImages({
+    required this.images,
+    required this.primaryId,
+    required this.onSetPrimary,
+    required this.onDelete,
+    required this.onReplace,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Wrap(
       spacing: 8.w,
@@ -981,22 +1173,62 @@ class _ExistingImages extends StatelessWidget {
       children: [
         for (final image in images)
           if (image.fileUrl.isNotEmpty)
-            Container(
-              width: 72.r,
-              height: 72.r,
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.network(
-                image.fileUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Icon(
-                  Icons.broken_image_outlined,
-                  size: 24.r,
-                  color: colorScheme.onSurfaceVariant,
-                ),
+            SizedBox(
+              width: 76.r,
+              height: 76.r,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10.r),
+                    child: Image.network(
+                      image.fileUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(
+                        Icons.broken_image_outlined,
+                        size: 24.r,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 2,
+                    left: 2,
+                    child: _ImageActionButton(
+                      icon: primaryId == image.id
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      color: primaryId == image.id
+                          ? Colors.amber
+                          : colorScheme.onSurfaceVariant,
+                      background: Colors.black45,
+                      tooltip: 'Set as cover photo',
+                      onTap: () => onSetPrimary(image),
+                    ),
+                  ),
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: _ImageActionButton(
+                      icon: Icons.close_rounded,
+                      color: colorScheme.error,
+                      background: Colors.black54,
+                      tooltip: 'Remove photo',
+                      onTap: () => onDelete(image),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 2,
+                    right: 2,
+                    child: _ImageActionButton(
+                      icon: Icons.swap_horiz_rounded,
+                      color: colorScheme.onPrimary,
+                      background: Colors.black45,
+                      tooltip: 'Replace photo',
+                      onTap: () => onReplace(image),
+                    ),
+                  ),
+                ],
               ),
             ),
       ],
@@ -1005,14 +1237,59 @@ class _ExistingImages extends StatelessWidget {
 }
 
 // =====================================================================
-// PICKED IMAGE TILE (with remove)
+// IMAGE ACTION BUTTON (star / close / swap)
+// =====================================================================
+
+class _ImageActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final Color background;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _ImageActionButton({
+    required this.icon,
+    required this.color,
+    required this.background,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Tooltip(
+        message: tooltip,
+        child: Container(
+          padding: EdgeInsets.all(4.r),
+          decoration: BoxDecoration(
+            color: background,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 14.r, color: color),
+        ),
+      ),
+    );
+  }
+}
+
+// =====================================================================
+// PICKED IMAGE TILE (with primary star + remove)
 // =====================================================================
 
 class _PickedImageTile extends StatelessWidget {
   final File file;
+  final bool isPrimary;
+  final VoidCallback? onSetPrimary;
   final VoidCallback onRemove;
 
-  const _PickedImageTile({required this.file, required this.onRemove});
+  const _PickedImageTile({
+    required this.file,
+    required this.onRemove,
+    this.isPrimary = false,
+    this.onSetPrimary,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1027,21 +1304,26 @@ class _PickedImageTile extends StatelessWidget {
         ),
         Positioned(
           top: 2,
+          left: 2,
+          child: _ImageActionButton(
+            icon: isPrimary
+                ? Icons.star_rounded
+                : Icons.star_outline_rounded,
+            color: isPrimary ? Colors.amber : colorScheme.onSurface,
+            background: Colors.black45,
+            tooltip: 'Set as cover photo',
+            onTap: onSetPrimary ?? () {},
+          ),
+        ),
+        Positioned(
+          top: 2,
           right: 2,
-          child: GestureDetector(
+          child: _ImageActionButton(
+            icon: Icons.close_rounded,
+            color: colorScheme.error,
+            background: Colors.black54,
+            tooltip: 'Remove',
             onTap: onRemove,
-            child: Container(
-              padding: EdgeInsets.all(4.r),
-              decoration: BoxDecoration(
-                color: colorScheme.error,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.close_rounded,
-                size: 12.r,
-                color: colorScheme.onError,
-              ),
-            ),
           ),
         ),
       ],

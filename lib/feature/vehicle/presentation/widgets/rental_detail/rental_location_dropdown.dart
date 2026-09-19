@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/rental_location.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_section_card.dart';
 
 class RentalLocationDropdown extends StatelessWidget {
   const RentalLocationDropdown({
     super.key,
     required this.label,
+    required this.locations,
     required this.value,
     required this.onChanged,
+    this.enabled = true,
   });
 
   final String label;
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  static const locations = [
-    'Phnom Penh International Airport',
-    'Phnom Penh City Center',
-    'Aeon Mall Sen Sok',
-  ];
+  final List<RentalLocation> locations;
+  final RentalLocation? value;
+  final ValueChanged<RentalLocation> onChanged;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +31,9 @@ class RentalLocationDropdown extends StatelessWidget {
 
         SizedBox(height: 8.h),
 
-        DropdownButtonFormField<String>(
+        DropdownButtonFormField<RentalLocation>(
           initialValue: value,
           isExpanded: true,
-
           icon: Icon(
             Icons.keyboard_arrow_down_rounded,
             color: colors.onSurfaceVariant,
@@ -85,10 +83,10 @@ class RentalLocationDropdown extends StatelessWidget {
           ),
 
           items: locations.map((location) {
-            return DropdownMenuItem<String>(
+            return DropdownMenuItem<RentalLocation>(
               value: location,
               child: Text(
-                location,
+                location.displayName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -98,11 +96,13 @@ class RentalLocationDropdown extends StatelessWidget {
             );
           }).toList(),
 
-          onChanged: (value) {
-            if (value != null) {
-              onChanged(value);
-            }
-          },
+          onChanged: enabled
+              ? (selected) {
+                  if (selected != null) {
+                    onChanged(selected);
+                  }
+                }
+              : null,
         ),
       ],
     );

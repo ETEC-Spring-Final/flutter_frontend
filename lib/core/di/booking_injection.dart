@@ -6,6 +6,8 @@ import 'package:vehicle_rental_system/feature/booking/data/repository/booking_re
 import 'package:vehicle_rental_system/feature/booking/domain/repository/booking_repository.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/usecase/create_booking.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_bookings.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_locations.dart';
+import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
 
 final sl = GetIt.instance;
 
@@ -14,7 +16,10 @@ void bookingInjection() {
   // Remote Data Source
   // ============================================================
   sl.registerLazySingleton<BookingRemoteDataSource>(
-    () => BookingRemoteDataSourceImpl(sl<ApiClient>()),
+    () => BookingRemoteDataSourceImpl(
+      sl<ApiClient>(),
+      sl<VehicleRemoteDataSource>(),
+    ),
   );
 
   // ============================================================
@@ -32,4 +37,6 @@ void bookingInjection() {
   sl.registerFactory<CreateBooking>(
     () => CreateBooking(sl<BookingRepository>()),
   );
+
+  sl.registerFactory<GetLocations>(() => GetLocations(sl<BookingRepository>()));
 }
