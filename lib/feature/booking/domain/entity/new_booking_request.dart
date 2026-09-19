@@ -16,6 +16,10 @@ class NewBookingRequest {
   final double? additionalCharges;
   final String? notes;
 
+  /// The ids of the selected per-day rental add-ons
+  /// (`GET /api/additional-services`).
+  final List<int>? serviceIds;
+
   const NewBookingRequest({
     required this.vehicleId,
     required this.pickUpLocationId,
@@ -26,6 +30,7 @@ class NewBookingRequest {
     this.discountAmount,
     this.additionalCharges,
     this.notes,
+    this.serviceIds,
   });
 
   Map<String, dynamic> toJson() {
@@ -35,6 +40,8 @@ class NewBookingRequest {
       'returnLocationId': returnLocationId,
       'pickUpDateTime': _format(pickUpDateTime),
       'returnDateTime': _format(returnDateTime),
+      if (serviceIds != null && serviceIds!.isNotEmpty)
+        'serviceIds': serviceIds,
       if (depositAmount != null) 'depositAmount': depositAmount,
       if (discountAmount != null) 'discountAmount': discountAmount,
       if (additionalCharges != null) 'additionalCharges': additionalCharges,

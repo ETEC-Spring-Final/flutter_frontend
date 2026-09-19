@@ -20,6 +20,7 @@ class ConfirmScreen extends StatefulWidget {
   final double totalPrice;
 
   final Map<String, bool> selectedServices;
+  final List<int> selectedServiceIds;
 
   final DateTime pickupDate;
   final DateTime returnDate;
@@ -38,6 +39,7 @@ class ConfirmScreen extends StatefulWidget {
     required this.servicesPrice,
     required this.totalPrice,
     required this.selectedServices,
+    required this.selectedServiceIds,
     required this.pickupDate,
     required this.returnDate,
     this.pickupTime,
@@ -76,6 +78,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
           returnLocationId: widget.returnLocationId,
           pickUpDateTime: startDate,
           returnDateTime: endDate,
+          serviceIds: widget.selectedServiceIds,
         ),
       ),
     );

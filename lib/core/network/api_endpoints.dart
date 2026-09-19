@@ -54,6 +54,12 @@ class ApiEndpoints {
   static const String locations = '/locations';
 
   // ==========================================
+  // Services catalogue (per-day add-ons for the booking form)
+  // ==========================================
+
+  static const String services = '/services';
+
+  // ==========================================
   // QR Code / Bakong (generate after booking)
   // ==========================================
 

@@ -1,6 +1,7 @@
 import 'package:vehicle_rental_system/core/network/api_client.dart';
 import 'package:vehicle_rental_system/core/network/api_endpoints.dart';
 import 'package:vehicle_rental_system/feature/booking/data/datasource/booking_remote_data_source.dart';
+import 'package:vehicle_rental_system/feature/booking/data/model/additional_service_model.dart';
 import 'package:vehicle_rental_system/feature/booking/data/model/booking_model.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/model/vehicle_model.dart';
@@ -76,6 +77,22 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     return data
         .whereType<Map>()
         .map((json) => RentalLocation.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
+  }
+
+  @override
+  Future<List<AdditionalServiceModel>> getAdditionalServices() async {
+    final response = await apiClient.get<dynamic>(ApiEndpoints.services);
+
+    final data = _extractList(response.data);
+
+    return data
+        .whereType<Map>()
+        .map(
+          (json) =>
+              AdditionalServiceModel.fromJson(Map<String, dynamic>.from(json)),
+        )
+        .where((model) => model.isActive)
         .toList();
   }
 

@@ -3,10 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
+import 'package:vehicle_rental_system/core/di/injection_container.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/confirm_screen.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/entity/additional_service.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_additional_services.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/confirm_screen.dart';
 
 class AdditionalServicesScreen extends StatefulWidget {
   final Vehicle vehicle;
@@ -46,19 +49,68 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
   // SERVICES
   // ---------------------------------------------------------------------------
 
-  final Map<String, bool> selectedServices = {
-    'Additional Driver': false,
-    'GPS Navigation': false,
-    'Child Seat': false,
-    'Full Insurance': false,
-  };
+  List<AdditionalService> _services = const [];
+  final Set<int> _selectedIds = {};
 
-  final Map<String, double> servicePrices = {
-    'Additional Driver': 10,
-    'GPS Navigation': 5,
-    'Child Seat': 8,
-    'Full Insurance': 15,
-  };
+  bool _isLoadingServices = true;
+  String? _servicesError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadServices();
+  }
+
+  Future<void> _loadServices() async {
+    setState(() {
+      _isLoadingServices = true;
+      _servicesError = null;
+    });
+
+    final result = await sl<GetAdditionalServices>().call();
+
+    if (!mounted) return;
+
+    result.fold(
+      (failure) {
+        setState(() {
+          _isLoadingServices = false;
+          _servicesError = failure.message;
+        });
+      },
+      (services) {
+        setState(() {
+          _isLoadingServices = false;
+          _services = services;
+        });
+      },
+    );
+  }
+
+  void _toggle(AdditionalService service, bool selected) {
+    setState(() {
+      if (selected) {
+        _selectedIds.add(service.id);
+      } else {
+        _selectedIds.remove(service.id);
+      }
+    });
+  }
+
+  AdditionalService? _serviceById(int id) {
+    for (final service in _services) {
+      if (service.id == id) return service;
+    }
+    return null;
+  }
+
+  Map<String, bool> get selectedServices {
+    return {
+      for (final service in _services) service.name: _selectedIds.contains(service.id),
+    };
+  }
+
+  List<int> get selectedServiceIds => _selectedIds.toList();
 
   // ---------------------------------------------------------------------------
   // PRICE CALCULATIONS
@@ -77,11 +129,12 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
   double get servicesPrice {
     double total = 0;
 
-    selectedServices.forEach((name, selected) {
-      if (selected) {
-        total += servicePrices[name]! * rentalDays;
+    for (final id in _selectedIds) {
+      final service = _serviceById(id);
+      if (service != null) {
+        total += service.price;
       }
-    });
+    }
 
     return total;
   }
@@ -105,6 +158,7 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
           servicesPrice: servicesPrice,
           totalPrice: totalPrice,
           selectedServices: selectedServices,
+          selectedServiceIds: selectedServiceIds,
           pickupDate: widget.pickupDate,
           returnDate: widget.returnDate,
           pickupTime: widget.pickupTime,
@@ -135,10 +189,6 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
       appBar: AppBar(
         title: const Text('Additional Services'),
         leading: AppBackButton(),
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back_ios_new_rounded),
-        //   onPressed: () => Navigator.pop(context),
-        // ),
       ),
 
       // -----------------------------------------------------------------------
@@ -174,21 +224,37 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
               // -----------------------------------------------------------------
               // SERVICES
               // -----------------------------------------------------------------
-              ...selectedServices.keys.map(
-                (service) => Padding(
-                  padding: EdgeInsets.only(bottom: 10.h),
-                  child: _ServiceTile(
-                    title: service,
-                    price: servicePrices[service]!,
-                    selected: selectedServices[service]!,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedServices[service] = value;
-                      });
-                    },
+              if (_isLoadingServices)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32.h),
+                  child: const Center(child: CircularProgressIndicator()),
+                )
+              else if (_servicesError != null)
+                _ServicesError(
+                  message: _servicesError!,
+                  onRetry: _loadServices,
+                )
+              else if (_services.isEmpty)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32.h),
+                  child: Center(
+                    child: Text(
+                      'No additional services are available right now.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                )
+              else
+                ..._services.map(
+                  (service) => Padding(
+                    padding: EdgeInsets.only(bottom: 10.h),
+                    child: _ServiceTile(
+                      service: service,
+                      selected: _selectedIds.contains(service.id),
+                      onChanged: (value) => _toggle(service, value),
+                    ),
                   ),
                 ),
-              ),
 
               SizedBox(height: 16.h),
 
@@ -219,42 +285,57 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
         onPressed: _continueToPayment,
         enabled: true,
       ),
-      // bottomNavigationBar: SafeArea(
-      //   child: Padding(
-      //     padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 12.h),
-      //     child: SizedBox(
-      //       width: double.infinity,
-      //       height: 54.h,
-      //       child: ElevatedButton(
-      //         onPressed: _continueToPayment,
+    );
+  }
+}
 
-      //         style: ElevatedButton.styleFrom(
-      //           elevation: 0,
-      //           backgroundColor: theme.colorScheme.primary,
-      //           foregroundColor: Colors.white,
+// =============================================================================
+// SERVICES ERROR
+// =============================================================================
 
-      //           shape: RoundedRectangleBorder(
-      //             borderRadius: BorderRadius.circular(16.r),
-      //           ),
-      //         ),
+class _ServicesError extends StatelessWidget {
+  const _ServicesError({required this.message, required this.onRetry});
 
-      //         child: Row(
-      //           mainAxisAlignment: MainAxisAlignment.center,
-      //           children: [
-      //             const Text(
-      //               'Confirm Booking',
-      //               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-      //             ),
+  final String message;
+  final VoidCallback onRetry;
 
-      //             SizedBox(width: 8.w),
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
-      //             const Icon(Icons.check_rounded, size: 18),
-      //           ],
-      //         ),
-      //       ),
-      //     ),
-      //   ),
-      // ),
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: theme.colorScheme.outline),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.extension_off_rounded,
+            color: theme.colorScheme.error,
+            size: 32.sp,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Could not load additional services.',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall,
+          ),
+          SizedBox(height: 10.h),
+          OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
+      ),
     );
   }
 }
@@ -264,14 +345,12 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
 // =============================================================================
 
 class _ServiceTile extends StatelessWidget {
-  final String title;
-  final double price;
+  final AdditionalService service;
   final bool selected;
   final ValueChanged<bool> onChanged;
 
   const _ServiceTile({
-    required this.title,
-    required this.price,
+    required this.service,
     required this.selected,
     required this.onChanged,
   });
@@ -281,22 +360,25 @@ class _ServiceTile extends StatelessWidget {
   // ---------------------------------------------------------------------------
 
   IconData get icon {
-    switch (title) {
-      case 'Additional Driver':
-        return Icons.person_add_alt_1_outlined;
+    final name = service.name.toLowerCase();
 
-      case 'GPS Navigation':
-        return Icons.gps_fixed_rounded;
-
-      case 'Child Seat':
-        return Icons.child_friendly_outlined;
-
-      case 'Full Insurance':
-        return Icons.shield_outlined;
-
-      default:
-        return Icons.add_circle_outline;
+    if (name.contains('driver')) {
+      return Icons.person_add_alt_1_outlined;
     }
+
+    if (name.contains('gps')) {
+      return Icons.gps_fixed_rounded;
+    }
+
+    if (name.contains('child') || name.contains('seat')) {
+      return Icons.child_friendly_outlined;
+    }
+
+    if (name.contains('insurance')) {
+      return Icons.shield_outlined;
+    }
+
+    return Icons.add_circle_outline;
   }
 
   // ---------------------------------------------------------------------------
@@ -360,17 +442,31 @@ class _ServiceTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      service.name,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
 
+                    if (service.description.isNotEmpty) ...[
+                      SizedBox(height: 3.h),
+
+                      Text(
+                        service.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+
                     SizedBox(height: 3.h),
 
                     Text(
-                      '+\$${price.toStringAsFixed(0)}/day',
-                      style: theme.textTheme.bodySmall,
+                      '+\$${service.price.toStringAsFixed(0)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),

@@ -5,6 +5,7 @@ import 'package:vehicle_rental_system/feature/booking/data/datasource/booking_re
 import 'package:vehicle_rental_system/feature/booking/data/repository/booking_repository_impl.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/repository/booking_repository.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/usecase/create_booking.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_additional_services.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_bookings.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_locations.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/datasource/vehicle_remote_data_source.dart';
@@ -39,4 +40,8 @@ void bookingInjection() {
   );
 
   sl.registerFactory<GetLocations>(() => GetLocations(sl<BookingRepository>()));
+
+  sl.registerFactory<GetAdditionalServices>(
+    () => GetAdditionalServices(sl<BookingRepository>()),
+  );
 }
