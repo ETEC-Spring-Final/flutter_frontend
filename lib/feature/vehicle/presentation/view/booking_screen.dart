@@ -171,6 +171,12 @@ class _BookingScreenState extends State<BookingScreen> {
             ),
             sliver: BlocBuilder<BookingBloc, BookingState>(
               builder: (context, state) {
+                final all = switch (state) {
+                  BookingLoaded(:final bookings) => bookings,
+                  BookingCreated(:final booking) => [booking],
+                  _ => const <Booking>[],
+                };
+
                 return switch (state) {
                   BookingLoading() => const SliverFillRemaining(
                       hasScrollBody: false,
@@ -203,12 +209,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         ),
                       ),
                     ),
-                  _ => _buildList(
-                      theme,
-                      _filter(
-                        state is BookingLoaded ? state.bookings : const [],
-                      ),
-                    ),
+                  _ => _buildList(theme, _filter(all)),
                 };
               },
             ),

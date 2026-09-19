@@ -13,6 +13,7 @@ import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart
 class BookingConfirmationScreen extends StatefulWidget {
   final VoidCallback? onBookingTap;
   final Booking? createdBooking;
+  final bool initialPaid;
   final Vehicle vehicle;
   final int rentalDays;
   final DateTime pickupDate;
@@ -27,6 +28,7 @@ class BookingConfirmationScreen extends StatefulWidget {
     super.key,
     this.onBookingTap,
     this.createdBooking,
+    this.initialPaid = false,
     required this.vehicle,
     required this.rentalDays,
     required this.pickupDate,
@@ -48,6 +50,10 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
   bool _isPaid = false;
 
+  Booking? _booking;
+
+  bool _awaitingSync = false;
+
   // ---------------------------------------------------------------------------
   // FORMATTERS
   // ---------------------------------------------------------------------------
@@ -66,8 +72,22 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   @override
   void initState() {
     super.initState();
-    // Open the QR payment screen automatically once the booking is created.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _openQrIfReady());
+
+    _isPaid = widget.initialPaid;
+    _booking = widget.createdBooking;
+
+    // When the payment succeeded before this screen was shown, the real
+    // backend reservation is still being created in the background. Flag it so
+    // a sync failure can be surfaced without blocking the success screen.
+    _awaitingSync = widget.initialPaid &&
+        (widget.createdBooking == null ||
+            widget.createdBooking!.bookingNumber.startsWith('BOOK-'));
+
+    // Open the QR payment screen automatically once the booking is created,
+    // unless the payment already completed before this screen was shown.
+    if (!widget.initialPaid) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openQrIfReady());
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -76,7 +96,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
   /// Booking produced by [BookingBloc], or null while it is still loading.
   Booking? get _createdBooking {
-    if (widget.createdBooking != null) return widget.createdBooking;
+    if (_booking != null) return _booking;
 
     final state = context.read<BookingBloc>().state;
     if (state is BookingCreated) return state.booking;
@@ -99,6 +119,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   void _openQrIfReady() {
+    if (widget.initialPaid) return;
+
     final booking = _createdBooking;
     if (booking != null) {
       _openQr(booking);
@@ -127,10 +149,11 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   void _viewBookings(BuildContext context) {
     if (!mounted) return;
 
-    // Make sure the booking list reflects the newly created booking.
+    // Make sure the booking list reflects the newly created booking, then
+    // open the Booking tab list.
     context.read<BookingBloc>().add(const LoadBookingsEvent(refresh: true));
     widget.onBookingTap?.call();
-    //context.go(AppRoutes.booking);
+    context.go(AppRoutes.booking);
   }
 
   // ---------------------------------------------------------------------------
@@ -147,7 +170,26 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
     return BlocListener<BookingBloc, BookingState>(
       listener: (context, state) {
         if (state is BookingCreated) {
+          // The real backend reservation arrived; swap out the provisional
+          // booking so the confirmation screen reflects the server record.
+          if (_booking == null ||
+              _booking!.bookingNumber != state.booking.bookingNumber) {
+            setState(() => _booking = state.booking);
+          }
+          _awaitingSync = false;
           _openQrIfReady();
+        } else if (state is BookingError && _awaitingSync) {
+          // The user already paid but the reservation could not be synced.
+          // Keep showing the success screen and surface the delay instead.
+          _awaitingSync = false;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Payment received. Your booking will appear once the server '
+                'is reachable.',
+              ),
+            ),
+          );
         }
       },
       child: Scaffold(
@@ -193,8 +235,10 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                     totalPrice: widget.totalPrice,
                     isPaid: _isPaid,
                   ),
-                  SizedBox(height: 14.h),
-                  _QrPaymentCard(onTap: () => _openQr(_createdBooking)),
+                  if (!_isPaid) ...[
+                    SizedBox(height: 14.h),
+                    _QrPaymentCard(onTap: () => _openQr(_createdBooking)),
+                  ],
                   if (services.isNotEmpty) ...[
                     SizedBox(height: 14.h),
                     _ServicesCard(services: services),

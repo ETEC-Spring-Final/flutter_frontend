@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:vehicle_rental_system/app/router/app_routes.dart';
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
+import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/entity/new_booking_request.dart';
 import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
@@ -55,7 +58,7 @@ class ConfirmScreen extends StatefulWidget {
 }
 
 class _ConfirmScreenState extends State<ConfirmScreen> {
-  String selectedPayment = 'Visa';
+  String selectedPayment = 'KHQR';
 
   bool _isCreating = false;
 
@@ -64,11 +67,48 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
     return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
-  void _payNow() {
+  Future<void> _payNow() async {
+    if (_isCreating) return;
     setState(() => _isCreating = true);
 
     final startDate = _combine(widget.pickupDate, widget.pickupTime);
     final endDate = _combine(widget.returnDate, widget.returnTime);
+
+    // Stage the rental so the QR payment screen can show what will be paid.
+    // The real booking is created on the backend only AFTER the payment has
+    // been scanned successfully, so an unpaid/aborted payment never produces
+    // a booking -> the vehicle cannot be rented.
+    final provisional = Booking(
+      id: widget.vehicle.id,
+      bookingNumber: 'BOOK-${DateTime.now().millisecondsSinceEpoch}',
+      vehicle: widget.vehicle,
+      startDate: startDate,
+      endDate: endDate,
+      totalDays: widget.rentalDays,
+      pricePerDay: widget.vehicle.pricePerDay,
+      totalPrice: widget.totalPrice,
+      pickupLocation: widget.pickupLocation,
+      returnLocation: widget.returnLocation,
+      status: 'PENDING',
+    );
+
+    final paid = await context.push<bool>(
+      AppRoutes.payment,
+      extra: provisional,
+    );
+
+    if (!mounted) return;
+
+    if (paid != true) {
+      // Payment was not completed -> keep the booking uncreated.
+      setState(() => _isCreating = false);
+      return;
+    }
+
+    // Payment succeeded -> go straight to the booking confirmation screen and
+    // create the real booking on the backend in the background so it appears
+    // under the Booking tab.
+    _openConfirmation(provisional);
 
     context.read<BookingBloc>().add(
       CreateBookingEvent(
@@ -84,11 +124,12 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
     );
   }
 
-  void _onBookingCreated(BookingCreated state) {
+  void _openConfirmation(Booking booking) {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => BookingConfirmationScreen(
-          createdBooking: state.booking,
+          createdBooking: booking,
+          initialPaid: true,
           vehicle: widget.vehicle,
           rentalDays: widget.rentalDays,
           pickupDate: widget.pickupDate,
@@ -109,15 +150,8 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
 
     return BlocListener<BookingBloc, BookingState>(
       listener: (context, state) {
-        if (!_isCreating) return;
-
-        if (state is BookingCreated) {
-          _onBookingCreated(state);
-        } else if (state is BookingError) {
+        if (state is BookingError && _isCreating) {
           setState(() => _isCreating = false);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.failure.message)));
         }
       },
       child: Scaffold(
