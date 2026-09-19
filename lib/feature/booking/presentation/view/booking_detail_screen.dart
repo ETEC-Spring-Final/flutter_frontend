@@ -59,10 +59,7 @@ class BookingDetailScreen extends StatelessWidget {
       backgroundColor: colors.surface,
       expandedHeight: 260.h,
       leadingWidth: 60.w,
-      leading: Padding(
-        padding: EdgeInsets.all(12.w),
-        child: const AppBackButton(),
-      ),
+      leading: AppBackButton(),
       title: Text(
         'Booking Details',
         style: theme.textTheme.titleMedium?.copyWith(
@@ -91,7 +88,9 @@ class _HeaderImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final imageUrl = vehicle.images.isNotEmpty ? vehicle.images.first.fileUrl : '';
+    final imageUrl = vehicle.images.isNotEmpty
+        ? vehicle.images.first.fileUrl
+        : '';
 
     return Stack(
       fit: StackFit.expand,

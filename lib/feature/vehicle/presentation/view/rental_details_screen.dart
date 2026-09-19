@@ -14,6 +14,7 @@ import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/renta
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_header.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_location_dropdown.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_section_card.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_unavailable_days.dart';
 
 class RentalDetailsScreen extends StatefulWidget {
   const RentalDetailsScreen({super.key, required this.vehicle});
@@ -306,7 +307,10 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
               delegate: SliverChildListDelegate([
                 SizedBox(height: 24.h),
 
+                VehicleUnavailableDays(vehicle: widget.vehicle),
                 _buildRentalDetailsCard(),
+
+                SizedBox(height: 14.h),
 
                 SizedBox(height: 14.h),
               ]),
