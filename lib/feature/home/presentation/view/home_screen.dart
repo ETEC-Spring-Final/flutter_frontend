@@ -160,295 +160,444 @@ class _HomeScreenState extends State<HomeScreen>
           }
 
           return Scaffold(
-      body: CustomScrollView(
-        key: const PageStorageKey('home_screen'),
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // ========================================================
-          // APP BAR
-          // ========================================================
-          SliverAppBar(
-            automaticallyImplyLeading: false,
+            body: CustomScrollView(
+              key: const PageStorageKey('home_screen'),
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // ========================================================
+                // APP BAR
+                // ========================================================
+                SliverAppBar(
+                  automaticallyImplyLeading: false,
 
-            // Hide when scrolling down
-            floating: true,
+                  // Hide when scrolling down
+                  floating: true,
 
-            // Show immediately when scrolling up
-            snap: true,
+                  // Show immediately when scrolling up
+                  snap: true,
 
-            // Don't stay pinned
-            pinned: false,
+                  // Don't stay pinned
+                  pinned: false,
 
-            elevation: 0,
+                  elevation: 0,
 
-            scrolledUnderElevation: 0,
+                  scrolledUnderElevation: 0,
 
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
-            surfaceTintColor: Colors.transparent,
+                  surfaceTintColor: Colors.transparent,
 
-            titleSpacing: 16,
+                  titleSpacing: 16,
 
-            centerTitle: false,
+                  centerTitle: false,
 
-            title: const AnimatedGreeting(),
+                  title: const AnimatedGreeting(),
 
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: InkWell(
-                  onTap: () {
-                    context.go(AppRoutes.notification);
-                  },
-                  child: BlocBuilder<NotificationBloc, NotificationState>(
-                    builder: (context, state) {
-                      final unreadCount = state is NotificationLoaded
-                          ? state.notifications.where((n) => !n.isRead).length
-                          : 0;
-
-                      return AppNotification(
-                        notificationCount: unreadCount,
-                        onTap: () {
-                          context.go(AppRoutes.notification);
-                        },
-                      );
-                    },
-                  ),
-                ),
-                // child: InkWell(
-                //   onTap: widget.onProfileTap,
-                //   child: CircleAvatar(
-                //     radius: 18.r,
-                //     backgroundImage: const NetworkImage(
-                //       'https://i.pinimg.com/236x/0f/21/77/0f21770c1e42550d64e8c210266141d2.jpg',
-                //     ),
-                //     backgroundColor: colorScheme.surfaceContainerHighest,
-                //   ),
-                // ),
-              ),
-            ],
-          ),
-
-          // ========================================================
-          // PULL TO REFRESH
-          // ========================================================
-          CupertinoSliverRefreshControl(
-            onRefresh: refreshData,
-
-            refreshTriggerPullDistance: 90,
-
-            refreshIndicatorExtent: 56,
-
-            builder:
-                (
-                  context,
-                  refreshState,
-                  pulledExtent,
-                  refreshTriggerPullDistance,
-                  refreshIndicatorExtent,
-                ) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: colorScheme.primary,
-                      backgroundColor: colorScheme.primary.withValues(
-                        alpha: 0.10,
-                      ),
-                    ),
-                  );
-                },
-          ),
-
-          // ========================================================
-          // HOME CONTENT
-          // ========================================================
-          SliverPadding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimensions.chipHorizontalPadding,
-            ),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ==================================================
-                    // SEARCH
-                    // ==================================================
+                  actions: [
                     InkWell(
                       onTap: () {
-                        widget.onExploreTap?.call(true);
+                        context.go(AppRoutes.notification);
                       },
-                      child: AppTextField(
-                        enabled: false,
-                        hint: 'Search cars or brands..',
-                        prefixIcon: Icons.search,
-                        keyboardType: TextInputType.text,
+                      child: BlocBuilder<NotificationBloc, NotificationState>(
+                        builder: (context, state) {
+                          final unreadCount = state is NotificationLoaded
+                              ? state.notifications
+                                    .where((n) => !n.isRead)
+                                    .length
+                              : 0;
+
+                          return AppNotification(
+                            notificationCount: unreadCount,
+                            onTap: () {
+                              context.go(AppRoutes.notification);
+                            },
+                          );
+                        },
                       ),
                     ),
+                  ],
+                ),
 
-                    SizedBox(height: 8.h),
+                // ========================================================
+                // PULL TO REFRESH
+                // ========================================================
+                CupertinoSliverRefreshControl(
+                  onRefresh: refreshData,
 
-                    // ==================================================
-                    // BANNER
-                    // ==================================================
-                    HomeBannerSlider(
-                      onExploreTap: () {
-                        widget.onExploreTap?.call(false);
-                      },
-                    ),
+                  refreshTriggerPullDistance: 90,
 
-                    SizedBox(height: 8.h),
+                  refreshIndicatorExtent: 56,
 
-                    // ==================================================
-                    // BRAND CATEGORY (from /api/brands)
-                    // ==================================================
-                    BlocBuilder<VehicleBloc, VehicleState>(
-                      builder: (context, state) {
-                        final isLoaded = state is VehicleLoaded;
-                        final brands = isLoaded
-                            ? state.brands
-                            : const <Brand>[];
-
-                        // Show shimmer skeleton chips while the brand list is
-                        // being fetched from the API.
-                        if (!isLoaded) {
-                          return const BrandChipsShimmer();
-                        }
-
-                        return SizedBox(
-                          height: 55.h,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-
-                            padding: EdgeInsets.symmetric(
-                              horizontal: AppDimensions.space12,
+                  builder:
+                      (
+                        context,
+                        refreshState,
+                        pulledExtent,
+                        refreshTriggerPullDistance,
+                        refreshIndicatorExtent,
+                      ) {
+                        return Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: colorScheme.primary,
+                            backgroundColor: colorScheme.primary.withValues(
+                              alpha: 0.10,
                             ),
+                          ),
+                        );
+                      },
+                ),
 
-                            itemCount: brands.length + 1,
-
-                            separatorBuilder: (_, _) {
-                              return SizedBox(width: AppDimensions.space16);
+                // ========================================================
+                // HOME CONTENT
+                // ========================================================
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppDimensions.chipHorizontalPadding,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ==================================================
+                          // SEARCH
+                          // ==================================================
+                          InkWell(
+                            onTap: () {
+                              widget.onExploreTap?.call(true);
                             },
+                            child: AppTextField(
+                              enabled: false,
+                              hint: 'Search cars or brands..',
+                              prefixIcon: Icons.search,
+                              keyboardType: TextInputType.text,
+                            ),
+                          ),
 
-                            itemBuilder: (context, index) {
-                              // ==========================================
-                              // ALL
-                              // ==========================================
+                          SizedBox(height: 8.h),
 
-                              if (index == 0) {
-                                return _CategoryItem(
-                                  title: 'All',
-                                  image: '',
-                                  isSelected: selectedCategoryIndex == 0,
-                                  onTap: () {
-                                    setState(() {
-                                      selectedCategoryIndex = 0;
-                                    });
+                          // ==================================================
+                          // BANNER
+                          // ==================================================
+                          HomeBannerSlider(
+                            onExploreTap: () {
+                              widget.onExploreTap?.call(false);
+                            },
+                          ),
 
-                                    log('Filter: All');
+                          SizedBox(height: 8.h),
+
+                          // ==================================================
+                          // BRAND CATEGORY (from /api/brands)
+                          // ==================================================
+                          BlocBuilder<VehicleBloc, VehicleState>(
+                            builder: (context, state) {
+                              final isLoaded = state is VehicleLoaded;
+                              final brands = isLoaded
+                                  ? state.brands
+                                  : const <Brand>[];
+
+                              // Show shimmer skeleton chips while the brand list is
+                              // being fetched from the API.
+                              if (!isLoaded) {
+                                return const BrandChipsShimmer();
+                              }
+
+                              return SizedBox(
+                                height: 55.h,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  physics: const BouncingScrollPhysics(),
+
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: AppDimensions.space12,
+                                  ),
+
+                                  itemCount: brands.length + 1,
+
+                                  separatorBuilder: (_, _) {
+                                    return SizedBox(
+                                      width: AppDimensions.space16,
+                                    );
+                                  },
+
+                                  itemBuilder: (context, index) {
+                                    // ==========================================
+                                    // ALL
+                                    // ==========================================
+
+                                    if (index == 0) {
+                                      return _CategoryItem(
+                                        title: 'All',
+                                        image: '',
+                                        isSelected: selectedCategoryIndex == 0,
+                                        onTap: () {
+                                          setState(() {
+                                            selectedCategoryIndex = 0;
+                                          });
+
+                                          log('Filter: All');
+                                        },
+                                      );
+                                    }
+
+                                    // ==========================================
+                                    // BRAND
+                                    // ==========================================
+
+                                    final brand = brands[index - 1];
+
+                                    return _CategoryItem(
+                                      title: brand.name,
+                                      image: brand.imageUrl,
+                                      isSelected:
+                                          selectedCategoryIndex == index,
+                                      onTap: () {
+                                        setState(() {
+                                          selectedCategoryIndex = index;
+                                        });
+
+                                        log('Filter: ${brand.name}');
+                                      },
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+
+                          SizedBox(height: 8.h),
+
+                          // ==================================================
+                          // POPULAR CARS TITLE
+                          // ==================================================
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Popular Cars',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.sp,
+                                  letterSpacing: -0.4,
+                                  height: 1.2,
+                                ),
+                              ),
+
+                              InkWell(
+                                onTap: () {
+                                  widget.onExploreTap?.call(false);
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  width: 36.w,
+                                  height: 36.h,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.92),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 18.r,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: 8.h),
+
+                          // ==================================================
+                          // POPULAR CARS
+                          // ==================================================
+                          BlocBuilder<VehicleBloc, VehicleState>(
+                            builder: (context, state) {
+                              // ============================================
+                              // LOADING
+                              // ============================================
+
+                              if (state is VehicleLoading) {
+                                return SizedBox(
+                                  height: 270.h,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: 2,
+                                    separatorBuilder: (_, _) {
+                                      return SizedBox(width: 14.w);
+                                    },
+                                    itemBuilder: (context, index) {
+                                      return ShimmerCard(
+                                        width: 280.w,
+                                        filled: true,
+                                      );
+                                    },
+                                  ),
+                                );
+                              }
+
+                              // ============================================
+                              // ERROR
+                              // ============================================
+
+                              if (state is VehicleError) {
+                                return _ErrorWidget(
+                                  message: state.message,
+                                  onRetry: () {
+                                    context.read<VehicleBloc>().add(
+                                      const GetVehicles(),
+                                    );
                                   },
                                 );
                               }
 
-                              // ==========================================
-                              // BRAND
-                              // ==========================================
+                              // ============================================
+                              // LOADED
+                              // ============================================
 
-                              final brand = brands[index - 1];
+                              if (state is VehicleLoaded) {
+                                final filteredVehicles = _filteredVehicles(
+                                  state.brands,
+                                  state.vehicles,
+                                );
 
-                              return _CategoryItem(
-                                title: brand.name,
-                                image: brand.imageUrl,
-                                isSelected: selectedCategoryIndex == index,
-                                onTap: () {
-                                  setState(() {
-                                    selectedCategoryIndex = index;
-                                  });
+                                if (filteredVehicles.isEmpty) {
+                                  return _EmptyVehiclesWidget(
+                                    brand: _selectedBrandName(state.brands),
+                                  );
+                                }
 
-                                  log('Filter: ${brand.name}');
-                                },
-                              );
+                                return PopularCarsSection(
+                                  vehicles: filteredVehicles,
+
+                                  onSeeAll: () {
+                                    widget.onExploreTap?.call(false);
+                                  },
+
+                                  // ========================================
+                                  // VEHICLE TAP
+                                  // ========================================
+                                  onVehicleTap: (vehicle) {
+                                    log(
+                                      'Vehicle: '
+                                      '${vehicle.brand} '
+                                      '${vehicle.model}',
+                                    );
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) {
+                                          return VehicleDetailScreen(
+                                            vehicle: vehicle,
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+
+                                  // ========================================
+                                  // FAVORITE
+                                  // ========================================
+                                  onFavoriteTap: (vehicle) {
+                                    log(
+                                      'Favorite: '
+                                      '${vehicle.brand} '
+                                      '${vehicle.model}',
+                                    );
+
+                                    widget.onFavoriteTap?.call();
+                                  },
+
+                                  // ========================================
+                                  // RENT
+                                  // ========================================
+                                  onRentTap: (vehicle) {
+                                    log(
+                                      'Rent: '
+                                      '${vehicle.brand} '
+                                      '${vehicle.model}',
+                                    );
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) {
+                                          return RentalDetailsScreen(
+                                            vehicle: vehicle,
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                );
+                              }
+
+                              // ============================================
+                              // INITIAL
+                              // ============================================
+
+                              return const SizedBox.shrink();
                             },
                           ),
-                        );
-                      },
-                    ),
 
-                    SizedBox(height: 8.h),
+                          SizedBox(height: 8.h),
 
-                    // ==================================================
-                    // POPULAR CARS TITLE
-                    // ==================================================
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Popular Cars',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.sp,
-                            letterSpacing: -0.4,
-                            height: 1.2,
+                          // ==================================================
+                          // RECOMMENDED TITLE
+                          // ==================================================
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Recommended Cars for you',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.sp,
+                                  letterSpacing: -0.4,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
 
-                        InkWell(
-                          onTap: () {
-                            widget.onExploreTap?.call(false);
-                          },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            width: 36.w,
-                            height: 36.h,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.92),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 18.r,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                          SizedBox(height: 12.h),
+                        ],
+                      ),
+                    ]),
+                  ),
+                ),
 
-                    SizedBox(height: 8.h),
-
-                    // ==================================================
-                    // POPULAR CARS
-                    // ==================================================
-                    BlocBuilder<VehicleBloc, VehicleState>(
+                // ==========================================================
+                // RECOMMENDED VEHICLES
+                // ==========================================================
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppDimensions.chipHorizontalPadding,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: BlocBuilder<VehicleBloc, VehicleState>(
                       builder: (context, state) {
-                        // ============================================
+                        // ================================================
                         // LOADING
-                        // ============================================
+                        // ================================================
 
                         if (state is VehicleLoading) {
-                          return SizedBox(
-                            height: 270.h,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: 2,
-                              separatorBuilder: (_, _) {
-                                return SizedBox(width: 14.w);
-                              },
-                              itemBuilder: (context, index) {
-                                return ShimmerCard(
-                                  width: 280.w,
-                                  filled: true,
-                                );
-                              },
-                            ),
+                          return Column(
+                            children: [
+                              const ShimmerCard(),
+                              SizedBox(height: 12.h),
+                              const ShimmerCard(),
+                            ],
                           );
                         }
 
-                        // ============================================
+                        // ================================================
                         // ERROR
-                        // ============================================
+                        // ================================================
 
                         if (state is VehicleError) {
                           return _ErrorWidget(
@@ -461,9 +610,9 @@ class _HomeScreenState extends State<HomeScreen>
                           );
                         }
 
-                        // ============================================
+                        // ================================================
                         // LOADED
-                        // ============================================
+                        // ================================================
 
                         if (state is VehicleLoaded) {
                           final filteredVehicles = _filteredVehicles(
@@ -477,220 +626,66 @@ class _HomeScreenState extends State<HomeScreen>
                             );
                           }
 
-                          return PopularCarsSection(
-                            vehicles: filteredVehicles,
+                          return Column(
+                            children: filteredVehicles.map((vehicle) {
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 12.h),
+                                child: VehicleCardExplore(
+                                  vehicle: vehicle,
 
-                            onSeeAll: () {
-                              widget.onExploreTap?.call(false);
-                            },
-
-                            // ========================================
-                            // VEHICLE TAP
-                            // ========================================
-                            onVehicleTap: (vehicle) {
-                              log(
-                                'Vehicle: '
-                                '${vehicle.brand} '
-                                '${vehicle.model}',
-                              );
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) {
-                                    return VehicleDetailScreen(
-                                      vehicle: vehicle,
+                                  // ======================================
+                                  // VEHICLE TAP
+                                  // ======================================
+                                  onTap: () {
+                                    log(
+                                      'Recommended: '
+                                      '${vehicle.brand} '
+                                      '${vehicle.model}',
                                     );
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) {
+                                          return VehicleDetailScreen(
+                                            vehicle: vehicle,
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+
+                                  // ======================================
+                                  // FAVORITE
+                                  // ======================================
+                                  onFavoriteTap: () {
+                                    log(
+                                      'Recommended favorite: '
+                                      '${vehicle.brand} '
+                                      '${vehicle.model}',
+                                    );
+
+                                    widget.onFavoriteTap?.call();
                                   },
                                 ),
                               );
-                            },
-
-                            // ========================================
-                            // FAVORITE
-                            // ========================================
-                            onFavoriteTap: (vehicle) {
-                              log(
-                                'Favorite: '
-                                '${vehicle.brand} '
-                                '${vehicle.model}',
-                              );
-
-                              widget.onFavoriteTap?.call();
-                            },
-
-                            // ========================================
-                            // RENT
-                            // ========================================
-                            onRentTap: (vehicle) {
-                              log(
-                                'Rent: '
-                                '${vehicle.brand} '
-                                '${vehicle.model}',
-                              );
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) {
-                                    return RentalDetailsScreen(
-                                      vehicle: vehicle,
-                                    );
-                                  },
-                                ),
-                              );
-                            },
+                            }).toList(),
                           );
                         }
-
-                        // ============================================
-                        // INITIAL
-                        // ============================================
 
                         return const SizedBox.shrink();
                       },
                     ),
-
-                    SizedBox(height: 8.h),
-
-                    // ==================================================
-                    // RECOMMENDED TITLE
-                    // ==================================================
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Recommended Cars for you',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.sp,
-                            letterSpacing: -0.4,
-                            height: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 12.h),
-                  ],
+                  ),
                 ),
-              ]),
+
+                // ==========================================================
+                // BOTTOM SPACE
+                // ==========================================================
+                SliverToBoxAdapter(child: SizedBox(height: 40.h)),
+              ],
             ),
-          ),
-
-          // ==========================================================
-          // RECOMMENDED VEHICLES
-          // ==========================================================
-          SliverPadding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimensions.chipHorizontalPadding,
-            ),
-            sliver: SliverToBoxAdapter(
-              child: BlocBuilder<VehicleBloc, VehicleState>(
-                builder: (context, state) {
-                  // ================================================
-                  // LOADING
-                  // ================================================
-
-                  if (state is VehicleLoading) {
-                    return Column(
-                      children: [
-                        const ShimmerCard(),
-                        SizedBox(height: 12.h),
-                        const ShimmerCard(),
-                      ],
-                    );
-                  }
-
-                  // ================================================
-                  // ERROR
-                  // ================================================
-
-                  if (state is VehicleError) {
-                    return _ErrorWidget(
-                      message: state.message,
-                      onRetry: () {
-                        context.read<VehicleBloc>().add(const GetVehicles());
-                      },
-                    );
-                  }
-
-                  // ================================================
-                  // LOADED
-                  // ================================================
-
-                  if (state is VehicleLoaded) {
-                    final filteredVehicles = _filteredVehicles(
-                      state.brands,
-                      state.vehicles,
-                    );
-
-                    if (filteredVehicles.isEmpty) {
-                      return _EmptyVehiclesWidget(
-                        brand: _selectedBrandName(state.brands),
-                      );
-                    }
-
-                    return Column(
-                      children: filteredVehicles.map((vehicle) {
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: 12.h),
-                          child: VehicleCardExplore(
-                            vehicle: vehicle,
-
-                            // ======================================
-                            // VEHICLE TAP
-                            // ======================================
-                            onTap: () {
-                              log(
-                                'Recommended: '
-                                '${vehicle.brand} '
-                                '${vehicle.model}',
-                              );
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) {
-                                    return VehicleDetailScreen(
-                                      vehicle: vehicle,
-                                    );
-                                  },
-                                ),
-                              );
-                            },
-
-                            // ======================================
-                            // FAVORITE
-                            // ======================================
-                            onFavoriteTap: () {
-                              log(
-                                'Recommended favorite: '
-                                '${vehicle.brand} '
-                                '${vehicle.model}',
-                              );
-
-                              widget.onFavoriteTap?.call();
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  }
-
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-          ),
-
-          // ==========================================================
-          // BOTTOM SPACE
-          // ==========================================================
-          SliverToBoxAdapter(child: SizedBox(height: 40.h)),
-        ],
-      ),
-    );
+          );
         },
       ),
     );

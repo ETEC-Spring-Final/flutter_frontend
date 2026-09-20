@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
+import 'package:vehicle_rental_system/feature/profile/presentation/bloc/profile_bloc.dart';
 
 class AnimatedGreeting extends StatefulWidget {
   const AnimatedGreeting({super.key});
@@ -184,14 +186,31 @@ class _AnimatedGreetingState extends State<AnimatedGreeting>
             // ==================================================
             // GREETING
             // ==================================================
-            Text(
-              'Hello, Visal 👋',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                //fontStyle: FontStyle.italic,
-                letterSpacing: -0.3,
-                height: 1.2,
-              ),
+            BlocBuilder<ProfileBloc, ProfileState>(
+              builder: (context, state) {
+                String lastName = '';
+                if (state is ProfileLoaded) {
+                  lastName = state.profile.lastName;
+                } else if (state is ProfileUpdating) {
+                  lastName = state.profile.lastName;
+                } else if (state is ProfileError) {
+                  lastName = state.cached?.lastName ?? '';
+                }
+
+                final greeting = lastName.trim().isNotEmpty
+                    ? 'Hello, $lastName 👋'
+                    : 'Hello, there 👋';
+
+                return Text(
+                  greeting,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    //fontStyle: FontStyle.italic,
+                    letterSpacing: -0.3,
+                    height: 1.2,
+                  ),
+                );
+              },
             ),
             //const SizedBox(height: 4),
 
