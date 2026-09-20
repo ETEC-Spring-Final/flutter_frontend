@@ -31,6 +31,23 @@ class ApiEndpoints {
   }
 
   // ==========================================
+  // User Profile (current user self-service)
+  // ==========================================
+
+  /// Current user's profile. `GET` fetches, `PUT` updates.
+  static const String myProfile = '/user-profiles/me';
+
+  /// Current user's login history.
+  static const String myLoginHistory = '/user-profiles/me/login-history';
+
+  // ==========================================
+  // Uploads (Cloudinary)
+  // ==========================================
+
+  /// Multipart upload; returns `{ "url", "publicId", "uploadedAt" }`.
+  static const String upload = '/uploads';
+
+  // ==========================================
   // Reservations (the backend "booking" resource)
   // ==========================================
 
