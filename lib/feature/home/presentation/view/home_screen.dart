@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:vehicle_rental_system/app/router/app_routes.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
@@ -57,6 +58,10 @@ class _HomeScreenState extends State<HomeScreen>
   // Index 0 = All
   // Index 1..n = categories
   int selectedCategoryIndex = 0;
+
+  // Becomes true after the first successful fetch so pull-to-refresh keeps
+  // showing the content instead of the loading skeleton.
+  bool _hasLoadedOnce = false;
 
   String _selectedBrandName(List<Brand> brands) {
     final index = selectedCategoryIndex - 1;
@@ -119,7 +124,40 @@ class _HomeScreenState extends State<HomeScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
+    return BlocListener<VehicleBloc, VehicleState>(
+      listener: (context, state) {
+        if (state is VehicleLoaded) {
+          _hasLoadedOnce = true;
+        }
+      },
+      child: BlocBuilder<VehicleBloc, VehicleState>(
+        builder: (context, state) {
+          // Show the full-page loading skeleton until brands and vehicles
+          // have been fetched successfully.
+          if (!_hasLoadedOnce &&
+              (state is VehicleInitial || state is VehicleLoading)) {
+            return const _HomeLoadingSkeleton();
+          }
+
+          // If the initial fetch completely failed, show a retry screen.
+          if (!_hasLoadedOnce && state is VehicleError) {
+            return Scaffold(
+              backgroundColor: colorScheme.surface,
+              body: SafeArea(
+                child: Center(
+                  child: _ErrorWidget(
+                    message: state.message,
+                    onRetry: () {
+                      context.read<VehicleBloc>().add(const GetVehicles());
+                      context.read<VehicleBloc>().add(const GetBrands());
+                    },
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return Scaffold(
       body: CustomScrollView(
         key: const PageStorageKey('home_screen'),
         physics: const BouncingScrollPhysics(),
@@ -269,19 +307,47 @@ class _HomeScreenState extends State<HomeScreen>
                             ? state.brands
                             : const <Brand>[];
 
-                        // Show a loader while the brand list is being
+                        // Show shimmer skeleton chips while the brand list is being
                         // fetched from the API.
                         if (!isLoaded) {
                           return SizedBox(
                             height: 55.h,
-                            child: Center(
-                              child: SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: colorScheme.primary,
+                            child: Shimmer.fromColors(
+                              baseColor: colorScheme.surfaceContainerHighest,
+                              highlightColor: colorScheme.surface,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: AppDimensions.space12,
                                 ),
+                                itemCount: 5,
+                                separatorBuilder: (_, _) {
+                                  return SizedBox(width: AppDimensions.space16);
+                                },
+                                itemBuilder: (context, index) {
+                                  return AspectRatio(
+                                    aspectRatio:
+                                        AppDimensions.aspectRatioSquare,
+                                    child: Container(
+                                      width: AppSize.w(context, 20),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            colorScheme.surfaceContainerHighest,
+                                        borderRadius: BorderRadius.circular(
+                                            AppDimensions.radius16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black
+                                                .withValues(alpha: 0.04),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           );
@@ -399,9 +465,26 @@ class _HomeScreenState extends State<HomeScreen>
                         // ============================================
 
                         if (state is VehicleLoading) {
-                          return const SizedBox(
-                            height: 200,
-                            child: Center(child: CircularProgressIndicator()),
+                          return SizedBox(
+                            height: 270.h,
+                            child: Shimmer.fromColors(
+                              baseColor: colorScheme.surfaceContainerHighest,
+                              highlightColor: colorScheme.surface,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: 2,
+                                separatorBuilder: (_, _) {
+                                  return SizedBox(width: 14.w);
+                                },
+                                itemBuilder: (context, index) {
+                                  return _VehicleCardSkeleton(
+                                    width: 280.w,
+                                    filled: true,
+                                  );
+                                },
+                              ),
+                            ),
                           );
                         }
 
@@ -552,9 +635,16 @@ class _HomeScreenState extends State<HomeScreen>
                   // ================================================
 
                   if (state is VehicleLoading) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 30),
-                      child: Center(child: CircularProgressIndicator()),
+                    return Shimmer.fromColors(
+                      baseColor: colorScheme.surfaceContainerHighest,
+                      highlightColor: colorScheme.surface,
+                      child: Column(
+                        children: [
+                          _VehicleCardSkeleton(),
+                          SizedBox(height: 12.h),
+                          _VehicleCardSkeleton(),
+                        ],
+                      ),
                     );
                   }
 
@@ -645,6 +735,216 @@ class _HomeScreenState extends State<HomeScreen>
           // ==========================================================
           SliverToBoxAdapter(child: SizedBox(height: 40.h)),
         ],
+      ),
+    );
+        },
+      ),
+    );
+  }
+}
+
+// ====================================================================
+// HOME LOADING SKELETON (full-page shimmer placeholder)
+// ====================================================================
+
+class _HomeLoadingSkeleton extends StatelessWidget {
+  const _HomeLoadingSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final fill = colorScheme.surfaceContainerHighest;
+
+    Widget bar(double width, double height, {double radius = 4}) {
+      return Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(radius),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: SafeArea(
+        child: Shimmer.fromColors(
+          baseColor: fill,
+          highlightColor: colorScheme.surface,
+          child: ListView(
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppDimensions.space12,
+              vertical: 12.h,
+            ),
+            children: [
+              bar(160.w, 24, radius: AppDimensions.radius16),
+              SizedBox(height: 16.h),
+              bar(1.sw - 24.w, 50, radius: AppDimensions.radius16),
+              SizedBox(height: 20.h),
+              AspectRatio(
+                aspectRatio: 1.9,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: fill,
+                    borderRadius: BorderRadius.circular(AppDimensions.radius16),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20.h),
+              bar(130.w, 20, radius: AppDimensions.radius16),
+              SizedBox(height: 12.h),
+              SizedBox(
+                height: 55.h,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 5,
+                  separatorBuilder: (_, _) {
+                    return SizedBox(width: AppDimensions.space16);
+                  },
+                  itemBuilder: (context, index) {
+                    return AspectRatio(
+                      aspectRatio: AppDimensions.aspectRatioSquare,
+                      child: Container(
+                        width: AppSize.w(context, 20),
+                        decoration: BoxDecoration(
+                          color: fill,
+                          borderRadius:
+                              BorderRadius.circular(AppDimensions.radius16),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: 20.h),
+              bar(150.w, 20, radius: AppDimensions.radius16),
+              SizedBox(height: 12.h),
+              SizedBox(
+                height: 270.h,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 2,
+                  separatorBuilder: (_, _) {
+                    return SizedBox(width: 14.w);
+                  },
+                  itemBuilder: (context, index) {
+                    return _VehicleCardSkeleton(
+                      width: 280.w,
+                      filled: true,
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: 20.h),
+              bar(170.w, 20, radius: AppDimensions.radius16),
+              SizedBox(height: 12.h),
+              _VehicleCardSkeleton(),
+              SizedBox(height: 12.h),
+              _VehicleCardSkeleton(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ====================================================================
+// VEHICLE CARD SKELETON (shimmer placeholder)
+// ====================================================================
+
+class _VehicleCardSkeleton extends StatelessWidget {
+  final double? width;
+
+  /// When true, the image area expands to fill the leftover height instead
+  /// of using a fixed aspect ratio (safe inside a fixed-height row).
+  final bool filled;
+
+  const _VehicleCardSkeleton({this.width, this.filled = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final fill = colorScheme.surfaceContainerHighest;
+
+    return Container(
+      width: width ?? double.infinity,
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (filled)
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  color: fill,
+                ),
+              )
+            else
+              AspectRatio(
+                aspectRatio: AppDimensions.vehicleCardAspectRatio,
+                child: Container(
+                  width: double.infinity,
+                  color: fill,
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 140.w,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: fill,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Container(
+                    width: 100.w,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: fill,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      Container(
+                        width: 80.w,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: fill,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 36.w,
+                        height: 36.w,
+                        decoration: BoxDecoration(
+                          color: fill,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

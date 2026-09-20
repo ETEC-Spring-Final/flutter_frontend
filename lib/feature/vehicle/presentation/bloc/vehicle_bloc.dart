@@ -16,6 +16,13 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
   List<Vehicle> _vehicles = const [];
   List<Brand> _brands = const [];
 
+  // Tracks whether the vehicle list has finished loading. Brand fetches
+  // may complete independently, but the home/explore empty states must
+  // not be shown until the vehicle fetch has actually finished (otherwise
+  // a fast brand response emits VehicleLoaded with an empty vehicle list
+  // while /vehicles is still in flight).
+  bool _vehiclesLoaded = false;
+
   VehicleBloc(this.repository) : super(VehicleInitial()) {
     on<GetVehicles>(_onGetVehicles);
     on<GetVehicleById>(_onGetVehicleById);
@@ -35,6 +42,7 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
 
     result.fold((failure) => emit(VehicleError(failure.message)), (vehicles) {
       _vehicles = vehicles;
+      _vehiclesLoaded = true;
       emit(VehicleLoaded(_vehicles, _brands));
     });
   }
@@ -48,7 +56,12 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
       },
       (brands) {
         _brands = brands;
-        emit(VehicleLoaded(_vehicles, _brands));
+        // Don't emit VehicleLoaded until the vehicle list has been fetched,
+        // otherwise the UI briefly shows an empty state while /vehicles is
+        // still loading.
+        if (_vehiclesLoaded) {
+          emit(VehicleLoaded(_vehicles, _brands));
+        }
       },
     );
   }
