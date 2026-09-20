@@ -308,9 +308,10 @@ class _RentalDetailsScreenState extends State<RentalDetailsScreen> {
                 SizedBox(height: 24.h),
 
                 VehicleUnavailableDays(vehicle: widget.vehicle),
-                _buildRentalDetailsCard(),
 
                 SizedBox(height: 14.h),
+
+                _buildRentalDetailsCard(),
 
                 SizedBox(height: 14.h),
               ]),

@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:vehicle_rental_system/app/locale/bloc/locale_bloc.dart';
 import 'package:vehicle_rental_system/app/router/app_routes.dart';
+import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/bloc/theme_bloc.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
@@ -70,9 +72,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: BlocListener<ProfileBloc, ProfileState>(
           listener: (context, state) {
             if (state is ProfileError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.failure.message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.failure.message)));
             }
           },
           child: BlocBuilder<ProfileBloc, ProfileState>(
@@ -84,8 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _ => null,
               };
 
-              final isBusy =
-                  state is ProfileLoading || state is ProfileInitial;
+              final isBusy = state is ProfileLoading || state is ProfileInitial;
 
               return RefreshIndicator(
                 onRefresh: _refreshProfile,
@@ -101,7 +102,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       pinned: false,
                       elevation: 0,
                       scrolledUnderElevation: 0,
-                      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor,
                       surfaceTintColor: Colors.transparent,
                       titleSpacing: 16,
                       centerTitle: false,
@@ -143,9 +146,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             if (state is ProfileError && profile == null)
                               _ProfileLoadError(
                                 message: state.failure.message,
-                                onRetry: () => context
-                                    .read<ProfileBloc>()
-                                    .add(const LoadProfileEvent()),
+                                onRetry: () => context.read<ProfileBloc>().add(
+                                  const LoadProfileEvent(),
+                                ),
                               )
                             else
                               _ProfileHeader(
@@ -163,8 +166,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 BlocBuilder<BookingBloc, BookingState>(
                                   builder: (context, bookingState) {
-                                    final bookings = bookingState
-                                            is BookingLoaded
+                                    final bookings =
+                                        bookingState is BookingLoaded
                                         ? bookingState.bookings.length
                                         : 0;
                                     return _StatCard(
@@ -177,8 +180,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 SizedBox(width: 12.w),
                                 BlocBuilder<FavoriteBloc, FavoriteState>(
                                   builder: (context, favoriteState) {
-                                    final favorites = favoriteState
-                                            is FavoriteLoaded
+                                    final favorites =
+                                        favoriteState is FavoriteLoaded
                                         ? favoriteState.favoriteIds.length
                                         : 0;
                                     return _StatCard(
@@ -254,7 +257,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               color: theme
-                                                  .colorScheme.onSurfaceVariant,
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
                                             ),
                                       ),
                                       value: themeState.isDarkMode,
@@ -298,6 +302,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
 
+                            /*
+
                             SizedBox(height: 24.h),
 
                             _SectionTitle(title: 'Developer Tools'),
@@ -316,14 +322,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
 
+                            */
                             SizedBox(height: 24.h),
 
+                            /*
+                            
                             Center(
                               child: TextButton.icon(
                                 onPressed: () {
-                                  context
-                                      .read<AuthBloc>()
-                                      .add(LogoutRequested());
+                                  context.read<AuthBloc>().add(
+                                    LogoutRequested(),
+                                  );
                                 },
                                 icon: Icon(
                                   Icons.logout_rounded,
@@ -336,6 +345,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     color: theme.colorScheme.error,
                                     fontWeight: FontWeight.w600,
                                   ),
+                                ),
+                              ),
+                            ),
+
+                            */
+                            Center(
+                              child: SizedBox(
+                                height: 45.h,
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    // context.read<AuthBloc>().add(
+                                    //   LogoutRequested(),
+                                    // );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent,
+                                    foregroundColor: AppColors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radius8,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text('Logout'),
                                 ),
                               ),
                             ),
@@ -458,9 +496,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       setState(() => _profileImage = File(image.path));
-      context
-          .read<ProfileBloc>()
-          .add(UpdateProfilePictureEvent(image.path));
+      context.read<ProfileBloc>().add(UpdateProfilePictureEvent(image.path));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -524,10 +560,7 @@ class _ProfileHeader extends StatelessWidget {
         children: [
           Stack(
             children: [
-              CircleAvatar(
-                radius: 34.r,
-                backgroundImage: _avatar(),
-              ),
+              CircleAvatar(radius: 34.r, backgroundImage: _avatar()),
               if (loading || updating)
                 Positioned.fill(
                   child: Container(
@@ -577,9 +610,7 @@ class _ProfileHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name.isEmpty
-                      ? (loading ? 'Loading…' : 'Your Profile')
-                      : name,
+                  name.isEmpty ? (loading ? 'Loading…' : 'Your Profile') : name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleLarge?.copyWith(

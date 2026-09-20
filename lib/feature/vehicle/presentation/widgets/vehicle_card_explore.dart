@@ -7,6 +7,7 @@ import 'package:vehicle_rental_system/core/widgets/app_badge.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/core/widgets/favorite_toggle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/service/map_service.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/spec_item.dart';
 
 class VehicleCardExplore extends StatelessWidget {
   final Vehicle vehicle;
@@ -236,6 +237,41 @@ class VehicleCardExplore extends StatelessWidget {
 
                       const SizedBox(height: 8),
 
+                      Row(
+                        mainAxisAlignment: .spaceAround,
+                        children: [
+                          // Text(
+                          //   //vehicle.model,
+                          //   '${vehicle.brand} ${vehicle.model}',
+                          //   maxLines: 1,
+                          //   overflow: TextOverflow.ellipsis,
+                          //   style: theme.textTheme.titleMedium?.copyWith(
+                          //     fontWeight: FontWeight.w800,
+                          //   ),
+                          // ),
+
+                          // SizedBox(width: 10.w),
+                          SpecItem(
+                            icon: Icons.settings_outlined,
+                            text: vehicle.transmission,
+                          ),
+
+                          //const SizedBox(width: 8),
+                          SpecItem(
+                            icon: Icons.local_gas_station_outlined,
+                            text: vehicle.fuelType,
+                          ),
+
+                          //const SizedBox(width: 8),
+                          SpecItem(
+                            icon: Icons.person_outline_rounded,
+                            text: '${vehicle.seats}',
+                          ),
+                        ],
+                      ),
+
+                      /*
+
                       // ------------------------------------------------------
                       // RATING + DISTANCE + FEATURE
                       // ------------------------------------------------------
@@ -330,6 +366,8 @@ class VehicleCardExplore extends StatelessWidget {
                           ),
                         ],
                       ),
+
+                      */
                     ],
                   ),
                 ),

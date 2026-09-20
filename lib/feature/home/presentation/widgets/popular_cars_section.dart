@@ -37,7 +37,7 @@ class PopularCarsSection extends StatelessWidget {
         // HORIZONTAL VEHICLE LIST
         // ================================================================
         SizedBox(
-          height: 300.h,
+          height: 270.h,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),

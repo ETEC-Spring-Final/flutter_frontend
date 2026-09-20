@@ -221,10 +221,31 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
+
+                    SizedBox(width: 12.w),
+
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: colorScheme.onSurfaceVariant,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+
+                    SizedBox(width: 12.w),
+
+                    Text(
+                      vehicle.color,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
 
-                SizedBox(height: 28.h),
+                SizedBox(height: 16.h),
 
                 // =================================================================
                 // UNAVAILABLE DAYS
@@ -235,7 +256,6 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 // SPECIFICATIONS
                 // =================================================================
                 SizedBox(height: 16.h),
-
                 _buildSpecifications(context, vehicle),
 
                 SizedBox(height: 28.h),
@@ -684,8 +704,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
                 border: Border.all(
-                  //color: colorScheme.outline
-                  color: AppColors.primary,
+                  color: colorScheme.outline,
+                  //color: AppColors.primary,
                   width: 1.5,
                 ),
               ),
@@ -720,8 +740,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        //color: colorScheme.onSurface,
-                        color: AppColors.primary,
+                        color: colorScheme.onSurface,
+                        //color: AppColors.primary,
                       ),
                     ),
                   ),

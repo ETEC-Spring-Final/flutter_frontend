@@ -5,6 +5,7 @@ import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/favorite_toggle.dart';
 import 'package:vehicle_rental_system/core/widgets/app_badge.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/spec_item.dart';
 
 class VehicleCard extends StatelessWidget {
   final Vehicle vehicle;
@@ -214,19 +215,19 @@ class VehicleCard extends StatelessWidget {
 
                         SizedBox(width: 10.w),
 
-                        _SpecItem(
+                        SpecItem(
                           icon: Icons.settings_outlined,
                           text: vehicle.transmission,
                         ),
 
                         //const SizedBox(width: 8),
-                        _SpecItem(
+                        SpecItem(
                           icon: Icons.local_gas_station_outlined,
                           text: vehicle.fuelType,
                         ),
 
                         //const SizedBox(width: 8),
-                        _SpecItem(
+                        SpecItem(
                           icon: Icons.person_outline_rounded,
                           text: '${vehicle.seats}',
                         ),
@@ -241,19 +242,19 @@ class VehicleCard extends StatelessWidget {
                     // Row(
                     //   mainAxisAlignment: .spaceAround,
                     //   children: [
-                    //     _SpecItem(
+                    //     SpecItem(
                     //       icon: Icons.settings_outlined,
                     //       text: vehicle.transmission,
                     //     ),
 
                     //     //const SizedBox(width: 8),
-                    //     _SpecItem(
+                    //     SpecItem(
                     //       icon: Icons.local_gas_station_outlined,
                     //       text: vehicle.fuelType,
                     //     ),
 
                     //     //const SizedBox(width: 8),
-                    //     _SpecItem(
+                    //     SpecItem(
                     //       icon: Icons.person_outline_rounded,
                     //       text: '${vehicle.seats}',
                     //     ),
@@ -340,44 +341,6 @@ class VehicleCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ==================================================================
-// SPEC ITEM
-// ==================================================================
-
-class _SpecItem extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _SpecItem({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Expanded(
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-
-          const SizedBox(width: 4),
-
-          Flexible(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
