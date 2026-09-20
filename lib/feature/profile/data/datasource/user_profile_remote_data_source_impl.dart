@@ -44,7 +44,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
         filePath,
         filename: 'profile_picture.jpg',
       ),
-      'folder': 'user-profiles',
+      'folder': 'profile-pictures',
     });
 
     final response = await apiClient.post<dynamic>(
