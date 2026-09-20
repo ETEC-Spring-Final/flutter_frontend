@@ -65,11 +65,16 @@ dependencies:
   crypto: ^3.0.6 # md5 hashing for QR transaction ids
   flutter_web_auth_2: ^5.1.0
   shimmer: ^3.0.0
+  flutter_launcher_icons: ^0.14.4 # icon image
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
+flutter_icons:
+  andriod: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -88,10 +93,9 @@ flutter:
   uses-material-design: true
   generate: true # For localization
 
-
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - assets/images/
+  assets:
+    - assets/images/
   #   - assets/svgs/
 
   # An image asset can refer to one or more resolution-specific "variants", see

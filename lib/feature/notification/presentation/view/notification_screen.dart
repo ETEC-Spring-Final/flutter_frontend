@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shimmer/shimmer.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
@@ -269,14 +270,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     ),
                   ),
               ] else if (isLoading)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      color: colorScheme.primary,
-                    ),
-                  ),
+                const SliverToBoxAdapter(
+                  child: _NotificationSkeleton(),
                 )
               else if (error != null)
                 SliverFillRemaining(
@@ -386,6 +381,114 @@ class _FilterChip extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _NotificationSkeleton extends StatelessWidget {
+  const _NotificationSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final fill = colorScheme.surfaceContainerHighest;
+
+    Widget bar(double width, double height) {
+      return Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      );
+    }
+
+    Widget card() {
+      return Container(
+        width: double.infinity,
+        height: 100.h,
+        padding: EdgeInsets.all(AppDimensions.cardPadding),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+          border: Border.all(color: colorScheme.outline.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44.r,
+              height: 44.r,
+              decoration: BoxDecoration(
+                color: fill,
+                shape: BoxShape.circle,
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  bar(160.w, 14),
+                  SizedBox(height: 6.h),
+                  bar(double.infinity, 12),
+                  SizedBox(height: 4.h),
+                  bar(200.w, 12),
+                  SizedBox(height: 8.h),
+                  bar(60.w, 10),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Shimmer.fromColors(
+      baseColor: fill,
+      highlightColor: colorScheme.surface,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppDimensions.chipHorizontalPadding,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                _chip(fill, 64.w),
+                SizedBox(width: AppDimensions.space8),
+                _chip(fill, 88.w),
+                SizedBox(width: AppDimensions.space8),
+                _chip(fill, 76.w),
+                SizedBox(width: AppDimensions.space8),
+                _chip(fill, 96.w),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            card(),
+            SizedBox(height: AppDimensions.space10),
+            card(),
+            SizedBox(height: AppDimensions.space10),
+            card(),
+            SizedBox(height: AppDimensions.space10),
+            card(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _chip(Color fill, double width) {
+    return Container(
+      width: width,
+      height: 36.h,
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusCircular),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shimmer/shimmer.dart';
 
 import 'package:vehicle_rental_system/app/locale/bloc/locale_bloc.dart';
 import 'package:vehicle_rental_system/app/router/app_routes.dart';
@@ -88,6 +89,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               final isBusy = state is ProfileLoading || state is ProfileInitial;
 
+              final isLoading = isBusy && profile == null;
+
               return RefreshIndicator(
                 onRefresh: _refreshProfile,
                 child: CustomScrollView(
@@ -143,56 +146,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (state is ProfileError && profile == null)
-                              _ProfileLoadError(
-                                message: state.failure.message,
-                                onRetry: () => context.read<ProfileBloc>().add(
-                                  const LoadProfileEvent(),
+                            if (isLoading) ...[
+                              const _ProfileLoadingSkeleton(),
+                            ] else ...[
+                              if (state is ProfileError && profile == null)
+                                _ProfileLoadError(
+                                  message: state.failure.message,
+                                  onRetry: () => context
+                                      .read<ProfileBloc>()
+                                      .add(const LoadProfileEvent()),
+                                )
+                              else
+                                _ProfileHeader(
+                                  profile: profile,
+                                  localImage: _profileImage,
+                                  defaultAvatar: _defaultAvatar,
+                                  loading: isLoading,
+                                  updating: state is ProfileUpdating,
+                                  onEditTap: _pickProfileImage,
                                 ),
-                              )
-                            else
-                              _ProfileHeader(
-                                profile: profile,
-                                localImage: _profileImage,
-                                defaultAvatar: _defaultAvatar,
-                                loading: isBusy && profile == null,
-                                updating: state is ProfileUpdating,
-                                onEditTap: _pickProfileImage,
+
+                              SizedBox(height: 24.h),
+
+                              Row(
+                                children: [
+                                  BlocBuilder<BookingBloc, BookingState>(
+                                    builder: (context, bookingState) {
+                                      final bookings =
+                                          bookingState is BookingLoaded
+                                          ? bookingState.bookings.length
+                                          : 0;
+                                      return _StatCard(
+                                        icon: Icons.book_online_rounded,
+                                        value: '$bookings',
+                                        label: 'Bookings',
+                                      );
+                                    },
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  BlocBuilder<FavoriteBloc, FavoriteState>(
+                                    builder: (context, favoriteState) {
+                                      final favorites =
+                                          favoriteState is FavoriteLoaded
+                                          ? favoriteState.favoriteIds.length
+                                          : 0;
+                                      return _StatCard(
+                                        icon: Icons.favorite_rounded,
+                                        value: '$favorites',
+                                        label: 'Favorites',
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
-
-                            SizedBox(height: 24.h),
-
-                            Row(
-                              children: [
-                                BlocBuilder<BookingBloc, BookingState>(
-                                  builder: (context, bookingState) {
-                                    final bookings =
-                                        bookingState is BookingLoaded
-                                        ? bookingState.bookings.length
-                                        : 0;
-                                    return _StatCard(
-                                      icon: Icons.book_online_rounded,
-                                      value: '$bookings',
-                                      label: 'Bookings',
-                                    );
-                                  },
-                                ),
-                                SizedBox(width: 12.w),
-                                BlocBuilder<FavoriteBloc, FavoriteState>(
-                                  builder: (context, favoriteState) {
-                                    final favorites =
-                                        favoriteState is FavoriteLoaded
-                                        ? favoriteState.favoriteIds.length
-                                        : 0;
-                                    return _StatCard(
-                                      icon: Icons.favorite_rounded,
-                                      value: '$favorites',
-                                      label: 'Favorites',
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
+                            ],
 
                             SizedBox(height: 28.h),
 
@@ -505,6 +512,112 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
     }
+  }
+}
+
+// =====================================================================
+// PROFILE LOADING SKELETON (shimmer placeholder)
+// =====================================================================
+
+class _ProfileLoadingSkeleton extends StatelessWidget {
+  const _ProfileLoadingSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final fill = colorScheme.surfaceContainerHighest;
+
+    Widget bar(double width, double height) {
+      return Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      );
+    }
+
+    Widget statSkeleton() {
+      return Expanded(
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 16.h),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+            border: Border.all(color: colorScheme.outline),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 22.r,
+                height: 22.r,
+                decoration: BoxDecoration(
+                  color: fill,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              bar(64.w, 16),
+              SizedBox(height: 2.h),
+              bar(80.w, 10),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Shimmer.fromColors(
+      baseColor: fill,
+      highlightColor: colorScheme.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
+              border: Border.all(color: colorScheme.outline),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 68.r,
+                  height: 68.r,
+                  decoration: BoxDecoration(
+                    color: fill,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      bar(140.w, 18),
+                      SizedBox(height: 8.h),
+                      bar(180.w, 14),
+                      SizedBox(height: 8.h),
+                      bar(100.w, 12),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 24.h),
+          Row(
+            children: [
+              statSkeleton(),
+              SizedBox(width: 12.w),
+              statSkeleton(),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
