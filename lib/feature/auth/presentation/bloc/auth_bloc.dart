@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:vehicle_rental_system/core/constants/storage_keys.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/entity/login_request.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/entity/register_request.dart';
+import 'package:vehicle_rental_system/feature/auth/domain/service/oauth2_service.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/usecase/login_use_case.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/usecase/register_use_case.dart';
 
@@ -13,19 +14,21 @@ part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   //final AuthRepository repository;
-  final LoginUseCase loginUseCase;
+final LoginUseCase loginUseCase;
   final RegisterUseCase registerUseCase;
   final FlutterSecureStorage secureStorage;
+  final OAuth2Service oauth2Service;
   AuthBloc({
     required this.loginUseCase,
     required this.registerUseCase,
     required this.secureStorage,
+    required this.oauth2Service,
   }) : super(AuthInitial()) {
     on<LoginSubmitted>(_onLogin);
     on<RegisterSubmitted>(_onRegister);
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<LogoutRequested>(_onLogout);
-    //on<AuthEvent>((event, emit) {});
+    on<OAuthLoginRequested>(_onOAuthLogin);
   }
 
   //final String key = 'jwt_token';
@@ -122,6 +125,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthFailure(message));
       //emit(AuthFailure());
       //log("Registration failed: $e");
+    }
+  }
+
+  Future<void> _onOAuthLogin(
+    OAuthLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final token = await oauth2Service.authenticate(provider: event.provider);
+
+      if (token == null || token.isEmpty) {
+        emit(AuthFailure('OAuth sign-in was cancelled.'));
+        return;
+      }
+
+      await secureStorage.write(key: StorageKeys.jwtKey, value: token);
+
+      log('OAuth login successful');
+      log('JWT token saved');
+      emit(AuthAuthenticated());
+    } catch (e, stackTrace) {
+      final message = _getErrorMessage(e);
+
+      log("OAuth login failed: $message", error: e, stackTrace: stackTrace);
+      emit(AuthFailure(message));
     }
   }
 

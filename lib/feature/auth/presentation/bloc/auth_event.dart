@@ -13,6 +13,12 @@ class LoginSubmitted extends AuthEvent {
   LoginSubmitted({required this.email, required this.password});
 }
 
+class OAuthLoginRequested extends AuthEvent {
+  final String provider;
+
+  OAuthLoginRequested({required this.provider});
+}
+
 class RegisterSubmitted extends AuthEvent {
   final String firstName;
   final String lastName;

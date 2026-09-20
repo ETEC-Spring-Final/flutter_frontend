@@ -63,6 +63,7 @@ dependencies:
   qr_flutter: ^4.1.0 # QR code generator
   mobile_scanner: ^6.0.2 # QR code scanner
   crypto: ^3.0.6 # md5 hashing for QR transaction ids
+  flutter_web_auth_2: ^5.1.0
 
 dev_dependencies:
   flutter_test:

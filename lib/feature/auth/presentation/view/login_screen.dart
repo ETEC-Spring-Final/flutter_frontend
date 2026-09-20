@@ -77,6 +77,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_isLoading) navigate();
   }
 
+  void _oauthLogin(String provider) {
+    _goTo(
+      () => context.read<AuthBloc>().add(OAuthLoginRequested(provider: provider)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -270,24 +276,35 @@ class _LoginScreenState extends State<LoginScreen> {
                 // ==================================================
                 // SOCIAL BUTTONS
                 // ==================================================
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SocialButton(
-                        icon: Icons.g_mobiledata_rounded,
-                        label: 'Google',
-                        onPressed: _isLoading ? null : () {},
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: _SocialButton(
-                        icon: Icons.facebook_rounded,
-                        label: 'Facebook',
-                        onPressed: _isLoading ? null : () {},
-                      ),
-                    ),
-                  ],
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    final isAuthLoading = state is AuthLoading;
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _SocialButton(
+                            icon: Icons.g_mobiledata_rounded,
+                            label: 'Google',
+                            loading: isAuthLoading,
+                            onPressed: isAuthLoading
+                                ? null
+                                : () => _oauthLogin('google'),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: _SocialButton(
+                            icon: Icons.facebook_rounded,
+                            label: 'Facebook',
+                            loading: isAuthLoading,
+                            onPressed: isAuthLoading
+                                ? null
+                                : () => _oauthLogin('facebook'),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
 
                 SizedBox(height: 28.h),
@@ -335,11 +352,13 @@ class _SocialButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback? onPressed;
+  final bool loading;
 
   const _SocialButton({
     required this.icon,
     required this.label,
     this.onPressed,
+    this.loading = false,
   });
 
   @override
@@ -359,7 +378,17 @@ class _SocialButton extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 22.r, color: colorScheme.onSurface),
+          if (loading)
+            SizedBox(
+              width: 22.r,
+              height: 22.r,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                color: colorScheme.primary,
+              ),
+            )
+          else
+            Icon(icon, size: 22.r, color: colorScheme.onSurface),
           SizedBox(width: 8.w),
           Text(
             label,
