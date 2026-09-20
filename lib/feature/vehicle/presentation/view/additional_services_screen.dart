@@ -106,7 +106,8 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
 
   Map<String, bool> get selectedServices {
     return {
-      for (final service in _services) service.name: _selectedIds.contains(service.id),
+      for (final service in _services)
+        service.name: _selectedIds.contains(service.id),
     };
   }
 
@@ -207,6 +208,7 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
             children: [
               SizedBox(height: 8.h),
 
+              //SizedBox(height: 16.h),
               Text(
                 'Enhance your rental experience',
                 style: theme.textTheme.bodyMedium,
@@ -222,6 +224,20 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
               SizedBox(height: 18.h),
 
               // -----------------------------------------------------------------
+              // ORDER SUMMARY
+              // -----------------------------------------------------------------
+              _OrderSummary(
+                rentalPrice: rentalPrice,
+                servicesPrice: servicesPrice,
+                totalPrice: totalPrice,
+                rentalDays: rentalDays,
+              ),
+
+              Divider(),
+
+              SizedBox(height: 16.h),
+
+              // -----------------------------------------------------------------
               // SERVICES
               // -----------------------------------------------------------------
               if (_isLoadingServices)
@@ -230,10 +246,7 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
                   child: const Center(child: CircularProgressIndicator()),
                 )
               else if (_servicesError != null)
-                _ServicesError(
-                  message: _servicesError!,
-                  onRetry: _loadServices,
-                )
+                _ServicesError(message: _servicesError!, onRetry: _loadServices)
               else if (_services.isEmpty)
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 32.h),
@@ -255,18 +268,6 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
                     ),
                   ),
                 ),
-
-              SizedBox(height: 16.h),
-
-              // -----------------------------------------------------------------
-              // ORDER SUMMARY
-              // -----------------------------------------------------------------
-              _OrderSummary(
-                rentalPrice: rentalPrice,
-                servicesPrice: servicesPrice,
-                totalPrice: totalPrice,
-                rentalDays: rentalDays,
-              ),
 
               // Space at the bottom so content does not touch
               // the fixed bottom button.

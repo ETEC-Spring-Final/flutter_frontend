@@ -33,19 +33,13 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
 
     final result = await repository.getVehicles();
 
-    result.fold(
-      (failure) => emit(VehicleError(failure.message)),
-      (vehicles) {
-        _vehicles = vehicles;
-        emit(VehicleLoaded(_vehicles, _brands));
-      },
-    );
+    result.fold((failure) => emit(VehicleError(failure.message)), (vehicles) {
+      _vehicles = vehicles;
+      emit(VehicleLoaded(_vehicles, _brands));
+    });
   }
 
-  Future<void> _onGetBrands(
-    GetBrands event,
-    Emitter<VehicleState> emit,
-  ) async {
+  Future<void> _onGetBrands(GetBrands event, Emitter<VehicleState> emit) async {
     final result = await repository.getBrands();
 
     result.fold(
@@ -67,13 +61,10 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
 
     final result = await repository.getVehicleById(event.id);
 
-    result.fold(
-      (failure) => emit(VehicleError(failure.message)),
-      (vehicle) {
-        _vehicles = [vehicle];
-        emit(VehicleLoaded(_vehicles, _brands));
-      },
-    );
+    result.fold((failure) => emit(VehicleError(failure.message)), (vehicle) {
+      _vehicles = [vehicle];
+      emit(VehicleLoaded(_vehicles, _brands));
+    });
   }
 
   Future<void> _onCreateVehicle(
@@ -93,7 +84,10 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
     final edits = event.imageEdits;
 
     if (edits != null && edits.newImages.isNotEmpty) {
-      final upload = await repository.uploadVehicleImages(created.id, edits.newImages);
+      final upload = await repository.uploadVehicleImages(
+        created.id,
+        edits.newImages,
+      );
 
       if (upload.isLeft()) {
         emit(VehicleError(upload.getLeft().toNullable()!.message));
@@ -153,8 +147,10 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
 
       List<VehicleImage> links = const [];
       if (edits.newImages.isNotEmpty) {
-        final upload =
-            await repository.uploadVehicleImages(updated.id, edits.newImages);
+        final upload = await repository.uploadVehicleImages(
+          updated.id,
+          edits.newImages,
+        );
 
         if (upload.isLeft()) {
           emit(VehicleError(upload.getLeft().toNullable()!.message));
@@ -218,9 +214,7 @@ class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
 
     result.fold(
       (failure) => emit(VehicleError(failure.message)),
-      (_) => emit(
-        const VehicleSuccess('Vehicle deleted successfully.'),
-      ),
+      (_) => emit(const VehicleSuccess('Vehicle deleted successfully.')),
     );
   }
 }

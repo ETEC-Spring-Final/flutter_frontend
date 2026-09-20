@@ -356,9 +356,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 width: double.infinity,
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    // context.read<AuthBloc>().add(
-                                    //   LogoutRequested(),
-                                    // );
+                                    context.read<AuthBloc>().add(
+                                      LogoutRequested(),
+                                    );
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.redAccent,
