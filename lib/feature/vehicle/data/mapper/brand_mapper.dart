@@ -5,8 +5,8 @@ class BrandMapper {
   const BrandMapper._();
 
   static Brand toEntity(BrandModel model) =>
-      Brand(id: model.id, name: model.name);
+      Brand(id: model.id, name: model.name, imageUrl: model.imageUrl);
 
   static BrandModel toModel(Brand entity) =>
-      BrandModel(id: entity.id, name: entity.name);
+      BrandModel(id: entity.id, name: entity.name, imageUrl: entity.imageUrl);
 }

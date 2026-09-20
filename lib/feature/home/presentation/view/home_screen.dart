@@ -19,8 +19,8 @@ import 'package:vehicle_rental_system/feature/home/presentation/widgets/popular_
 
 import 'package:vehicle_rental_system/feature/notification/presentation/bloc/notification_bloc.dart';
 
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/brand.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
-import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_category.dart';
 
 import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/rental_details_screen.dart';
@@ -58,22 +58,22 @@ class _HomeScreenState extends State<HomeScreen>
   // Index 1..n = categories
   int selectedCategoryIndex = 0;
 
-  String get _selectedBrand {
+  String _selectedBrandName(List<Brand> brands) {
     final index = selectedCategoryIndex - 1;
 
-    if (index < 0 || index >= categories.length) {
+    if (index < 0 || index >= brands.length) {
       return '';
     }
 
-    return categories[index].name;
+    return brands[index].name;
   }
 
   // ============================================================
   // FILTER VEHICLES
   // ============================================================
 
-  List<Vehicle> _filteredVehicles(List<Vehicle> vehicles) {
-    final brand = _selectedBrand;
+  List<Vehicle> _filteredVehicles(List<Brand> brands, List<Vehicle> vehicles) {
+    final brand = _selectedBrandName(brands);
 
     // "All"
     if (brand.isEmpty) {
@@ -94,8 +94,9 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
 
-    // Load vehicles from Spring Boot API
+    // Load vehicles and brands from Spring Boot API
     context.read<VehicleBloc>().add(const GetVehicles());
+    context.read<VehicleBloc>().add(const GetBrands());
   }
 
   // ============================================================
@@ -104,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> refreshData() async {
     context.read<VehicleBloc>().add(const GetVehicles());
+    context.read<VehicleBloc>().add(const GetBrands());
   }
 
   // ============================================================
@@ -161,9 +163,7 @@ class _HomeScreenState extends State<HomeScreen>
                   child: BlocBuilder<NotificationBloc, NotificationState>(
                     builder: (context, state) {
                       final unreadCount = state is NotificationLoaded
-                          ? state.notifications
-                                .where((n) => !n.isRead)
-                                .length
+                          ? state.notifications.where((n) => !n.isRead).length
                           : 0;
 
                       return AppNotification(
@@ -260,64 +260,72 @@ class _HomeScreenState extends State<HomeScreen>
                     SizedBox(height: 8.h),
 
                     // ==================================================
-                    // BRAND CATEGORY
+                    // BRAND CATEGORY (from /api/brands)
                     // ==================================================
-                    SizedBox(
-                      height: 55.h,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
+                    BlocBuilder<VehicleBloc, VehicleState>(
+                      builder: (context, state) {
+                        final brands = state is VehicleLoaded
+                            ? state.brands
+                            : const <Brand>[];
 
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppDimensions.space12,
-                        ),
+                        return SizedBox(
+                          height: 55.h,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
 
-                        itemCount: categories.length + 1,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppDimensions.space12,
+                            ),
 
-                        separatorBuilder: (_, _) {
-                          return SizedBox(width: AppDimensions.space16);
-                        },
+                            itemCount: brands.length + 1,
 
-                        itemBuilder: (context, index) {
-                          // ==========================================
-                          // ALL
-                          // ==========================================
-
-                          if (index == 0) {
-                            return _CategoryItem(
-                              title: 'All',
-                              image: '',
-                              isSelected: selectedCategoryIndex == 0,
-                              onTap: () {
-                                setState(() {
-                                  selectedCategoryIndex = 0;
-                                });
-
-                                log('Filter: All');
-                              },
-                            );
-                          }
-
-                          // ==========================================
-                          // BRAND
-                          // ==========================================
-
-                          final category = categories[index - 1];
-
-                          return _CategoryItem(
-                            title: category.name,
-                            image: category.image,
-                            isSelected: selectedCategoryIndex == index,
-                            onTap: () {
-                              setState(() {
-                                selectedCategoryIndex = index;
-                              });
-
-                              log('Filter: ${category.name}');
+                            separatorBuilder: (_, _) {
+                              return SizedBox(width: AppDimensions.space16);
                             },
-                          );
-                        },
-                      ),
+
+                            itemBuilder: (context, index) {
+                              // ==========================================
+                              // ALL
+                              // ==========================================
+
+                              if (index == 0) {
+                                return _CategoryItem(
+                                  title: 'All',
+                                  image: '',
+                                  isSelected: selectedCategoryIndex == 0,
+                                  onTap: () {
+                                    setState(() {
+                                      selectedCategoryIndex = 0;
+                                    });
+
+                                    log('Filter: All');
+                                  },
+                                );
+                              }
+
+                              // ==========================================
+                              // BRAND
+                              // ==========================================
+
+                              final brand = brands[index - 1];
+
+                              return _CategoryItem(
+                                title: brand.name,
+                                image: brand.imageUrl,
+                                isSelected: selectedCategoryIndex == index,
+                                onTap: () {
+                                  setState(() {
+                                    selectedCategoryIndex = index;
+                                  });
+
+                                  log('Filter: ${brand.name}');
+                                },
+                              );
+                            },
+                          ),
+                        );
+                      },
                     ),
 
                     SizedBox(height: 8.h),
@@ -399,11 +407,14 @@ class _HomeScreenState extends State<HomeScreen>
 
                         if (state is VehicleLoaded) {
                           final filteredVehicles = _filteredVehicles(
+                            state.brands,
                             state.vehicles,
                           );
 
                           if (filteredVehicles.isEmpty) {
-                            return _EmptyVehiclesWidget(brand: _selectedBrand);
+                            return _EmptyVehiclesWidget(
+                              brand: _selectedBrandName(state.brands),
+                            );
                           }
 
                           return PopularCarsSection(
@@ -546,10 +557,15 @@ class _HomeScreenState extends State<HomeScreen>
                   // ================================================
 
                   if (state is VehicleLoaded) {
-                    final filteredVehicles = _filteredVehicles(state.vehicles);
+                    final filteredVehicles = _filteredVehicles(
+                      state.brands,
+                      state.vehicles,
+                    );
 
                     if (filteredVehicles.isEmpty) {
-                      return _EmptyVehiclesWidget(brand: _selectedBrand);
+                      return _EmptyVehiclesWidget(
+                        brand: _selectedBrandName(state.brands),
+                      );
                     }
 
                     return Column(
@@ -731,7 +747,7 @@ class _CategoryItem extends StatelessWidget {
                   : Image.network(
                       image,
 
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
 
                       filterQuality: FilterQuality.high,
 
