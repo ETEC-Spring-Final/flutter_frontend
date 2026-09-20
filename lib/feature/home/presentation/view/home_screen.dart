@@ -264,9 +264,28 @@ class _HomeScreenState extends State<HomeScreen>
                     // ==================================================
                     BlocBuilder<VehicleBloc, VehicleState>(
                       builder: (context, state) {
-                        final brands = state is VehicleLoaded
+                        final isLoaded = state is VehicleLoaded;
+                        final brands = isLoaded
                             ? state.brands
                             : const <Brand>[];
+
+                        // Show a loader while the brand list is being
+                        // fetched from the API.
+                        if (!isLoaded) {
+                          return SizedBox(
+                            height: 55.h,
+                            child: Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
 
                         return SizedBox(
                           height: 55.h,

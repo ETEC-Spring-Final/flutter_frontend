@@ -6,6 +6,7 @@ import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/di/injection_container.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_booking_bottom_bar.dart';
+import 'package:vehicle_rental_system/core/widgets/app_loading.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/entity/additional_service.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_additional_services.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
@@ -243,7 +244,7 @@ class _AdditionalServicesScreenState extends State<AdditionalServicesScreen> {
               if (_isLoadingServices)
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 32.h),
-                  child: const Center(child: CircularProgressIndicator()),
+                  child: const Center(child: AppLoading()),
                 )
               else if (_servicesError != null)
                 _ServicesError(message: _servicesError!, onRetry: _loadServices)
