@@ -363,7 +363,8 @@ class _SplashScreenState extends State<SplashScreen>
       height: 118.w,
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: Colors.white,
+        //color: colorScheme.surface,
         borderRadius: BorderRadius.circular(32.r),
         boxShadow: [
           BoxShadow(

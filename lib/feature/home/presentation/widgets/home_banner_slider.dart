@@ -163,7 +163,7 @@ class _BannerCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
 
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: Colors.transparent,
 
         borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
       ),
@@ -190,7 +190,8 @@ class _BannerCard extends StatelessWidget {
               }
 
               return Container(
-                color: AppColors.primary,
+                //color: AppColors.primary,
+                color: Colors.transparent,
 
                 alignment: Alignment.center,
 
