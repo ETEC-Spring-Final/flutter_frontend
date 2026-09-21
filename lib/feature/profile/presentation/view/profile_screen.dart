@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -13,6 +12,9 @@ import 'package:vehicle_rental_system/app/router/app_routes.dart';
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/app/theme/bloc/theme_bloc.dart';
+import 'package:vehicle_rental_system/core/constants/app_constants.dart';
+import 'package:vehicle_rental_system/core/widgets/app_dialog.dart';
+import 'package:vehicle_rental_system/core/widgets/app_loading.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
 import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/favorite/presentation/bloc/favorite_bloc.dart';
@@ -40,9 +42,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   File? _profileImage;
-
-  static const String _defaultAvatar =
-      "https://i.pinimg.com/736x/9d/16/4e/9d164e4e074d11ce4de0a508914537a8.jpg";
 
   Future<void> _refreshProfile() async {
     final bloc = context.read<ProfileBloc>();
@@ -160,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 _ProfileHeader(
                                   profile: profile,
                                   localImage: _profileImage,
-                                  defaultAvatar: _defaultAvatar,
+                                  defaultAvatar: AppConstants.defaultAvatar,
                                   loading: isLoading,
                                   updating: state is ProfileUpdating,
                                   onEditTap: _pickProfileImage,
@@ -362,10 +361,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 height: 45.h,
                                 width: double.infinity,
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    context.read<AuthBloc>().add(
-                                      LogoutRequested(),
+                                  onPressed: () async {
+                                    final confirmLogout =
+                                        await AppDialog.showConfirmation(
+                                          context: context,
+                                          title: 'Logout',
+                                          message: 'Do you want to logout?',
+                                          confirmText: 'Confirm',
+                                        );
+
+                                    if (confirmLogout != true) {
+                                      return;
+                                    }
+                                    // Loading
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (context) {
+                                        return Dialog.fullscreen(
+                                          backgroundColor: Colors.transparent,
+                                          child: AppLoading(),
+                                        );
+                                      },
                                     );
+                                    // Delay
+                                    await Future.delayed(
+                                      const Duration(seconds: 3),
+                                    );
+
+                                    if (!mounted) return;
+
+                                    Navigator.of(context).pop();
+
+                                    if (confirmLogout == true) {
+                                      context.read<AuthBloc>().add(
+                                        LogoutRequested(),
+                                      );
+                                    }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.redAccent,
@@ -552,10 +584,7 @@ class _ProfileLoadingSkeleton extends StatelessWidget {
               Container(
                 width: 22.r,
                 height: 22.r,
-                decoration: BoxDecoration(
-                  color: fill,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
               ),
               SizedBox(height: 8.h),
               bar(64.w, 16),

@@ -16,13 +16,17 @@ class AppLoading extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
           width: size,
           height: size,
-          child: CircularProgressIndicator(
-            strokeWidth: strokWidth,
-            color: theme.colorScheme.primary,
+          child: Center(
+            child: CircularProgressIndicator(
+              strokeWidth: strokWidth,
+              color: theme.colorScheme.primary,
+            ),
           ),
         ),
         if (message != null) ...[
