@@ -9,7 +9,7 @@ import 'package:vehicle_rental_system/core/widgets/app_empty.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart';
 import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/booking/presentation/view/booking_detail_screen.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/booking_card.dart';
+import 'package:vehicle_rental_system/feature/booking/presentation/widgets/booking_card.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});

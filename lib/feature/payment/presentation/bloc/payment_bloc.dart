@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/usecases/check_payment_usecase.dart';
-import '../../domain/usecases/create_qr_usecase.dart';
+import '../../domain/usecase/check_payment_usecase.dart';
+import '../../domain/usecase/create_qr_usecase.dart';
 import 'payment_event.dart';
 import 'payment_state.dart';
 

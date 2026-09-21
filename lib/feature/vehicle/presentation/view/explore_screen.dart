@@ -10,7 +10,7 @@ import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
 import 'package:vehicle_rental_system/core/widgets/shimmer_card.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/vehicle_detail_screen.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detail_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/explore_category_filter.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card_explore.dart';
 

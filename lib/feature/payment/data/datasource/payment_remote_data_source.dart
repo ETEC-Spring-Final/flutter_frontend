@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:vehicle_rental_system/core/constants/api_constants.dart';
 
-import '../models/create_qr_response.dart';
-import '../models/check_payment_response.dart';
+import '../model/create_qr_response.dart';
+import '../model/check_payment_response.dart';
 
 abstract class PaymentRemoteDataSource {
   Future<CreateQrResponse> createQr({required double amount});

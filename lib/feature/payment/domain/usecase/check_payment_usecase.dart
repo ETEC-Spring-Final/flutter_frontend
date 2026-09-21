@@ -1,5 +1,5 @@
-import '../../data/models/check_payment_response.dart';
-import '../repositories/payment_repository.dart';
+import '../../data/model/check_payment_response.dart';
+import '../repository/payment_repository.dart';
 
 class CheckPaymentUseCase {
   final PaymentRepository repository;

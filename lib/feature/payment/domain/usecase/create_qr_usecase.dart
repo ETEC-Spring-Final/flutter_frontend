@@ -1,5 +1,5 @@
-import '../../data/models/create_qr_response.dart';
-import '../repositories/payment_repository.dart';
+import '../../data/model/create_qr_response.dart';
+import '../repository/payment_repository.dart';
 
 class CreateQrUseCase {
   final PaymentRepository repository;

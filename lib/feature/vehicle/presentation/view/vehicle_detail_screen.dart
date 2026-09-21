@@ -12,9 +12,9 @@ import 'package:vehicle_rental_system/core/widgets/favorite_toggle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/service/map_service.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/rental_details_screen.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/widget/vehicle_image_thumbnails.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/widget/vehicle_image_viewer.dart';
+import 'package:vehicle_rental_system/feature/rental/presentation/view/rental_details_screen.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_detail/vehicle_image_thumbnails.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_detail/vehicle_image_viewer.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_unavailable_days.dart';
 

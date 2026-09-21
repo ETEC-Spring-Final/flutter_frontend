@@ -1,11 +1,9 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/widget/image_viewer_arrow.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/widget/vehicle_image_thumbnails.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_detail/vehicle_image_thumbnails.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_detial/image_viewer_arrow.dart';
 
 class VehicleImageViewer extends StatefulWidget {
   final Vehicle vehicle;

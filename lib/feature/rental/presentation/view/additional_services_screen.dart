@@ -10,7 +10,7 @@ import 'package:vehicle_rental_system/core/widgets/app_loading.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/entity/additional_service.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/usecase/get_additional_services.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/confirm_screen.dart';
+import 'package:vehicle_rental_system/feature/rental/presentation/view/confirm_screen.dart';
 
 class AdditionalServicesScreen extends StatefulWidget {
   final Vehicle vehicle;

@@ -7,13 +7,13 @@ import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart
 import 'package:vehicle_rental_system/feature/notification/presentation/view/notification_screen.dart';
 
 import '../../feature/home/presentation/view/main_screen.dart';
-import '../../feature/onboarding/view/onboarding_screen.dart';
-import '../../feature/onboarding/view/splash_screen.dart';
+import '../../feature/onboarding/presentation/view/onboarding_screen.dart';
+import '../../feature/onboarding/presentation/view/splash_screen.dart';
 import '../../feature/profile/presentation/view/profile_screen.dart';
-import '../../feature/vehicle/presentation/view/booking_screen.dart';
+import '../../feature/rental/presentation/view/booking_screen.dart';
 import '../../feature/vehicle/presentation/view/explore_screen.dart';
 import '../../feature/vehicle/presentation/view/favorite_screen.dart';
-import '../../feature/vehicle/presentation/view/vehicle_detial/vehicle_detail_screen.dart';
+import '../../feature/vehicle/presentation/view/vehicle_detail_screen.dart';
 import '../../feature/payment/presentation/view/payment_screen.dart';
 import '../../feature/vehicle/presentation/view/vehicle_crud_screen.dart';
 import '../router/app_routes.dart';

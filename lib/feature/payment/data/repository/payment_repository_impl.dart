@@ -1,7 +1,7 @@
-import '../../domain/repositories/payment_repository.dart';
-import '../datasources/payment_remote_data_source.dart';
-import '../models/create_qr_response.dart';
-import '../models/check_payment_response.dart';
+import '../../domain/repository/payment_repository.dart';
+import '../datasource/payment_remote_data_source.dart';
+import '../model/create_qr_response.dart';
+import '../model/check_payment_response.dart';
 
 class PaymentRepositoryImpl implements PaymentRepository {
   final PaymentRemoteDataSource remoteDataSource;

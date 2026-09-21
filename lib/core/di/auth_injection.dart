@@ -4,7 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:vehicle_rental_system/core/storage/secure_storage_service.dart';
 import 'package:vehicle_rental_system/feature/auth/data/datasource/auth_remote_data_source.dart';
 import 'package:vehicle_rental_system/feature/auth/data/datasource/auth_remote_data_source_impl.dart';
-import 'package:vehicle_rental_system/feature/auth/data/repositories/auth_repository_impl.dart';
+import 'package:vehicle_rental_system/feature/auth/data/repository/auth_repository_impl.dart';
 import 'package:vehicle_rental_system/feature/auth/data/service/oauth2_service_impl.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/repository/auth_repository.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/service/oauth2_service.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vehicle_rental_system/feature/rental/presentation/widgets/rental_detail/rental_section_card.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/rental_location.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/rental_detail/rental_section_card.dart';
 
 class RentalLocationDropdown extends StatelessWidget {
   const RentalLocationDropdown({

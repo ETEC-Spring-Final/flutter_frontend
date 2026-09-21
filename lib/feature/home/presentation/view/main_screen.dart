@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:vehicle_rental_system/feature/home/presentation/view/home_screen.dart';
-import 'package:vehicle_rental_system/feature/home/presentation/widgets/app_botton_navigation.dart';
+import 'package:vehicle_rental_system/feature/home/presentation/widgets/app_bottom_navigation.dart';
 import 'package:vehicle_rental_system/feature/profile/presentation/view/profile_screen.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/booking_screen.dart';
+import 'package:vehicle_rental_system/feature/rental/presentation/view/booking_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/explore_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/favorite_screen.dart';
 

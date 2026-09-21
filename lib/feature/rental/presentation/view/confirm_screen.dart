@@ -12,7 +12,7 @@ import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart
 import 'package:vehicle_rental_system/feature/booking/domain/entity/new_booking_request.dart';
 import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/booking_confirmation_screen.dart';
+import 'package:vehicle_rental_system/feature/rental/presentation/view/booking_confirmation_screen.dart';
 
 class ConfirmScreen extends StatefulWidget {
   final Vehicle vehicle;

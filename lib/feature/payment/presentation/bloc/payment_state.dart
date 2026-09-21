@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../data/models/create_qr_response.dart';
+import '../../data/model/create_qr_response.dart';
 
 abstract class PaymentState extends Equatable {
   const PaymentState();

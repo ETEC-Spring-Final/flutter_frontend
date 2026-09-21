@@ -4,9 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:vehicle_rental_system/core/constants/api_constants.dart';
 import 'package:vehicle_rental_system/core/errors/app_exception.dart';
 import 'package:vehicle_rental_system/feature/auth/data/datasource/auth_remote_data_source.dart';
-import 'package:vehicle_rental_system/feature/auth/data/models/auth_response_model.dart';
-import 'package:vehicle_rental_system/feature/auth/data/models/login_request_model.dart';
-import 'package:vehicle_rental_system/feature/auth/data/models/register_request_model.dart';
+import 'package:vehicle_rental_system/feature/auth/data/model/auth_response_model.dart';
+import 'package:vehicle_rental_system/feature/auth/data/model/login_request_model.dart';
+import 'package:vehicle_rental_system/feature/auth/data/model/register_request_model.dart';
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final Dio dio;

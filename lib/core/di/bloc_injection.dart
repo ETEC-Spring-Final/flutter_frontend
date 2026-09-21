@@ -7,8 +7,8 @@ import 'package:vehicle_rental_system/feature/favorite/domain/repository/favorit
 import 'package:vehicle_rental_system/feature/favorite/presentation/bloc/favorite_bloc.dart';
 import 'package:vehicle_rental_system/feature/notification/domain/repository/notification_repository.dart';
 import 'package:vehicle_rental_system/feature/notification/presentation/bloc/notification_bloc.dart';
-import 'package:vehicle_rental_system/feature/payment/domain/usecases/check_payment_usecase.dart';
-import 'package:vehicle_rental_system/feature/payment/domain/usecases/create_qr_usecase.dart';
+import 'package:vehicle_rental_system/feature/payment/domain/usecase/check_payment_usecase.dart';
+import 'package:vehicle_rental_system/feature/payment/domain/usecase/create_qr_usecase.dart';
 import 'package:vehicle_rental_system/feature/payment/presentation/bloc/payment_bloc.dart';
 import 'package:vehicle_rental_system/feature/profile/domain/repository/user_profile_repository.dart';
 import 'package:vehicle_rental_system/feature/profile/presentation/bloc/profile_bloc.dart';

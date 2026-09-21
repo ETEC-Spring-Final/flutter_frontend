@@ -26,8 +26,8 @@ import 'package:vehicle_rental_system/feature/vehicle/domain/entity/brand.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 
 import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/rental_details_screen.dart';
-import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detial/vehicle_detail_screen.dart';
+import 'package:vehicle_rental_system/feature/rental/presentation/view/rental_details_screen.dart';
+import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detail_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card_explore.dart';
 
 class HomeScreen extends StatefulWidget {
