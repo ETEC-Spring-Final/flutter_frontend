@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:vehicle_rental_system/core/constants/app_constants.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/entity/booking.dart';
 import 'package:vehicle_rental_system/feature/rental/presentation/bloc/rental_bloc.dart';
@@ -519,8 +520,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       height: 45.w,
                       padding: EdgeInsets.all(3.w),
                       color: Colors.white,
-                      child: Image.network(
-                        'https://api.nuget.org/v3-flatcontainer/kh.gov.nbc.bakongkhqr/1.0.0.15/icon',
+                      child: Image.asset(
+                        AppConstants.bakongIcon,
                         fit: BoxFit.contain,
                       ),
                     ),
