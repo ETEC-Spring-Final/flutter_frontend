@@ -116,6 +116,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
+
+                      /*
                       actions: [
                         TextButton.icon(
                           onPressed: () {
@@ -135,6 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                       ],
+                      */
                     ),
 
                     SliverPadding(
