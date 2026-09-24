@@ -3,6 +3,7 @@ import 'package:vehicle_rental_system/feature/booking/data/datasource/booking_re
 import 'package:vehicle_rental_system/feature/booking/data/datasource/booking_remote_data_source_impl.dart';
 import 'package:vehicle_rental_system/feature/booking/data/repository/booking_repository_impl.dart';
 import 'package:vehicle_rental_system/feature/booking/domain/repository/booking_repository.dart';
+import 'package:vehicle_rental_system/feature/favorite/data/datasource/favorite_remote_data_source.dart';
 import 'package:vehicle_rental_system/feature/favorite/data/repository/favorite_repository_impl.dart';
 import 'package:vehicle_rental_system/feature/favorite/domain/repository/favorite_repository.dart';
 import 'package:vehicle_rental_system/feature/vehicle/data/datasource/location_remote_data_source.dart';
@@ -30,7 +31,9 @@ void registerRepositories() {
   // Favorite
   // ==========================================
 
-  sl.registerLazySingleton<FavoriteRepository>(() => FavoriteRepositoryImpl());
+  sl.registerLazySingleton<FavoriteRepository>(
+    () => FavoriteRepositoryImpl(sl<FavoriteRemoteDataSource>()),
+  );
 
   sl.registerLazySingleton<LocationRepository>(
     () => LocationRepositoryImpl(

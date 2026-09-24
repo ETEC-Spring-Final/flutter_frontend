@@ -25,7 +25,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // ============================================================
   // PAGES DATA
   // ============================================================
-
   static const List<_OnboardingPageData> _pages = [
     _OnboardingPageData(
       icon: Icons.directions_car_filled_rounded,

@@ -1,62 +1,70 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vehicle_rental_system/core/errors/failure.dart';
+import 'package:vehicle_rental_system/feature/favorite/data/datasource/favorite_remote_data_source.dart';
 import 'package:vehicle_rental_system/feature/favorite/domain/repository/favorite_repository.dart';
 
-/// Local [FavoriteRepository] backed by [SharedPreferences].
+/// [FavoriteRepository] backed entirely by the Spring Boot `/favorites` API.
 ///
-/// Favorites are persisted locally so they survive app restarts. This is the
-/// default, offline-capable implementation. Swap this impl in DI once a remote
-/// favorites API is available.
+/// Favorites are always read from and written to the server for the current
+/// user (JWT-attached via [AuthInterceptor]). There is intentionally no local
+/// persistence: the API is the single source of truth, so favorites stay in
+/// sync across devices and logins.
 class FavoriteRepositoryImpl implements FavoriteRepository {
-  FavoriteRepositoryImpl();
+  FavoriteRepositoryImpl(this._remote);
 
-  static const String _prefsKey = 'favorite_vehicle_ids';
+  final FavoriteRemoteDataSource _remote;
 
   @override
   Future<Either<Failure, Set<int>>> getFavoriteIds() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final ids = (prefs.getStringList(_prefsKey) ?? const [])
-          .map(int.parse)
-          .toSet();
-      return Right(ids);
+      final favorites = await _remote.getFavorites();
+      return Right(favorites.map((f) => f.vehicleId).toSet());
     } catch (e) {
       return Left(ServiceFailure('Failed to load favorites: $e'));
     }
   }
 
   @override
-  Future<Either<Failure, void>> addFavorite(int vehicleId) async {
-    final result = await getFavoriteIds();
-    final ids = result.fold((_) => <int>{}, (ids) => ids);
-    ids.add(vehicleId);
-    return _persist(ids);
-  }
-
-  @override
-  Future<Either<Failure, void>> removeFavorite(int vehicleId) async {
-    final result = await getFavoriteIds();
-    final ids = result.fold((_) => <int>{}, (ids) => ids);
-    ids.remove(vehicleId);
-    return _persist(ids);
-  }
-
-  @override
-  Future<Either<Failure, void>> setFavoriteIds(Set<int> ids) async {
-    return _persist(ids);
-  }
-
-  Future<Either<Failure, void>> _persist(Set<int> ids) async {
+  Future<Either<Failure, Unit>> addFavorite(int vehicleId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(
-        _prefsKey,
-        ids.map((id) => id.toString()).toList(),
-      );
-      return const Right(null);
+      await _remote.addFavorite(vehicleId);
+      return const Right(unit);
     } catch (e) {
-      return Left(ServiceFailure('Failed to save favorites: $e'));
+      return Left(ServiceFailure('Failed to add favorite: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> removeFavorite(int vehicleId) async {
+    try {
+      await _remote.removeFavorite(vehicleId);
+      return const Right(unit);
+    } catch (e) {
+      return Left(ServiceFailure('Failed to remove favorite: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> setFavoriteIds(Set<int> ids) async {
+    try {
+      // Replace the server set with [ids]: remove former favorites that are no
+      // longer selected secret; add newly-selected ones most recently.
+      final serverIds =
+          (await _remote.getFavorites()).map((f) => f.vehicleId).toSet();
+
+      final toAdd = ids.difference(serverIds);
+      final toRemove = serverIds.difference(ids);
+
+      for (final vehicleId in toRemove) {
+        await _remote.removeFavorite(vehicleId);
+      }
+      for (final vehicleId in toAdd) {
+        await _remote.addFavorite(vehicleId);
+      }
+
+      return const Right(unit);
+    } catch (e) {
+      return Left(ServiceFailure('Failed to update favorites: $e'));
     }
   }
 }

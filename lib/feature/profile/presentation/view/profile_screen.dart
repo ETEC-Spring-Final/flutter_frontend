@@ -682,7 +682,7 @@ class _ProfileHeader extends StatelessWidget {
       return NetworkImage(pictureUrl);
     }
 
-    return NetworkImage(defaultAvatar);
+    return AssetImage(defaultAvatar);
   }
 
   @override

@@ -282,16 +282,11 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                               '${vehicle.model}',
                             );
 
-                            // Your FavoriteBloc event
-                            // should be dispatched here.
-                            //
-                            // Example:
-                            //
-                            // context.read<FavoriteBloc>().add(
-                            //   ToggleFavoriteEvent(
-                            //     vehicle.id,
-                            //   ),
-                            // );
+                            context.read<FavoriteBloc>().add(
+                              ToggleFavoriteEvent(
+                                vehicle.id,
+                              ),
+                            );
                           },
                         );
                       },

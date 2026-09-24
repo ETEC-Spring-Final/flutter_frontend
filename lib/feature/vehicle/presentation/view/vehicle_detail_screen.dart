@@ -9,6 +9,7 @@ import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_back_button.dart';
 import 'package:vehicle_rental_system/core/widgets/favorite_toggle.dart';
+import 'package:vehicle_rental_system/feature/favorite/presentation/bloc/favorite_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/service/map_service.dart';
@@ -104,9 +105,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             actions: [
               FavoriteToggle(
                 onFavoriteTap: () {
-                  // context.read<FavoriteBloc>().add(
-                  //   ToggleFavoriteEvent(vehicle.id),
-                  // );
+                  context.read<FavoriteBloc>().add(
+                    ToggleFavoriteEvent(vehicle.id),
+                  );
                 },
                 vehicle: vehicle,
               ),
