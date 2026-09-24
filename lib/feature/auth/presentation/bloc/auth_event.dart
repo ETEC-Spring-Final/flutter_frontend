@@ -38,3 +38,16 @@ class RegisterSubmitted extends AuthEvent {
     required this.gender,
   });
 }
+
+class ForgotPasswordSubmitted extends AuthEvent {
+  final String email;
+
+  ForgotPasswordSubmitted({required this.email});
+}
+
+class ResetPasswordSubmitted extends AuthEvent {
+  final String token;
+  final String newPassword;
+
+  ResetPasswordSubmitted({required this.token, required this.newPassword});
+}

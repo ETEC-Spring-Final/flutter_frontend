@@ -4,8 +4,10 @@ import 'package:vehicle_rental_system/core/storage/secure_storage_service.dart';
 import 'package:vehicle_rental_system/feature/auth/data/datasource/auth_remote_data_source.dart';
 import 'package:vehicle_rental_system/feature/auth/data/mapper/auth_mapper.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/entity/auth_response.dart';
+import 'package:vehicle_rental_system/feature/auth/domain/entity/forgot_password_request.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/entity/login_request.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/entity/register_request.dart';
+import 'package:vehicle_rental_system/feature/auth/domain/entity/reset_password_request.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/repository/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -42,5 +44,19 @@ class AuthRepositoryImpl implements AuthRepository {
     log("JWT from storage: $storedToken");
 
     return AuthMapper.modelToEntity(responseModel);
+  }
+
+  @override
+  Future<String> forgotPassword(ForgotPasswordRequest request) async {
+    final model = AuthMapper.forgotToModel(request);
+
+    return remote.forgotPassword(model);
+  }
+
+  @override
+  Future<void> resetPassword(ResetPasswordRequest request) async {
+    final model = AuthMapper.resetToModel(request);
+
+    await remote.resetPassword(model);
   }
 }

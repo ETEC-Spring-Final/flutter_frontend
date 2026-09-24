@@ -3,11 +3,16 @@ import 'dart:developer';
 import 'package:bloc/bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:vehicle_rental_system/core/constants/storage_keys.dart';
+import 'package:vehicle_rental_system/core/errors/app_exception.dart';
+import 'package:vehicle_rental_system/feature/auth/domain/entity/forgot_password_request.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/entity/login_request.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/entity/register_request.dart';
+import 'package:vehicle_rental_system/feature/auth/domain/entity/reset_password_request.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/service/oauth2_service.dart';
+import 'package:vehicle_rental_system/feature/auth/domain/usecase/forgot_password_use_case.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/usecase/login_use_case.dart';
 import 'package:vehicle_rental_system/feature/auth/domain/usecase/register_use_case.dart';
+import 'package:vehicle_rental_system/feature/auth/domain/usecase/reset_password_use_case.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -16,16 +21,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   //final AuthRepository repository;
 final LoginUseCase loginUseCase;
   final RegisterUseCase registerUseCase;
+  final ForgotPasswordUseCase forgotPasswordUseCase;
+  final ResetPasswordUseCase resetPasswordUseCase;
   final FlutterSecureStorage secureStorage;
   final OAuth2Service oauth2Service;
   AuthBloc({
     required this.loginUseCase,
     required this.registerUseCase,
+    required this.forgotPasswordUseCase,
+    required this.resetPasswordUseCase,
     required this.secureStorage,
     required this.oauth2Service,
   }) : super(AuthInitial()) {
     on<LoginSubmitted>(_onLogin);
     on<RegisterSubmitted>(_onRegister);
+    on<ForgotPasswordSubmitted>(_onForgotPassword);
+    on<ResetPasswordSubmitted>(_onResetPassword);
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<LogoutRequested>(_onLogout);
     on<OAuthLoginRequested>(_onOAuthLogin);
@@ -34,6 +45,10 @@ final LoginUseCase loginUseCase;
   //final String key = 'jwt_token';
 
   String _getErrorMessage(Object error) {
+    if (error is AppException) {
+      return error.message;
+    }
+
     final message = error.toString();
 
     if (message.startsWith('Exception: ')) {
@@ -125,6 +140,51 @@ final LoginUseCase loginUseCase;
       emit(AuthFailure(message));
       //emit(AuthFailure());
       //log("Registration failed: $e");
+    }
+  }
+
+  Future<void> _onForgotPassword(
+    ForgotPasswordSubmitted event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final request = ForgotPasswordRequest(email: event.email);
+
+      final message = await forgotPasswordUseCase(request);
+
+      log('Password reset link sent');
+      emit(ForgotPasswordSuccess(message));
+    } catch (e, stackTrace) {
+      final message = _getErrorMessage(e);
+
+      log("Forgot password failed: $message", error: e, stackTrace: stackTrace);
+
+      emit(AuthFailure(message));
+    }
+  }
+
+  Future<void> _onResetPassword(
+    ResetPasswordSubmitted event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final request = ResetPasswordRequest(
+        token: event.token,
+        newPassword: event.newPassword,
+      );
+
+      await resetPasswordUseCase(request);
+
+      log('Password reset successful');
+      emit(ResetPasswordSuccess());
+    } catch (e, stackTrace) {
+      final message = _getErrorMessage(e);
+
+      log("Reset password failed: $message", error: e, stackTrace: stackTrace);
+
+      emit(AuthFailure(message));
     }
   }
 
