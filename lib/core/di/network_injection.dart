@@ -6,6 +6,7 @@ import 'package:vehicle_rental_system/core/constants/api_constants.dart';
 
 import 'package:vehicle_rental_system/core/network/api_client.dart';
 import 'package:vehicle_rental_system/core/network/interceptors/logging_interceptor.dart';
+import 'package:vehicle_rental_system/core/network/lenient_json_transformer.dart';
 import 'package:vehicle_rental_system/core/network/network_info.dart';
 import 'package:vehicle_rental_system/core/network/interceptors/auth_interceptor.dart';
 import 'package:vehicle_rental_system/core/storage/secure_storage_service.dart';
@@ -45,6 +46,8 @@ void registerNetwork() {
         },
       ),
     );
+
+    dio.transformer = LenientJsonTransformer();
 
     dio.interceptors.add(sl<AuthInterceptor>());
 
