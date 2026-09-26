@@ -65,6 +65,61 @@ class _HomeScreenState extends State<HomeScreen>
   // showing the content instead of the loading skeleton.
   bool _hasLoadedOnce = false;
 
+  // ============================================================
+  // BRAND PAGINATION (client side)
+  // ============================================================
+
+  // The /api/brands endpoint returns the whole list at once, so the paging
+  // is done here: only the first _brandPageSize chips are revealed and the
+  // rest are appended as the row is scrolled.
+  static const int _brandPageSize = 8;
+
+  // Distance from the end of the row (in logical pixels) at which the next
+  // page is appended.
+  static const double _brandLoadMoreThreshold = 200;
+
+  int _visibleBrandCount = _brandPageSize;
+
+  final ScrollController _brandScrollController = ScrollController();
+
+  // ============================================================
+  // BRAND PAGINATION HANDLERS
+  // ============================================================
+
+  void _onBrandScroll() {
+    if (!_brandScrollController.hasClients) return;
+
+    final position = _brandScrollController.position;
+
+    if (position.pixels >=
+        position.maxScrollExtent - _brandLoadMoreThreshold) {
+      _loadMoreBrands();
+    }
+  }
+
+  void _loadMoreBrands() {
+    if (_visibleBrandCount >= _brandTotal) return;
+
+    setState(() {
+      _visibleBrandCount = (_visibleBrandCount + _brandPageSize).clamp(
+        0,
+        _brandTotal,
+      );
+    });
+  }
+
+  // Total number of brands reported by the API, so the scroll listener can
+  // tell whether there is still another page to reveal.
+  int _brandTotal = 0;
+
+  void _resetBrandPagination() {
+    // Keep the active chip visible: it lives at index 1..n in the row, so
+    // never collapse back to fewer chips than the current selection.
+    final required = selectedCategoryIndex;
+
+    _visibleBrandCount = required > _brandPageSize ? required : _brandPageSize;
+  }
+
   String _selectedBrandName(List<Brand> brands) {
     final index = selectedCategoryIndex - 1;
 
@@ -101,6 +156,8 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
 
+    _brandScrollController.addListener(_onBrandScroll);
+
     // Load vehicles and brands from Spring Boot API
     context.read<VehicleBloc>().add(const GetVehicles());
     context.read<VehicleBloc>().add(const GetBrands());
@@ -111,8 +168,17 @@ class _HomeScreenState extends State<HomeScreen>
   // ============================================================
 
   Future<void> refreshData() async {
+    _resetBrandPagination();
     context.read<VehicleBloc>().add(const GetVehicles());
     context.read<VehicleBloc>().add(const GetBrands());
+  }
+
+  @override
+  void dispose() {
+    _brandScrollController
+      ..removeListener(_onBrandScroll)
+      ..dispose();
+    super.dispose();
   }
 
   // ============================================================
@@ -130,6 +196,13 @@ class _HomeScreenState extends State<HomeScreen>
       listener: (context, state) {
         if (state is VehicleLoaded) {
           _hasLoadedOnce = true;
+
+          // Start back at the first page whenever the brand dataset itself
+          // changed size, so a refresh never leaves stale brands revealed.
+          if (state.brands.length != _brandTotal) {
+            _brandTotal = state.brands.length;
+            _resetBrandPagination();
+          }
         }
       },
       child: BlocBuilder<VehicleBloc, VehicleState>(
@@ -304,9 +377,17 @@ class _HomeScreenState extends State<HomeScreen>
                                 return const BrandChipsShimmer();
                               }
 
+                              // Only the brands paged in so far are rendered; the
+                              // rest are appended while the row is scrolled.
+                              final visibleBrands = brands
+                                  .take(_visibleBrandCount)
+                                  .toList(growable: false);
+
                               return SizedBox(
                                 height: 55.h,
                                 child: ListView.separated(
+                                  controller: _brandScrollController,
+
                                   scrollDirection: Axis.horizontal,
                                   physics: const BouncingScrollPhysics(),
 
@@ -314,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     horizontal: AppDimensions.space12,
                                   ),
 
-                                  itemCount: brands.length + 1,
+                                  itemCount: visibleBrands.length + 1,
 
                                   separatorBuilder: (_, _) {
                                     return SizedBox(
@@ -346,7 +427,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     // BRAND
                                     // ==========================================
 
-                                    final brand = brands[index - 1];
+                                    final brand = visibleBrands[index - 1];
 
                                     return _CategoryItem(
                                       title: brand.name,
