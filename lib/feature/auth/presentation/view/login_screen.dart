@@ -3,15 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vehicle_rental_system/app/router/app_routes.dart';
-
-import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/constants/app_constants.dart';
 import 'package:vehicle_rental_system/core/widgets/app_button.dart';
+import 'package:vehicle_rental_system/core/widgets/app_circle_btn.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
-import 'package:vehicle_rental_system/feature/auth/presentation/view/forgot_password_screen.dart';
-import 'package:vehicle_rental_system/feature/auth/presentation/view/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,10 +19,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -34,55 +32,120 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // ============================================================
+  // VALIDATORS
+  // ============================================================
+
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
-    if (email.isEmpty) return 'Please enter your email.';
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      return 'Please enter a valid email.';
+
+    if (email.isEmpty) {
+      return 'Enter your email.';
     }
+
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      return 'Enter a valid email.';
+    }
+
     return null;
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter your password.';
-    if (value.length < 6) return 'Password must be at least 6 characters.';
+    if (value == null || value.isEmpty) {
+      return 'Enter your password.';
+    }
+
+    if (value.length < 6) {
+      return 'Use at least 6 characters.';
+    }
+
     return null;
   }
 
+  // ============================================================
+  // LOGIN
+  // ============================================================
+
   void _login() {
-    if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     context.read<AuthBloc>().add(
       LoginSubmitted(
-        email: _emailController.text.trim(),
+        email: _emailController.text.trim().toLowerCase(),
         password: _passwordController.text.trim(),
       ),
     );
-
-    // setState(() => _isLoading = true);
-
-    // // Simulate a network request. Swap with the real auth API later.
-    // await Future.delayed(const Duration(milliseconds: 1200));
-
-    // if (!mounted) return;
-
-    // setState(() => _isLoading = false);
-
-    // Navigator.of(context).pushReplacement(
-    //   MaterialPageRoute(builder: (_) => const MainScreen(index: 0)),
-    // );
   }
 
-  void _goTo(Function() navigate) {
-    if (!_isLoading) navigate();
-  }
+  // ============================================================
+  // OAUTH
+  // ============================================================
 
   void _oauthLogin(String provider) {
-    _goTo(
-      () =>
-          context.read<AuthBloc>().add(OAuthLoginRequested(provider: provider)),
+    context.read<AuthBloc>().add(OAuthLoginRequested(provider: provider));
+  }
+
+  // ============================================================
+  // INPUT DECORATION
+  // ============================================================
+
+  InputDecoration _inputDecoration(
+    BuildContext context, {
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InputDecoration(
+      prefixIcon: Icon(icon, size: 21.r, color: colorScheme.onSurfaceVariant),
+
+      suffixIcon: suffixIcon,
+
+      filled: true,
+
+      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
+
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(
+          color: colorScheme.outline.withValues(alpha: 0.12),
+        ),
+      ),
+
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(
+          color: colorScheme.outline.withValues(alpha: 0.12),
+        ),
+      ),
+
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+      ),
+
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: colorScheme.error),
+      ),
+
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: colorScheme.error, width: 1.5),
+      ),
     );
   }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -91,219 +154,319 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
+
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: AppDimensions.screenPadding.copyWith(top: 24.h),
+
+          padding: EdgeInsets.all(AppDimensions.chipHorizontalPadding),
           child: Form(
             key: _formKey,
+
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // ==================================================
-                // LOGO / HEADER
+                // TOP BAR
                 // ==================================================
-                Center(
-                  child: Container(
-                    width: 88.r,
-                    height: 88.r,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.10),
-                      shape: BoxShape.circle,
+                Row(
+                  children: [
+                    AppCircleBtn(
+                      icon: Icons.arrow_back_rounded,
+                      onTap: () => context.pop(),
+                      backgroundColor: colorScheme.surfaceContainerHighest,
+                      iconColor: colorScheme.onSurface,
                     ),
-                    child: Icon(
-                      Icons.directions_car_filled_rounded,
-                      size: 46.r,
-                      color: AppColors.primary,
+
+                    const Spacer(),
+
+                    Container(
+                      // padding: EdgeInsets.symmetric(
+                      //   horizontal: 12.w,
+                      //   vertical: 7.h,
+                      // ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(30.r),
+                      ),
+
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.directions_car_rounded,
+                            size: 15.r,
+                            color: colorScheme.primary,
+                          ),
+
+                          SizedBox(width: 6.w),
+
+                          Text(
+                            'AUTO RENT',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
 
-                SizedBox(height: 20.h),
+                SizedBox(height: 34.h),
 
-                Text(
-                  'Welcome Back',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
+                // ==================================================
+                // HEADER
+                // ==================================================
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 64.r,
+                      height: 64.r,
 
-                SizedBox(height: 8.h),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            colorScheme.primary,
+                            colorScheme.primary.withValues(alpha: 0.72),
+                          ],
+                        ),
 
-                Text(
-                  'Sign in to continue renting your perfect vehicle.',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                        borderRadius: BorderRadius.circular(20.r),
+
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withValues(alpha: 0.20),
+                            blurRadius: 20.r,
+                            offset: Offset(0, 8.h),
+                          ),
+                        ],
+                      ),
+
+                      child: Icon(
+                        Icons.directions_car_filled_rounded,
+                        color: Colors.white,
+                        size: 31.r,
+                      ),
+                    ),
+
+                    SizedBox(width: 16.w),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome back',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.7,
+                            ),
+                          ),
+
+                          SizedBox(height: 5.h),
+
+                          Text(
+                            'Sign in to continue your journey.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
 
                 SizedBox(height: 32.h),
 
                 // ==================================================
-                // EMAIL
+                // LOGIN CARD
                 // ==================================================
-                AppTextField(
-                  controller: _emailController,
-                  hint: 'Email address',
-                  prefixIcon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: _validateEmail,
-                  filled: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.22,
+                    ),
+
+                    borderRadius: BorderRadius.circular(22.r),
+
+                    border: Border.all(
+                      color: colorScheme.outline.withValues(alpha: 0.08),
+                    ),
                   ),
-                ),
 
-                SizedBox(height: 16.h),
-
-                // ==================================================
-                // PASSWORD
-                // ==================================================
-                AppTextField(
-                  controller: _passwordController,
-                  hint: 'Password',
-                  prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: true,
-                  textInputAction: TextInputAction.done,
-                  validator: _validatePassword,
-                  filled: true,
-                  onSubmitted: (_) => _login(),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
-                  ),
-                ),
-
-                SizedBox(height: 12.h),
-
-                // ==================================================
-                // FORGOT PASSWORD
-                // ==================================================
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => _goTo(
-                      () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ForgotPasswordScreen(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ============================================
+                      // EMAIL
+                      // ============================================
+                      Text(
+                        'Email address',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
-                    child: Text(
-                      'Forgot Password?',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
+
+                      SizedBox(height: 8.h),
+
+                      AppTextField(
+                        controller: _emailController,
+                        hint: 'Enter your email',
+                        prefixIcon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        validator: _validateEmail,
+                        filled: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 16.h,
+                        ),
                       ),
-                    ),
+
+                      SizedBox(height: 18.h),
+
+                      // ============================================
+                      // PASSWORD
+                      // ============================================
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Password',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+
+                          GestureDetector(
+                            onTap: () {
+                              context.push(AppRoutes.forgotPassword);
+                            },
+                            child: Text(
+                              'Forgot password?',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 8.h),
+
+                      AppTextField(
+                        controller: _passwordController,
+                        hint: 'Enter your password',
+                        prefixIcon: Icons.lock_outline_rounded,
+                        obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.done,
+                        validator: _validatePassword,
+                        filled: true,
+
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            size: 21.r,
+                          ),
+                        ),
+
+                        onSubmitted: (_) => _login(),
+
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 16.h,
+                        ),
+                      ),
+
+                      SizedBox(height: 22.h),
+
+                      // ============================================
+                      // LOGIN BUTTON
+                      // ============================================
+                      BlocConsumer<AuthBloc, AuthState>(
+                        listener: (context, state) {
+                          if (state is AuthSuccess ||
+                              state is AuthAuthenticated) {
+                            context.go(AppRoutes.mainHome);
+                          }
+
+                          if (state is AuthFailure) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(state.message)),
+                            );
+                          }
+                        },
+
+                        builder: (context, state) {
+                          final isLoading = state is AuthLoading;
+
+                          return AppButton(
+                            text: 'Login',
+                            height: 56.h,
+                            borderRadius: 16.r,
+                            isLoading: isLoading,
+                            onPressed: isLoading ? null : _login,
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
 
-                SizedBox(height: 16.h),
+                SizedBox(height: 26.h),
 
                 // ==================================================
-                // LOGIN BUTTON
-                // ==================================================
-                BlocConsumer<AuthBloc, AuthState>(
-                  listener: (context, state) {
-                    if (state is AuthSuccess || state is AuthAuthenticated) {
-                      return context.go(AppRoutes.mainHome);
-                    }
-
-                    if (state is AuthFailure) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(state.message)));
-                    }
-                  },
-                  builder: (context, state) {
-                    final isLoading = state is AuthLoading;
-                    // if (state is AuthLoading) {
-                    //   return const Center(child: CircularProgressIndicator());
-                    // }
-                    return AppButton(
-                      text: 'Login',
-                      height: AppDimensions.buttonLargeHeight,
-                      borderRadius: AppDimensions.radius12,
-                      isLoading: isLoading,
-                      onPressed: _isLoading ? null : _login,
-
-                      /*
-                      onPressed: () {
-                        context.read()<AuthBloc>().add(
-                          LoginSubmitted(
-                            email: _emailController.text.trim(),
-                            password: _passwordController.text.trim(),
-                          ),
-                        );
-                        //context.go(AppRoutes.mainHome);
-                        // Navigator.of(context).pushReplacement(
-                        //   MaterialPageRoute(builder: (_) => const HomeScreen()),
-                        // );
-                      },
-                      */
-                    );
-                  },
-                ),
-
-                SizedBox(height: 24.h),
-
-                // ==================================================
-                // OR DIVIDER
+                // DIVIDER
                 // ==================================================
                 Row(
                   children: [
                     Expanded(child: Divider(color: colorScheme.outlineVariant)),
+
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      padding: EdgeInsets.symmetric(horizontal: 14.w),
                       child: Text(
-                        'OR',
-                        style: theme.textTheme.labelMedium?.copyWith(
+                        'OR CONTINUE WITH',
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
+
                     Expanded(child: Divider(color: colorScheme.outlineVariant)),
                   ],
                 ),
 
-                SizedBox(height: 24.h),
+                SizedBox(height: 20.h),
 
                 // ==================================================
-                // SOCIAL BUTTONS
+                // GOOGLE
                 // ==================================================
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
-                    final isAuthLoading = state is AuthLoading;
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: _SocialButton(
-                            image: AppConstants.googleIcon,
-                            label: 'Google',
-                            loading: isAuthLoading,
-                            onPressed: isAuthLoading
-                                ? null
-                                : () => _oauthLogin('google'),
-                          ),
-                        ),
-                        // SizedBox(width: 12.w),
-                        // Expanded(
-                        //   child: _SocialButton(
-                        //     icon: Icons.facebook_rounded,
-                        //     label: 'Facebook',
-                        //     loading: isAuthLoading,
-                        //     onPressed: isAuthLoading
-                        //         ? null
-                        //         : () => _oauthLogin('facebook'),
-                        //   ),
-                        // ),
-                      ],
+                    final isLoading = state is AuthLoading;
+
+                    return _SocialButton(
+                      image: AppConstants.googleIcon,
+                      label: 'Continue with Google',
+                      loading: isLoading,
+                      onPressed: isLoading ? null : () => _oauthLogin('google'),
                     );
                   },
                 ),
@@ -311,34 +474,47 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: 28.h),
 
                 // ==================================================
-                // SIGN UP LINK
+                // REGISTER
                 // ==================================================
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account? ",
+                      "Don't have an account?",
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
+
+                    SizedBox(width: 6.w),
+
                     GestureDetector(
-                      onTap: () => _goTo(
-                        () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterScreen(),
-                          ),
-                        ),
-                      ),
+                      onTap: () {
+                        context.push(AppRoutes.register);
+                      },
                       child: Text(
-                        'Register',
+                        'Create account',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
                   ],
+                ),
+
+                SizedBox(height: 14.h),
+
+                // ==================================================
+                // FOOTER
+                // ==================================================
+                Text(
+                  'Secure login · Your information is protected',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.65),
+                  ),
                 ),
               ],
             ),
@@ -348,6 +524,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+// ================================================================
+// SOCIAL BUTTON
+// ================================================================
 
 class _SocialButton extends StatelessWidget {
   final String image;
@@ -367,39 +547,52 @@ class _SocialButton extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        padding: EdgeInsets.symmetric(vertical: 14.h),
-        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.4)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radius12),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (loading)
-            SizedBox(
-              width: 22.r,
-              height: 22.r,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.4,
-                color: colorScheme.primary,
-              ),
-            )
-          else
-            SizedBox(width: 22.w, height: 22.h, child: Image.asset(image)),
-          //Icon(icon, size: 22.r, color: colorScheme.onSurface),
-          SizedBox(width: 8.w),
-          Text(
-            label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-            ),
+    return SizedBox(
+      height: 54.h,
+      child: OutlinedButton(
+        onPressed: onPressed,
+
+        style: OutlinedButton.styleFrom(
+          backgroundColor: colorScheme.surface,
+          elevation: 0,
+
+          side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.18)),
+
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
           ),
-        ],
+        ),
+
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (loading)
+              SizedBox(
+                width: 21.r,
+                height: 21.r,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: colorScheme.primary,
+                ),
+              )
+            else
+              SizedBox(
+                width: 21.r,
+                height: 21.r,
+                child: Image.asset(image, fit: BoxFit.contain),
+              ),
+
+            SizedBox(width: 10.w),
+
+            Text(
+              label,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

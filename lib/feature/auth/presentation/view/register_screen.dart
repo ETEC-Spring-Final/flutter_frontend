@@ -4,13 +4,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:vehicle_rental_system/app/router/app_routes.dart';
-import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
 import 'package:vehicle_rental_system/core/widgets/app_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_circle_btn.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
-import 'package:vehicle_rental_system/feature/auth/presentation/view/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,6 +19,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -29,6 +28,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmController = TextEditingController();
 
   String? _selectedGender;
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   static const _genderOptions = ['Male', 'Female', 'Other'];
 
@@ -43,82 +45,182 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  // ============================================================
+  // VALIDATORS
+  // ============================================================
+
   String? _validateFirstName(String? value) {
     final name = value?.trim() ?? '';
-    if (name.isEmpty) return 'Please enter your first name.';
-    if (name.length < 2) return 'First name is too short.';
+
+    if (name.isEmpty) {
+      return 'Enter your first name.';
+    }
+
+    if (name.length < 2) {
+      return 'First name is too short.';
+    }
+
     return null;
   }
 
   String? _validateLastName(String? value) {
     final name = value?.trim() ?? '';
-    if (name.isEmpty) return 'Please enter your last name.';
-    if (name.length < 2) return 'Last name is too short.';
+
+    if (name.isEmpty) {
+      return 'Enter your last name.';
+    }
+
+    if (name.length < 2) {
+      return 'Last name is too short.';
+    }
+
     return null;
   }
 
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
-    if (email.isEmpty) return 'Please enter your email.';
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      return 'Please enter a valid email.';
+
+    if (email.isEmpty) {
+      return 'Enter your email.';
     }
+
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      return 'Enter a valid email.';
+    }
+
     return null;
   }
 
   String? _validatePhone(String? value) {
     final phone = value?.trim() ?? '';
-    if (phone.isEmpty) return 'Please enter your phone number.';
-    if (!RegExp(r'^[0-9+\-\s]{7,15}$').hasMatch(phone)) {
-      return 'Please enter a valid phone number.';
+
+    if (phone.isEmpty) {
+      return 'Enter your phone number.';
     }
+
+    if (!RegExp(r'^[0-9+\-\s]{7,15}$').hasMatch(phone)) {
+      return 'Enter a valid phone number.';
+    }
+
     return null;
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Please enter a password.';
-    if (value.length < 6) return 'Password must be at least 6 characters.';
+    if (value == null || value.isEmpty) {
+      return 'Enter a password.';
+    }
+
+    if (value.length < 6) {
+      return 'Use at least 6 characters.';
+    }
+
     return null;
   }
 
   String? _validateConfirm(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please confirm your password.';
+      return 'Confirm your password.';
     }
+
     if (value != _passwordController.text) {
       return 'Passwords do not match.';
     }
+
     return null;
   }
 
   String? _validateGender(String? value) {
-    if (value == null || value.isEmpty) return 'Please select your gender.';
+    if (value == null || value.isEmpty) {
+      return 'Select your gender.';
+    }
+
     return null;
   }
 
+  // ============================================================
+  // SIGN UP
+  // ============================================================
+
   void _signUp() {
-    if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     context.read<AuthBloc>().add(
       RegisterSubmitted(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
-        email: _emailController.text.trim(),
+        email: _emailController.text.trim().toLowerCase(),
         password: _passwordController.text.trim(),
-        //confirmPassword: _confirmController.text.trim(),
         phone: _phoneController.text.trim(),
         gender: _selectedGender!.toUpperCase(),
       ),
-      // RegisterSubmitted(
-      //   firstName: 'Sorn',
-      //   lastName: 'Visal',
-      //   email: 'sornvisal@example.com',
-      //   password: 'Password123!',
-      //   phone: '012345678',
-      //   gender: 'MALE',
-      // ),
     );
   }
+
+  // ============================================================
+  // FIELD DECORATION
+  // ============================================================
+
+  InputDecoration _inputDecoration(
+    BuildContext context, {
+    required IconData icon,
+    required String hint,
+    Widget? suffixIcon,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: theme.textTheme.bodyMedium?.copyWith(
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+        fontWeight: FontWeight.w500,
+      ),
+      prefixIcon: Icon(icon, size: 21.r, color: colorScheme.onSurfaceVariant),
+      suffixIcon: suffixIcon,
+
+      filled: true,
+      fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
+
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(
+          color: colorScheme.outline.withValues(alpha: 0.12),
+        ),
+      ),
+
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(
+          color: colorScheme.outline.withValues(alpha: 0.12),
+        ),
+      ),
+
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+      ),
+
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: colorScheme.error),
+      ),
+
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16.r),
+        borderSide: BorderSide(color: colorScheme.error, width: 1.5),
+      ),
+    );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -127,104 +229,181 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
+
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: AppDimensions.screenPadding.copyWith(top: 16.h),
-          child: Form(
-            key: _formKey,
+        child: Form(
+          key: _formKey,
+
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+
+            padding: EdgeInsets.all(AppDimensions.chipHorizontalPadding),
+
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // ==================================================
-                // BACK BUTTON
+                // TOP BAR
                 // ==================================================
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: AppCircleBtn(
-                    icon: Icons.arrow_back_rounded,
-                    onTap: () => Navigator.of(context).pop(),
-                    backgroundColor: colorScheme.surfaceContainerHighest,
-                    iconColor: colorScheme.onSurface,
-                  ),
-                ),
-
-                SizedBox(height: 16.h),
-
-                // ==================================================
-                // HEADER
-                // ==================================================
-                Center(
-                  child: Container(
-                    width: 88.r,
-                    height: 88.r,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.10),
-                      shape: BoxShape.circle,
+                Row(
+                  children: [
+                    AppCircleBtn(
+                      icon: Icons.arrow_back_rounded,
+                      onTap: () => context.pop(),
+                      backgroundColor: colorScheme.surfaceContainerHighest,
+                      iconColor: colorScheme.onSurface,
                     ),
-                    child: Icon(
-                      Icons.person_add_alt_1_rounded,
-                      size: 44.r,
-                      color: AppColors.primary,
+
+                    const Spacer(),
+
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 7.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(30.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.directions_car_rounded,
+                            size: 15.r,
+                            color: colorScheme.primary,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            'AUTO RENT Premium',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-
-                SizedBox(height: 20.h),
-
-                Text(
-                  'Create Account',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-
-                SizedBox(height: 8.h),
-
-                Text(
-                  'Join us and start renting vehicles with ease.',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  ],
                 ),
 
                 SizedBox(height: 28.h),
 
                 // ==================================================
-                // FIRST NAME
+                // MODERN HEADER
                 // ==================================================
-                AppTextField(
-                  controller: _firstNameController,
-                  hint: 'First Name',
-                  prefixIcon: Icons.person_outline_rounded,
-                  textInputAction: TextInputAction.next,
-                  validator: _validateFirstName,
-                  filled: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 62.r,
+                      height: 62.r,
+
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            colorScheme.primary,
+                            colorScheme.primary.withValues(alpha: 0.72),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20.r),
+
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withValues(alpha: 0.20),
+                            blurRadius: 20.r,
+                            offset: Offset(0, 8.h),
+                          ),
+                        ],
+                      ),
+
+                      child: Icon(
+                        Icons.person_add_alt_1_rounded,
+                        color: Colors.white,
+                        size: 30.r,
+                      ),
+                    ),
+
+                    SizedBox(width: 16.w),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Create your account',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.7,
+                            ),
+                          ),
+
+                          SizedBox(height: 5.h),
+
+                          Text(
+                            'Start your journey with Auto Rent.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 30.h),
+
+                // ==================================================
+                // PERSONAL INFORMATION LABEL
+                // ==================================================
+                _SectionTitle(
+                  icon: Icons.person_outline_rounded,
+                  title: 'Personal information',
                 ),
 
                 SizedBox(height: 14.h),
 
                 // ==================================================
-                // LAST NAME
+                // FIRST + LAST NAME
                 // ==================================================
-                AppTextField(
-                  controller: _lastNameController,
-                  hint: 'Last Name',
-                  prefixIcon: Icons.person_outline_rounded,
-                  textInputAction: TextInputAction.next,
-                  validator: _validateLastName,
-                  filled: true,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppTextField(
+                        controller: _firstNameController,
+                        hint: 'First name',
+                        prefixIcon: Icons.person_outline_rounded,
+                        textInputAction: TextInputAction.next,
+                        validator: _validateFirstName,
+                        filled: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 14.w,
+                          vertical: 16.h,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(width: 12.w),
+
+                    Expanded(
+                      child: AppTextField(
+                        controller: _lastNameController,
+                        hint: 'Last name',
+                        prefixIcon: Icons.person_outline_rounded,
+                        textInputAction: TextInputAction.next,
+                        validator: _validateLastName,
+                        filled: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 14.w,
+                          vertical: 16.h,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 SizedBox(height: 14.h),
@@ -272,73 +451,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // ==================================================
                 DropdownButtonFormField<String>(
                   initialValue: _selectedGender,
+
                   hint: Text(
-                    'Select Gender',
+                    'Select gender',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
+
                   icon: Icon(
                     Icons.keyboard_arrow_down_rounded,
                     color: colorScheme.onSurfaceVariant,
                   ),
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(
-                      Icons.wc_outlined,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    filled: true,
-                    fillColor: colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.3,
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 16.h,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radius12,
-                      ),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radius12,
-                      ),
-                      borderSide: BorderSide(
-                        color: colorScheme.outline.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radius12,
-                      ),
-                      borderSide: BorderSide(
-                        color: colorScheme.primary,
-                        width: 1.5,
-                      ),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radius12,
-                      ),
-                      borderSide: BorderSide(color: colorScheme.error),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radius12,
-                      ),
-                      borderSide: BorderSide(
-                        color: colorScheme.error,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
+
+                  decoration: _inputDecoration(
+                    context,
+                    icon: Icons.wc_outlined,
+                    hint: 'Select gender',
+                  ).copyWith(hintText: null),
+
+                  dropdownColor: colorScheme.surface,
+
+                  borderRadius: BorderRadius.circular(16.r),
+
                   items: _genderOptions
-                      .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                      .map(
+                        (gender) => DropdownMenuItem<String>(
+                          value: gender,
+                          child: Text(
+                            gender,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      )
                       .toList(),
-                  onChanged: (value) => _selectedGender = value,
+
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedGender = value;
+                    });
+                  },
+
                   validator: _validateGender,
+                ),
+
+                SizedBox(height: 28.h),
+
+                // ==================================================
+                // SECURITY SECTION
+                // ==================================================
+                _SectionTitle(
+                  icon: Icons.lock_outline_rounded,
+                  title: 'Account security',
                 ),
 
                 SizedBox(height: 14.h),
@@ -350,11 +517,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _passwordController,
                   hint: 'Password',
                   prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
                   textInputAction: TextInputAction.next,
                   validator: _validatePassword,
                   filled: true,
-                  onChanged: (_) => _formKey.currentState?.validate(),
+
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      size: 21.r,
+                    ),
+                  ),
+
+                  onChanged: (_) {
+                    if (_confirmController.text.isNotEmpty) {
+                      _formKey.currentState?.validate();
+                    }
+                  },
+
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 16.w,
                     vertical: 16.h,
@@ -370,18 +557,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _confirmController,
                   hint: 'Confirm password',
                   prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: true,
+                  obscureText: _obscureConfirmPassword,
                   textInputAction: TextInputAction.done,
                   validator: _validateConfirm,
                   filled: true,
+
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      });
+                    },
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      size: 21.r,
+                    ),
+                  ),
+
                   onSubmitted: (_) => _signUp(),
+
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 16.w,
                     vertical: 16.h,
                   ),
                 ),
 
-                SizedBox(height: 24.h),
+                SizedBox(height: 12.h),
+
+                // ==================================================
+                // PASSWORD INFO
+                // ==================================================
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 16.r,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    SizedBox(width: 7.w),
+                    Expanded(
+                      child: Text(
+                        'Use at least 6 characters for a secure password.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 26.h),
 
                 // ==================================================
                 // SIGN UP BUTTON
@@ -394,7 +622,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           content: Text('Account created successfully!'),
                         ),
                       );
-                      return context.go(AppRoutes.mainHome);
+
+                      context.go(AppRoutes.mainHome);
                     }
 
                     if (state is AuthFailure) {
@@ -403,15 +632,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ).showSnackBar(SnackBar(content: Text(state.message)));
                     }
                   },
+
                   builder: (context, state) {
                     final isLoading = state is AuthLoading;
-                    // if (state is AuthLoading) {
-                    //   return const Center(child: CircularProgressIndicator());
-                    // }
+
                     return AppButton(
                       text: 'Create Account',
-                      height: AppDimensions.buttonLargeHeight,
-                      borderRadius: AppDimensions.radius12,
+                      height: 56.h,
+                      borderRadius: 16.r,
                       isLoading: isLoading,
                       onPressed: isLoading ? null : _signUp,
                     );
@@ -421,36 +649,94 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 SizedBox(height: 20.h),
 
                 // ==================================================
-                // LOGIN LINK
+                // LOGIN
                 // ==================================================
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Already have an account? ',
+                      'Already have an account?',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
+
+                    SizedBox(width: 5.w),
+
                     GestureDetector(
-                      onTap: () => Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      ),
+                      onTap: () => context.pop(),
+
                       child: Text(
                         'Login',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
                   ],
+                ),
+
+                SizedBox(height: 12.h),
+
+                // ==================================================
+                // TERMS
+                // ==================================================
+                Text(
+                  'By creating an account, you agree to our Terms & Privacy Policy.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+// ================================================================
+// SECTION TITLE
+// ================================================================
+
+class _SectionTitle extends StatelessWidget {
+  final IconData icon;
+  final String title;
+
+  const _SectionTitle({required this.icon, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Row(
+      children: [
+        Container(
+          width: 30.r,
+          height: 30.r,
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(9.r),
+          ),
+          child: Icon(icon, size: 17.r, color: colorScheme.primary),
+        ),
+
+        SizedBox(width: 9.w),
+
+        Text(
+          title,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.1,
+          ),
+        ),
+      ],
     );
   }
 }
