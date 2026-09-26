@@ -1,11 +1,12 @@
-import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
+
 import 'package:vehicle_rental_system/app/router/app_routes.dart';
+import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,73 +22,76 @@ class _SplashScreenState extends State<SplashScreen>
   // ============================================================
 
   late final AnimationController _introController;
-  late final AnimationController _jumpController;
+  late final AnimationController _floatController;
+  late final AnimationController _glowController;
+  late final AnimationController _rotationController;
 
   // ============================================================
-  // INTRO ANIMATIONS
+  // ANIMATIONS
   // ============================================================
 
-  late final Animation<double> _logoScaleAnimation;
-  late final Animation<double> _logoFadeAnimation;
+  late final Animation<double> _logoScale;
+  late final Animation<double> _logoFade;
 
-  late final Animation<double> _textFadeAnimation;
-  late final Animation<Offset> _textSlideAnimation;
+  late final Animation<double> _titleFade;
+  late final Animation<Offset> _titleSlide;
 
-  // ============================================================
-  // JUMP ANIMATION
-  // ============================================================
+  late final Animation<double> _subtitleFade;
+  late final Animation<Offset> _subtitleSlide;
 
-  late final Animation<double> _jumpAnimation;
+  late final Animation<double> _floatingY;
+  late final Animation<double> _glow;
+  late final Animation<double> _rotation;
 
   @override
   void initState() {
     super.initState();
 
-    _setupIntroAnimation();
-    _setupJumpAnimation();
+    _setupAnimations();
 
     _introController.forward();
 
-    // Start jump after logo entrance animation.
-    Future.delayed(const Duration(milliseconds: 3000), () {
-      if (!mounted) return;
-
-      _jumpController.repeat();
-    });
+    _floatController.repeat(reverse: true);
+    _glowController.repeat(reverse: true);
+    _rotationController.repeat();
 
     _checkAuthentication();
-
-    //_goToNextScreen();
   }
 
+  // ============================================================
+  // AUTHENTICATION
+  // ============================================================
+
   Future<void> _checkAuthentication() async {
-    // Keep splash screen visible for 3 seconds
     await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
-    // Ask AuthBloc to check JWT
     context.read<AuthBloc>().add(CheckAuthStatus());
   }
 
   // ============================================================
-  // INTRO ANIMATION
+  // ANIMATIONS
   // ============================================================
 
-  void _setupIntroAnimation() {
+  void _setupAnimations() {
+    // ----------------------------------------------------------
+    // INTRO
+    // ----------------------------------------------------------
+
     _introController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 1500),
     );
 
     // ----------------------------------------------------------
     // LOGO SCALE
     // ----------------------------------------------------------
 
-    _logoScaleAnimation = Tween<double>(begin: 0.65, end: 1.0).animate(
+    _logoScale = Tween<double>(begin: 0.65, end: 1.0).animate(
       CurvedAnimation(
         parent: _introController,
-        curve: const Interval(0.0, 0.65, curve: Curves.easeOutBack),
+        curve: const Interval(0.0, 0.55, curve: Curves.easeOutBack),
       ),
     );
 
@@ -95,82 +99,90 @@ class _SplashScreenState extends State<SplashScreen>
     // LOGO FADE
     // ----------------------------------------------------------
 
-    _logoFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _logoFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _introController,
-        curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
       ),
     );
 
     // ----------------------------------------------------------
-    // TEXT FADE
+    // TITLE
     // ----------------------------------------------------------
 
-    _textFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _titleFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _introController,
-        curve: const Interval(0.35, 0.85, curve: Curves.easeOut),
+        curve: const Interval(0.35, 0.75, curve: Curves.easeOut),
       ),
     );
 
-    // ----------------------------------------------------------
-    // TEXT SLIDE
-    // ----------------------------------------------------------
-
-    _textSlideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero).animate(
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.25), end: Offset.zero)
+        .animate(
           CurvedAnimation(
             parent: _introController,
-            curve: const Interval(0.35, 0.9, curve: Curves.easeOutCubic),
+            curve: const Interval(0.35, 0.8, curve: Curves.easeOutCubic),
           ),
         );
-  }
 
-  // ============================================================
-  // JUMP ANIMATION
-  // ============================================================
+    // ----------------------------------------------------------
+    // SUBTITLE
+    // ----------------------------------------------------------
 
-  void _setupJumpAnimation() {
-    _jumpController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
+    _subtitleFade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _introController,
+        curve: const Interval(0.55, 0.95, curve: Curves.easeOut),
+      ),
     );
 
-    _jumpAnimation = TweenSequence<double>([
-      // --------------------------------------------------------
-      // Jump UP
-      // --------------------------------------------------------
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 0.0,
-          end: -28.h,
-        ).chain(CurveTween(curve: Curves.easeOut)),
-        weight: 40,
-      ),
+    _subtitleSlide =
+        Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _introController,
+            curve: const Interval(0.55, 0.95, curve: Curves.easeOutCubic),
+          ),
+        );
 
-      // --------------------------------------------------------
-      // Fall + Bounce
-      // --------------------------------------------------------
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: -28.h,
-          end: 0.0,
-        ).chain(CurveTween(curve: Curves.bounceOut)),
-        weight: 60,
-      ),
-    ]).animate(_jumpController);
-  }
+    // ----------------------------------------------------------
+    // FLOATING CAR
+    // ----------------------------------------------------------
 
-  // ============================================================
-  // NAVIGATION
-  // ============================================================
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
 
-  Future<void> _goToNextScreen() async {
-    await Future.delayed(const Duration(milliseconds: 5000));
+    _floatingY = Tween<double>(begin: -5, end: 5).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
 
-    if (!mounted) return;
+    // ----------------------------------------------------------
+    // GLOW
+    // ----------------------------------------------------------
 
-    context.go(AppRoutes.onboarding);
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+
+    _glow = Tween<double>(begin: 0.12, end: 0.24).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+
+    // ----------------------------------------------------------
+    // SUBTLE ROTATION
+    // ----------------------------------------------------------
+
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    );
+
+    _rotation = Tween<double>(
+      begin: 0,
+      end: math.pi * 2,
+    ).animate(_rotationController);
   }
 
   // ============================================================
@@ -180,7 +192,9 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _introController.dispose();
-    _jumpController.dispose();
+    _floatController.dispose();
+    _glowController.dispose();
+    _rotationController.dispose();
 
     super.dispose();
   }
@@ -209,141 +223,79 @@ class _SplashScreenState extends State<SplashScreen>
         body: SafeArea(
           child: Stack(
             children: [
-              // ======================================================
-              // TOP RIGHT DECORATION
-              // ======================================================
-              Positioned(
-                top: -90.h,
-                right: -80.w,
-                child: Container(
-                  width: 220.w,
-                  height: 220.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colorScheme.onPrimary.withValues(alpha: 0.08),
-                  ),
-                ),
-              ),
+              // ==================================================
+              // BACKGROUND
+              // ==================================================
+              _buildBackground(colorScheme),
 
-              // ======================================================
-              // BOTTOM LEFT DECORATION
-              // ======================================================
-              Positioned(
-                bottom: -120.h,
-                left: -100.w,
-                child: Container(
-                  width: 280.w,
-                  height: 280.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colorScheme.onPrimary.withValues(alpha: 0.06),
-                  ),
-                ),
-              ),
-
-              // ======================================================
+              // ==================================================
               // CENTER CONTENT
-              // ======================================================
+              // ==================================================
               Center(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ==================================================
-                    // JUMPING CAR LOGO
-                    // ==================================================
-                    AnimatedBuilder(
-                      animation: _jumpAnimation,
-                      builder: (context, child) {
-                        return Transform.translate(
-                          offset: Offset(0, _jumpAnimation.value),
-                          child: child,
-                        );
-                      },
-                      child: FadeTransition(
-                        opacity: _logoFadeAnimation,
-                        child: ScaleTransition(
-                          scale: _logoScaleAnimation,
-                          child: _buildLogo(colorScheme),
+                    // ------------------------------------------------
+                    // LOGO
+                    // ------------------------------------------------
+                    FadeTransition(
+                      opacity: _logoFade,
+                      child: ScaleTransition(
+                        scale: _logoScale,
+                        child: AnimatedBuilder(
+                          animation: Listenable.merge([
+                            _floatController,
+                            _glowController,
+                          ]),
+                          builder: (context, child) {
+                            return Transform.translate(
+                              offset: Offset(0, _floatingY.value),
+                              child: _buildLogo(colorScheme),
+                            );
+                          },
                         ),
                       ),
                     ),
 
-                    SizedBox(height: 28.h),
+                    SizedBox(height: 32.h),
 
-                    // ==================================================
+                    // ------------------------------------------------
                     // APP NAME
-                    // ==================================================
+                    // ------------------------------------------------
                     FadeTransition(
-                      opacity: _textFadeAnimation,
+                      opacity: _titleFade,
                       child: SlideTransition(
-                        position: _textSlideAnimation,
-                        child: Column(
-                          children: [
-                            Text(
-                              'Auto Rent',
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                color: colorScheme.onPrimary,
-                                fontSize: 30.sp,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
+                        position: _titleSlide,
+                        child: _buildTitle(colorScheme),
+                      ),
+                    ),
 
-                            SizedBox(height: 8.h),
+                    SizedBox(height: 10.h),
 
-                            Text(
-                              'Drive your journey',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onPrimary.withValues(
-                                  alpha: 0.75,
-                                ),
-                                fontSize: 15.sp,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ],
-                        ),
+                    // ------------------------------------------------
+                    // SUBTITLE
+                    // ------------------------------------------------
+                    FadeTransition(
+                      opacity: _subtitleFade,
+                      child: SlideTransition(
+                        position: _subtitleSlide,
+                        child: _buildSubtitle(colorScheme),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // ======================================================
-              // LOADING
-              // ======================================================
+              // ==================================================
+              // BOTTOM LOADING
+              // ==================================================
               Positioned(
                 left: 0,
                 right: 0,
-                bottom: 42.h,
+                bottom: 38.h,
                 child: FadeTransition(
-                  opacity: _textFadeAnimation,
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: 24.w,
-                        height: 24.w,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2.w,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            colorScheme.onPrimary.withValues(alpha: 0.85),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 12.h),
-
-                      Text(
-                        'Loading...',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: colorScheme.onPrimary.withValues(alpha: 0.65),
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+                  opacity: _subtitleFade,
+                  child: _buildLoading(colorScheme),
                 ),
               ),
             ],
@@ -354,31 +306,241 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   // ============================================================
+  // BACKGROUND
+  // ============================================================
+
+  Widget _buildBackground(ColorScheme colorScheme) {
+    return Stack(
+      children: [
+        // --------------------------------------------------------
+        // TOP GLOW
+        // --------------------------------------------------------
+        Positioned(
+          top: -150.h,
+          right: -100.w,
+          child: AnimatedBuilder(
+            animation: _glowController,
+            builder: (context, child) {
+              return Container(
+                width: 330.w,
+                height: 330.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colorScheme.onPrimary.withValues(alpha: _glow.value),
+                ),
+              );
+            },
+          ),
+        ),
+
+        // --------------------------------------------------------
+        // BOTTOM GLOW
+        // --------------------------------------------------------
+        Positioned(
+          bottom: -170.h,
+          left: -130.w,
+          child: Container(
+            width: 360.w,
+            height: 360.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colorScheme.onPrimary.withValues(alpha: 0.08),
+            ),
+          ),
+        ),
+
+        // --------------------------------------------------------
+        // DECORATIVE RING
+        // --------------------------------------------------------
+        Positioned(
+          top: 85.h,
+          right: -75.w,
+          child: AnimatedBuilder(
+            animation: _rotationController,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _rotation.value,
+                child: Container(
+                  width: 190.w,
+                  height: 190.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: colorScheme.onPrimary.withValues(alpha: 0.08),
+                      width: 1,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        // --------------------------------------------------------
+        // SECOND RING
+        // --------------------------------------------------------
+        Positioned(
+          bottom: 70.h,
+          left: -90.w,
+          child: Container(
+            width: 170.w,
+            height: 170.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: colorScheme.onPrimary.withValues(alpha: 0.06),
+                width: 1,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
   // LOGO
   // ============================================================
 
   Widget _buildLogo(ColorScheme colorScheme) {
     return Container(
-      width: 118.w,
-      height: 118.w,
-      padding: EdgeInsets.all(24.w),
+      width: 128.w,
+      height: 128.w,
       decoration: BoxDecoration(
         color: Colors.white,
-        //color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(32.r),
+        borderRadius: BorderRadius.circular(38.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 25.r,
-            offset: Offset(0, 12.h),
+            color: Colors.black.withValues(alpha: 0.16),
+            blurRadius: 35.r,
+            spreadRadius: 2.r,
+            offset: Offset(0, 18.h),
           ),
         ],
       ),
-      child: Icon(
-        Icons.directions_car_rounded,
-        size: 66.sp,
-        color: colorScheme.primary,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Soft inner circle
+          Container(
+            width: 82.w,
+            height: 82.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colorScheme.primary.withValues(alpha: 0.08),
+            ),
+          ),
+
+          // Car icon
+          Icon(
+            Icons.directions_car_rounded,
+            size: 66.sp,
+            color: colorScheme.primary,
+          ),
+        ],
       ),
+    );
+  }
+
+  // ============================================================
+  // TITLE
+  // ============================================================
+
+  Widget _buildTitle(ColorScheme colorScheme) {
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: 'Auto ',
+            style: TextStyle(
+              color: colorScheme.onPrimary,
+              fontSize: 34.sp,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1.2,
+            ),
+          ),
+          TextSpan(
+            text: 'Rent',
+            style: TextStyle(
+              color: colorScheme.onPrimary.withValues(alpha: 0.72),
+              fontSize: 34.sp,
+              fontWeight: FontWeight.w400,
+              letterSpacing: -1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // SUBTITLE
+  // ============================================================
+
+  Widget _buildSubtitle(ColorScheme colorScheme) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 22.w,
+          height: 1.h,
+          color: colorScheme.onPrimary.withValues(alpha: 0.35),
+        ),
+
+        SizedBox(width: 10.w),
+
+        Text(
+          'DRIVE YOUR JOURNEY',
+          style: TextStyle(
+            color: colorScheme.onPrimary.withValues(alpha: 0.68),
+            fontSize: 10.sp,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 2.2,
+          ),
+        ),
+
+        SizedBox(width: 10.w),
+
+        Container(
+          width: 22.w,
+          height: 1.h,
+          color: colorScheme.onPrimary.withValues(alpha: 0.35),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // LOADING
+  // ============================================================
+
+  Widget _buildLoading(ColorScheme colorScheme) {
+    return Column(
+      children: [
+        SizedBox(
+          width: 26.w,
+          height: 26.w,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.w,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              colorScheme.onPrimary.withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+
+        SizedBox(height: 12.h),
+
+        Text(
+          'Preparing your journey',
+          style: TextStyle(
+            color: colorScheme.onPrimary.withValues(alpha: 0.55),
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.4,
+          ),
+        ),
+      ],
     );
   }
 }

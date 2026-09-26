@@ -42,11 +42,56 @@ class AppRouter {
       // ============================================================
       // ONBOARDING
       // ============================================================
+      // Onboarding
       GoRoute(
         path: AppRoutes.onboarding,
         name: RouterNames.onboarding,
-        builder: (context, state) {
-          return const OnboardingScreen();
+        pageBuilder: (context, state) {
+          return CustomTransitionPage<void>(
+            key: state.pageKey,
+
+            child: const OnboardingScreen(),
+
+            transitionDuration: const Duration(milliseconds: 700),
+            reverseTransitionDuration: const Duration(milliseconds: 500),
+
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  final curvedAnimation = CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  );
+
+                  // Fade
+                  final fadeAnimation = Tween<double>(
+                    begin: 0.0,
+                    end: 1.0,
+                  ).animate(curvedAnimation);
+
+                  // Slide
+                  final slideAnimation = Tween<Offset>(
+                    begin: const Offset(0, 0.08),
+                    end: Offset.zero,
+                  ).animate(curvedAnimation);
+
+                  // Scale
+                  final scaleAnimation = Tween<double>(
+                    begin: 0.96,
+                    end: 1.0,
+                  ).animate(curvedAnimation);
+
+                  return FadeTransition(
+                    opacity: fadeAnimation,
+                    child: SlideTransition(
+                      position: slideAnimation,
+                      child: ScaleTransition(
+                        scale: scaleAnimation,
+                        child: child,
+                      ),
+                    ),
+                  );
+                },
+          );
         },
       ),
 
