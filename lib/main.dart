@@ -5,6 +5,7 @@ import 'package:vehicle_rental_system/app/theme/bloc/theme_bloc.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
 import 'package:vehicle_rental_system/feature/booking/presentation/bloc/booking_bloc.dart';
 import 'package:vehicle_rental_system/feature/favorite/presentation/bloc/favorite_bloc.dart';
+import 'package:vehicle_rental_system/feature/home/presentation/bloc/home_bloc.dart';
 import 'package:vehicle_rental_system/feature/notification/presentation/bloc/notification_bloc.dart';
 import 'package:vehicle_rental_system/feature/payment/presentation/bloc/payment_bloc.dart';
 import 'package:vehicle_rental_system/feature/profile/presentation/bloc/profile_bloc.dart';
@@ -26,6 +27,7 @@ void main() async {
         BlocProvider<FavoriteBloc>(create: (_) => sl<FavoriteBloc>()),
         BlocProvider<BookingBloc>(create: (_) => sl<BookingBloc>()),
         BlocProvider<VehicleBloc>(create: (_) => sl<VehicleBloc>()),
+        BlocProvider<HomeBloc>(create: (_) => sl<HomeBloc>()),
         BlocProvider<PaymentBloc>(create: (_) => sl<PaymentBloc>()),
         BlocProvider<ProfileBloc>(create: (_) => sl<ProfileBloc>()),
         BlocProvider<RentalBloc>(create: (_) => sl<RentalBloc>()),

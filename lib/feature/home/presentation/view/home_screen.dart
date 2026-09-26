@@ -15,6 +15,7 @@ import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
 import 'package:vehicle_rental_system/core/widgets/brand_chips_shimmer.dart';
 import 'package:vehicle_rental_system/core/widgets/shimmer_card.dart';
 
+import 'package:vehicle_rental_system/feature/home/presentation/bloc/home_bloc.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/animated_greeting.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/home_banner_slider.dart';
 import 'package:vehicle_rental_system/feature/home/presentation/widgets/home_loading_skeleton.dart';
@@ -22,10 +23,6 @@ import 'package:vehicle_rental_system/feature/home/presentation/widgets/popular_
 
 import 'package:vehicle_rental_system/feature/notification/presentation/bloc/notification_bloc.dart';
 
-import 'package:vehicle_rental_system/feature/vehicle/domain/entity/brand.dart';
-import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
-
-import 'package:vehicle_rental_system/feature/vehicle/presentation/bloc/vehicle_bloc.dart';
 import 'package:vehicle_rental_system/feature/rental/presentation/view/rental_details_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/view/vehicle_detail_screen.dart';
 import 'package:vehicle_rental_system/feature/vehicle/presentation/widgets/vehicle_card_explore.dart';
@@ -54,98 +51,45 @@ class _HomeScreenState extends State<HomeScreen>
   bool get wantKeepAlive => true;
 
   // ============================================================
-  // CATEGORY
+  // PAGINATION
   // ============================================================
 
-  // Index 0 = All
-  // Index 1..n = categories
-  int selectedCategoryIndex = 0;
+  // The paging itself lives in HomeBloc; these three controllers only turn
+  // "the user reached the end of this list" into the matching event.
 
-  // Becomes true after the first successful fetch so pull-to-refresh keeps
-  // showing the content instead of the loading skeleton.
-  bool _hasLoadedOnce = false;
+  // Distance from the end at which the next page is requested.
+  static const double _loadMoreThreshold = 200;
 
-  // ============================================================
-  // BRAND PAGINATION (client side)
-  // ============================================================
-
-  // The /api/brands endpoint returns the whole list at once, so the paging
-  // is done here: only the first _brandPageSize chips are revealed and the
-  // rest are appended as the row is scrolled.
-  static const int _brandPageSize = 8;
-
-  // Distance from the end of the row (in logical pixels) at which the next
-  // page is appended.
-  static const double _brandLoadMoreThreshold = 200;
-
-  int _visibleBrandCount = _brandPageSize;
-
+  // The brand chip row.
   final ScrollController _brandScrollController = ScrollController();
 
-  // ============================================================
-  // BRAND PAGINATION HANDLERS
-  // ============================================================
+  // The popular cars row, which scrolls on its own axis.
+  final ScrollController _popularScrollController = ScrollController();
+
+  // The page's own scroll, which drives the recommended list: that section is
+  // a plain column inside the page scroll rather than a scrollable of its own.
+  final ScrollController _pageScrollController = ScrollController();
 
   void _onBrandScroll() {
-    if (!_brandScrollController.hasClients) return;
+    _loadMoreOn(_brandScrollController, const HomeLoadMoreBrands());
+  }
 
-    final position = _brandScrollController.position;
+  void _onPopularScroll() {
+    _loadMoreOn(_popularScrollController, const HomeLoadMoreVehicles());
+  }
 
-    if (position.pixels >=
-        position.maxScrollExtent - _brandLoadMoreThreshold) {
-      _loadMoreBrands();
+  void _onPageScroll() {
+    _loadMoreOn(_pageScrollController, const HomeLoadMoreVehicles());
+  }
+
+  void _loadMoreOn(ScrollController controller, HomeEvent event) {
+    if (!controller.hasClients) return;
+
+    final position = controller.position;
+
+    if (position.pixels >= position.maxScrollExtent - _loadMoreThreshold) {
+      context.read<HomeBloc>().add(event);
     }
-  }
-
-  void _loadMoreBrands() {
-    if (_visibleBrandCount >= _brandTotal) return;
-
-    setState(() {
-      _visibleBrandCount = (_visibleBrandCount + _brandPageSize).clamp(
-        0,
-        _brandTotal,
-      );
-    });
-  }
-
-  // Total number of brands reported by the API, so the scroll listener can
-  // tell whether there is still another page to reveal.
-  int _brandTotal = 0;
-
-  void _resetBrandPagination() {
-    // Keep the active chip visible: it lives at index 1..n in the row, so
-    // never collapse back to fewer chips than the current selection.
-    final required = selectedCategoryIndex;
-
-    _visibleBrandCount = required > _brandPageSize ? required : _brandPageSize;
-  }
-
-  String _selectedBrandName(List<Brand> brands) {
-    final index = selectedCategoryIndex - 1;
-
-    if (index < 0 || index >= brands.length) {
-      return '';
-    }
-
-    return brands[index].name;
-  }
-
-  // ============================================================
-  // FILTER VEHICLES
-  // ============================================================
-
-  List<Vehicle> _filteredVehicles(List<Brand> brands, List<Vehicle> vehicles) {
-    final brand = _selectedBrandName(brands);
-
-    // "All"
-    if (brand.isEmpty) {
-      return vehicles;
-    }
-
-    // Filter by brand
-    return vehicles
-        .where((vehicle) => vehicle.brand.toLowerCase() == brand.toLowerCase())
-        .toList();
   }
 
   // ============================================================
@@ -158,9 +102,12 @@ class _HomeScreenState extends State<HomeScreen>
 
     _brandScrollController.addListener(_onBrandScroll);
 
-    // Load vehicles and brands from Spring Boot API
-    context.read<VehicleBloc>().add(const GetVehicles());
-    context.read<VehicleBloc>().add(const GetBrands());
+    _popularScrollController.addListener(_onPopularScroll);
+
+    _pageScrollController.addListener(_onPageScroll);
+
+    // Load the first page of vehicles and brands.
+    context.read<HomeBloc>().add(const HomeStarted());
   }
 
   // ============================================================
@@ -168,9 +115,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ============================================================
 
   Future<void> refreshData() async {
-    _resetBrandPagination();
-    context.read<VehicleBloc>().add(const GetVehicles());
-    context.read<VehicleBloc>().add(const GetBrands());
+    context.read<HomeBloc>().add(const HomeRefreshed());
   }
 
   @override
@@ -178,6 +123,15 @@ class _HomeScreenState extends State<HomeScreen>
     _brandScrollController
       ..removeListener(_onBrandScroll)
       ..dispose();
+
+    _popularScrollController
+      ..removeListener(_onPopularScroll)
+      ..dispose();
+
+    _pageScrollController
+      ..removeListener(_onPageScroll)
+      ..dispose();
+
     super.dispose();
   }
 
@@ -192,49 +146,35 @@ class _HomeScreenState extends State<HomeScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return BlocListener<VehicleBloc, VehicleState>(
-      listener: (context, state) {
-        if (state is VehicleLoaded) {
-          _hasLoadedOnce = true;
-
-          // Start back at the first page whenever the brand dataset itself
-          // changed size, so a refresh never leaves stale brands revealed.
-          if (state.brands.length != _brandTotal) {
-            _brandTotal = state.brands.length;
-            _resetBrandPagination();
-          }
+    return BlocBuilder<HomeBloc, HomeState>(
+      builder: (context, state) {
+        // Show the full-page loading skeleton until the first page of
+        // vehicles and brands has arrived.
+        if (state is HomeInitial || state is HomeLoading) {
+          return const HomeLoadingSkeleton();
         }
-      },
-      child: BlocBuilder<VehicleBloc, VehicleState>(
-        builder: (context, state) {
-          // Show the full-page loading skeleton until brands and vehicles
-          // have been fetched successfully.
-          if (!_hasLoadedOnce &&
-              (state is VehicleInitial || state is VehicleLoading)) {
-            return const HomeLoadingSkeleton();
-          }
 
-          // If the initial fetch completely failed, show a retry screen.
-          if (!_hasLoadedOnce && state is VehicleError) {
-            return Scaffold(
-              backgroundColor: colorScheme.surface,
-              body: SafeArea(
-                child: Center(
-                  child: _ErrorWidget(
-                    message: state.message,
-                    onRetry: () {
-                      context.read<VehicleBloc>().add(const GetVehicles());
-                      context.read<VehicleBloc>().add(const GetBrands());
-                    },
-                  ),
+        // If the first page completely failed, show a retry screen.
+        if (state is HomeError) {
+          return Scaffold(
+            backgroundColor: colorScheme.surface,
+            body: SafeArea(
+              child: Center(
+                child: _ErrorWidget(
+                  message: state.message,
+                  onRetry: () {
+                    context.read<HomeBloc>().add(const HomeStarted());
+                  },
                 ),
               ),
-            );
-          }
+            ),
+          );
+        }
 
           return Scaffold(
             body: CustomScrollView(
               key: const PageStorageKey('home_screen'),
+              controller: _pageScrollController,
               physics: const BouncingScrollPhysics(),
               slivers: [
                 // ========================================================
@@ -364,24 +304,13 @@ class _HomeScreenState extends State<HomeScreen>
                           // ==================================================
                           // BRAND CATEGORY (from /api/brands)
                           // ==================================================
-                          BlocBuilder<VehicleBloc, VehicleState>(
+                          BlocBuilder<HomeBloc, HomeState>(
                             builder: (context, state) {
-                              final isLoaded = state is VehicleLoaded;
-                              final brands = isLoaded
-                                  ? state.brands
-                                  : const <Brand>[];
-
-                              // Show shimmer skeleton chips while the brand list is
-                              // being fetched from the API.
-                              if (!isLoaded) {
+                              // Show shimmer skeleton chips while the first page
+                              // of brands is being fetched.
+                              if (state is! HomeLoaded) {
                                 return const BrandChipsShimmer();
                               }
-
-                              // Only the brands paged in so far are rendered; the
-                              // rest are appended while the row is scrolled.
-                              final visibleBrands = brands
-                                  .take(_visibleBrandCount)
-                                  .toList(growable: false);
 
                               return SizedBox(
                                 height: 55.h,
@@ -395,7 +324,12 @@ class _HomeScreenState extends State<HomeScreen>
                                     horizontal: AppDimensions.space12,
                                   ),
 
-                                  itemCount: visibleBrands.length + 1,
+                                  // "All", the loaded brands, and a trailing
+                                  // spinner while the next page is in flight.
+                                  itemCount:
+                                      state.brands.length +
+                                      1 +
+                                      (state.isLoadingMoreBrands ? 1 : 0),
 
                                   separatorBuilder: (_, _) {
                                     return SizedBox(
@@ -405,6 +339,14 @@ class _HomeScreenState extends State<HomeScreen>
 
                                   itemBuilder: (context, index) {
                                     // ==========================================
+                                    // MORE BRANDS SPINNER
+                                    // ==========================================
+
+                                    if (index > state.brands.length) {
+                                      return const _BrandChipSpinner();
+                                    }
+
+                                    // ==========================================
                                     // ALL
                                     // ==========================================
 
@@ -412,11 +354,11 @@ class _HomeScreenState extends State<HomeScreen>
                                       return _CategoryItem(
                                         title: 'All',
                                         image: '',
-                                        isSelected: selectedCategoryIndex == 0,
+                                        isSelected: state.selectedBrand == null,
                                         onTap: () {
-                                          setState(() {
-                                            selectedCategoryIndex = 0;
-                                          });
+                                          context.read<HomeBloc>().add(
+                                            const HomeBrandSelected(null),
+                                          );
 
                                           log('Filter: All');
                                         },
@@ -427,17 +369,17 @@ class _HomeScreenState extends State<HomeScreen>
                                     // BRAND
                                     // ==========================================
 
-                                    final brand = visibleBrands[index - 1];
+                                    final brand = state.brands[index - 1];
 
                                     return _CategoryItem(
                                       title: brand.name,
                                       image: brand.imageUrl,
                                       isSelected:
-                                          selectedCategoryIndex == index,
+                                          state.selectedBrand == brand.name,
                                       onTap: () {
-                                        setState(() {
-                                          selectedCategoryIndex = index;
-                                        });
+                                        context.read<HomeBloc>().add(
+                                          HomeBrandSelected(brand.name),
+                                        );
 
                                         log('Filter: ${brand.name}');
                                       },
@@ -493,13 +435,15 @@ class _HomeScreenState extends State<HomeScreen>
                           // ==================================================
                           // POPULAR CARS
                           // ==================================================
-                          BlocBuilder<VehicleBloc, VehicleState>(
+                          BlocBuilder<HomeBloc, HomeState>(
                             builder: (context, state) {
                               // ============================================
                               // LOADING
                               // ============================================
 
-                              if (state is VehicleLoading) {
+                              // Skeleton while the first page is in flight,
+                              // which includes the reload after a brand change.
+                              if (state is! HomeLoaded || state.isLoadingVehicles) {
                                 return SizedBox(
                                   height: 270.h,
                                   child: ListView.separated(
@@ -521,42 +465,25 @@ class _HomeScreenState extends State<HomeScreen>
                               }
 
                               // ============================================
-                              // ERROR
-                              // ============================================
-
-                              if (state is VehicleError) {
-                                return _ErrorWidget(
-                                  message: state.message,
-                                  onRetry: () {
-                                    context.read<VehicleBloc>().add(
-                                      const GetVehicles(),
-                                    );
-                                  },
-                                );
-                              }
-
-                              // ============================================
                               // LOADED
                               // ============================================
 
-                              if (state is VehicleLoaded) {
-                                final filteredVehicles = _filteredVehicles(
-                                  state.brands,
-                                  state.vehicles,
+                              if (state.hasNoVehicles) {
+                                return _EmptyVehiclesWidget(
+                                  brand: state.selectedBrand ?? '',
                                 );
+                              }
 
-                                if (filteredVehicles.isEmpty) {
-                                  return _EmptyVehiclesWidget(
-                                    brand: _selectedBrandName(state.brands),
-                                  );
-                                }
+                              return PopularCarsSection(
+                                vehicles: state.vehicles,
 
-                                return PopularCarsSection(
-                                  vehicles: filteredVehicles,
+                                controller: _popularScrollController,
 
-                                  onSeeAll: () {
-                                    widget.onExploreTap?.call(false);
-                                  },
+                                isLoadingMore: state.isLoadingMoreVehicles,
+
+                                onSeeAll: () {
+                                  widget.onExploreTap?.call(false);
+                                },
 
                                   // ========================================
                                   // VEHICLE TAP
@@ -615,13 +542,6 @@ class _HomeScreenState extends State<HomeScreen>
                                     );
                                   },
                                 );
-                              }
-
-                              // ============================================
-                              // INITIAL
-                              // ============================================
-
-                              return const SizedBox.shrink();
                             },
                           ),
 
@@ -660,13 +580,13 @@ class _HomeScreenState extends State<HomeScreen>
                     horizontal: AppDimensions.chipHorizontalPadding,
                   ),
                   sliver: SliverToBoxAdapter(
-                    child: BlocBuilder<VehicleBloc, VehicleState>(
+                    child: BlocBuilder<HomeBloc, HomeState>(
                       builder: (context, state) {
                         // ================================================
                         // LOADING
                         // ================================================
 
-                        if (state is VehicleLoading) {
+                        if (state is! HomeLoaded || state.isLoadingVehicles) {
                           return Column(
                             children: [
                               const ShimmerCard(),
@@ -677,46 +597,26 @@ class _HomeScreenState extends State<HomeScreen>
                         }
 
                         // ================================================
-                        // ERROR
-                        // ================================================
-
-                        if (state is VehicleError) {
-                          return _ErrorWidget(
-                            message: state.message,
-                            onRetry: () {
-                              context.read<VehicleBloc>().add(
-                                const GetVehicles(),
-                              );
-                            },
-                          );
-                        }
-
-                        // ================================================
                         // LOADED
                         // ================================================
 
-                        if (state is VehicleLoaded) {
-                          final filteredVehicles = _filteredVehicles(
-                            state.brands,
-                            state.vehicles,
+                        if (state.hasNoVehicles) {
+                          return _EmptyVehiclesWidget(
+                            brand: state.selectedBrand ?? '',
                           );
+                        }
 
-                          if (filteredVehicles.isEmpty) {
-                            return _EmptyVehiclesWidget(
-                              brand: _selectedBrandName(state.brands),
-                            );
-                          }
-
-                          return Column(
-                            children: filteredVehicles.map((vehicle) {
+                        return Column(
+                          children: [
+                            ...state.vehicles.map((vehicle) {
                               return Padding(
                                 padding: EdgeInsets.only(bottom: 12.h),
                                 child: VehicleCardExplore(
                                   vehicle: vehicle,
 
-                                  // ======================================
+                                  // ==================================
                                   // VEHICLE TAP
-                                  // ======================================
+                                  // ==================================
                                   onTap: () {
                                     log(
                                       'Recommended: '
@@ -736,9 +636,9 @@ class _HomeScreenState extends State<HomeScreen>
                                     );
                                   },
 
-                                  // ======================================
+                                  // ==================================
                                   // FAVORITE
-                                  // ======================================
+                                  // ==================================
                                   onFavoriteTap: () {
                                     log(
                                       'Recommended favorite: '
@@ -750,11 +650,25 @@ class _HomeScreenState extends State<HomeScreen>
                                   },
                                 ),
                               );
-                            }).toList(),
-                          );
-                        }
+                            }),
 
-                        return const SizedBox.shrink();
+                            // ================================================
+                            // LOADING THE NEXT PAGE
+                            // ================================================
+
+                            if (state.isLoadingMoreVehicles)
+                              Padding(
+                                padding: EdgeInsets.symmetric(vertical: 18.h),
+                                child: SizedBox(
+                                  width: 26.r,
+                                  height: 26.r,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
                       },
                     ),
                   ),
@@ -767,7 +681,34 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           );
-        },
+      },
+    );
+  }
+}
+
+// ====================================================================
+// BRAND CHIP SPINNER (shown while the next page of brands loads)
+// ====================================================================
+
+class _BrandChipSpinner extends StatelessWidget {
+  const _BrandChipSpinner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: 55.h,
+      height: 55.h,
+      child: Center(
+        child: SizedBox(
+          width: 20.r,
+          height: 20.r,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: colorScheme.primary,
+          ),
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:vehicle_rental_system/core/di/auth_injection.dart';
 import 'package:vehicle_rental_system/core/di/bloc_injection.dart';
 import 'package:vehicle_rental_system/core/di/booking_injection.dart';
 import 'package:vehicle_rental_system/core/di/datasource_injection.dart';
+import 'package:vehicle_rental_system/core/di/home_injection.dart';
 import 'package:vehicle_rental_system/core/di/network_injection.dart';
 import 'package:vehicle_rental_system/core/di/notification_injection.dart';
 import 'package:vehicle_rental_system/core/di/payment_injection.dart';
@@ -27,6 +28,9 @@ Future<void> configureDependencies() async {
 
   // Vehicle
   vehiclInjection();
+
+  // Home
+  homeInjection();
 
   // Booking
   bookingInjection();

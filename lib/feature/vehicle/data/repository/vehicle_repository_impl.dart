@@ -8,6 +8,7 @@ import 'package:vehicle_rental_system/feature/vehicle/data/mapper/vehicle_image_
 import 'package:vehicle_rental_system/feature/vehicle/data/mapper/vehicle_mapper.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/booked_date.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/brand.dart';
+import 'package:vehicle_rental_system/feature/vehicle/domain/entity/paged_result.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/entity/vehicle_image.dart';
 import 'package:vehicle_rental_system/feature/vehicle/domain/repository/vehicle_repository.dart';
@@ -15,7 +16,86 @@ import 'package:vehicle_rental_system/feature/vehicle/domain/repository/vehicle_
 class VehicleRepositoryImpl implements VehicleRepository {
   final VehicleRemoteDataSource remote;
 
+  // The API hands back the full list, so the snapshot is kept in memory and
+  // paged locally. TODO: delete both caches, the delay and the forceRefresh
+  // flag once /vehicles and /brands return a Spring Data Page.
+  List<Vehicle>? _vehicleSnapshot;
+  List<Brand>? _brandSnapshot;
+
+  // Simulated round trip so the paging behaves like a real request: the
+  // loading states are visible and the append is not instantaneous.
+  static const Duration _pageDelay = Duration(milliseconds: 450);
+
   VehicleRepositoryImpl(this.remote);
+
+  @override
+  Future<Either<Failure, PagedResult<Vehicle>>> getVehiclePage({
+    required int page,
+    int size = 8,
+    String? brand,
+    bool forceRefresh = false,
+  }) async {
+    try {
+      if (forceRefresh) _vehicleSnapshot = null;
+
+      var snapshot = _vehicleSnapshot;
+
+      if (snapshot == null) {
+        final result = await getVehicles();
+
+        if (result.isLeft()) {
+          return Left(result.getLeft().toNullable()!);
+        }
+
+        snapshot = _vehicleSnapshot = result.getRight().toNullable()!;
+      }
+
+      await Future<void>.delayed(_pageDelay);
+
+      return Right(
+        PagedResult.fromAll(
+          snapshot,
+          page: page,
+          size: size,
+          filter: brand == null || brand.isEmpty
+              ? null
+              : (vehicle) =>
+                    vehicle.brand.toLowerCase() == brand.toLowerCase(),
+        ),
+      );
+    } catch (e) {
+      return Left(ServiceFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PagedResult<Brand>>> getBrandPage({
+    required int page,
+    int size = 8,
+    bool forceRefresh = false,
+  }) async {
+    try {
+      if (forceRefresh) _brandSnapshot = null;
+
+      var snapshot = _brandSnapshot;
+
+      if (snapshot == null) {
+        final result = await getBrands();
+
+        if (result.isLeft()) {
+          return Left(result.getLeft().toNullable()!);
+        }
+
+        snapshot = _brandSnapshot = result.getRight().toNullable()!;
+      }
+
+      await Future<void>.delayed(_pageDelay);
+
+      return Right(PagedResult.fromAll(snapshot, page: page, size: size));
+    } catch (e) {
+      return Left(ServiceFailure(e.toString()));
+    }
+  }
 
   @override
   Future<Either<Failure, List<Brand>>> getBrands() async {

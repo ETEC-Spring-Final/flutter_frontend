@@ -12,6 +12,12 @@ class PopularCarsSection extends StatelessWidget {
   final ValueChanged<Vehicle>? onFavoriteTap;
   final ValueChanged<Vehicle>? onRentTap;
 
+  // Owned by the caller so it can page the row in from the outside.
+  final ScrollController? controller;
+
+  // Shows a trailing spinner while the next page is being fetched.
+  final bool isLoadingMore;
+
   const PopularCarsSection({
     super.key,
     required this.vehicles,
@@ -19,6 +25,8 @@ class PopularCarsSection extends StatelessWidget {
     this.onVehicleTap,
     this.onFavoriteTap,
     this.onRentTap,
+    this.controller,
+    this.isLoadingMore = false,
   });
 
   @override
@@ -39,15 +47,34 @@ class PopularCarsSection extends StatelessWidget {
         SizedBox(
           height: 270.h,
           child: ListView.separated(
+            controller: controller,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            itemCount: vehicles.length,
+
+            // The trailing slot is the "loading the next page" spinner.
+            itemCount: vehicles.length + (isLoadingMore ? 1 : 0),
 
             separatorBuilder: (_, _) {
               return SizedBox(width: 14.w);
             },
 
             itemBuilder: (context, index) {
+              if (index >= vehicles.length) {
+                return SizedBox(
+                  width: 60.w,
+                  child: Center(
+                    child: SizedBox(
+                      width: 22.r,
+                      height: 22.r,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
               final vehicle = vehicles[index];
 
               return SizedBox(
