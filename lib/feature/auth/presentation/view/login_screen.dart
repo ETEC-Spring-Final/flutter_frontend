@@ -6,12 +6,12 @@ import 'package:vehicle_rental_system/app/router/app_routes.dart';
 
 import 'package:vehicle_rental_system/app/theme/app_colors.dart';
 import 'package:vehicle_rental_system/app/theme/app_dimensions.dart';
+import 'package:vehicle_rental_system/core/constants/app_constants.dart';
 import 'package:vehicle_rental_system/core/widgets/app_button.dart';
 import 'package:vehicle_rental_system/core/widgets/app_text_field.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/bloc/auth_bloc.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/view/forgot_password_screen.dart';
 import 'package:vehicle_rental_system/feature/auth/presentation/view/register_screen.dart';
-import 'package:vehicle_rental_system/feature/home/presentation/view/main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -79,7 +79,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _oauthLogin(String provider) {
     _goTo(
-      () => context.read<AuthBloc>().add(OAuthLoginRequested(provider: provider)),
+      () =>
+          context.read<AuthBloc>().add(OAuthLoginRequested(provider: provider)),
     );
   }
 
@@ -283,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Expanded(
                           child: _SocialButton(
-                            icon: Icons.g_mobiledata_rounded,
+                            image: AppConstants.googleIcon,
                             label: 'Google',
                             loading: isAuthLoading,
                             onPressed: isAuthLoading
@@ -291,17 +292,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                 : () => _oauthLogin('google'),
                           ),
                         ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: _SocialButton(
-                            icon: Icons.facebook_rounded,
-                            label: 'Facebook',
-                            loading: isAuthLoading,
-                            onPressed: isAuthLoading
-                                ? null
-                                : () => _oauthLogin('facebook'),
-                          ),
-                        ),
+                        // SizedBox(width: 12.w),
+                        // Expanded(
+                        //   child: _SocialButton(
+                        //     icon: Icons.facebook_rounded,
+                        //     label: 'Facebook',
+                        //     loading: isAuthLoading,
+                        //     onPressed: isAuthLoading
+                        //         ? null
+                        //         : () => _oauthLogin('facebook'),
+                        //   ),
+                        // ),
                       ],
                     );
                   },
@@ -349,13 +350,13 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 class _SocialButton extends StatelessWidget {
-  final IconData icon;
+  final String image;
   final String label;
   final VoidCallback? onPressed;
   final bool loading;
 
   const _SocialButton({
-    required this.icon,
+    required this.image,
     required this.label,
     this.onPressed,
     this.loading = false,
@@ -388,7 +389,8 @@ class _SocialButton extends StatelessWidget {
               ),
             )
           else
-            Icon(icon, size: 22.r, color: colorScheme.onSurface),
+            SizedBox(width: 22.w, height: 22.h, child: Image.asset(image)),
+          //Icon(icon, size: 22.r, color: colorScheme.onSurface),
           SizedBox(width: 8.w),
           Text(
             label,
