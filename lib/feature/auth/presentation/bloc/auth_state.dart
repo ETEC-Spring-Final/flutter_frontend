@@ -12,6 +12,16 @@ final class AuthUnauthenticated extends AuthState {}
 
 final class AuthSuccess extends AuthState {}
 
+/// Emitted after the forgot-password request reaches the backend.
+final class ForgotPasswordSuccess extends AuthState {
+  final String message;
+
+  ForgotPasswordSuccess(this.message);
+}
+
+/// Emitted after the password reset completes with a valid token.
+final class ResetPasswordSuccess extends AuthState {}
+
 final class AuthFailure extends AuthState {
   final String message;
 

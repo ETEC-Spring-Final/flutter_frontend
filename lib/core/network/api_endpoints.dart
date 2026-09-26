@@ -10,6 +10,12 @@ class ApiEndpoints {
   static const String logout = '/auth/logout';
   static const String refreshToken = '/auth/refresh';
 
+  /// Sends a password reset link via email. Body: `{ "email": "string" }`.
+  static const String forgotPassword = '/auth/forgot-password';
+
+  /// Resets the password with the emailed token. Body: `{ "token", "newPassword" }`.
+  static const String resetPassword = '/auth/reset-password';
+
   // ==========================================
   // Vehicles
   // ==========================================

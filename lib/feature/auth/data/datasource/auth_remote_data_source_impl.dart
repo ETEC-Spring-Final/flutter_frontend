@@ -5,8 +5,10 @@ import 'package:vehicle_rental_system/core/constants/api_constants.dart';
 import 'package:vehicle_rental_system/core/errors/app_exception.dart';
 import 'package:vehicle_rental_system/feature/auth/data/datasource/auth_remote_data_source.dart';
 import 'package:vehicle_rental_system/feature/auth/data/model/auth_response_model.dart';
+import 'package:vehicle_rental_system/feature/auth/data/model/forgot_password_request_model.dart';
 import 'package:vehicle_rental_system/feature/auth/data/model/login_request_model.dart';
 import 'package:vehicle_rental_system/feature/auth/data/model/register_request_model.dart';
+import 'package:vehicle_rental_system/feature/auth/data/model/reset_password_request_model.dart';
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final Dio dio;
@@ -25,7 +27,42 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return message.toString();
       }
     }
+
+    if (data is String) {
+      final message = data.trim();
+
+      if (message.isNotEmpty) {
+        return _stripJsonQuotes(message);
+      }
+    }
+
     return 'Something went wrong. Please try again.';
+  }
+
+  // The Spring backend may return a body quoted as JSON, e.g. "\"User not found\"".
+  String _stripJsonQuotes(String value) {
+    if (value.length >= 2 &&
+        value.startsWith('"') &&
+        value.endsWith('"')) {
+      return value.substring(1, value.length - 1);
+    }
+    return value;
+  }
+
+  String _extractMessage(Object? data, String fallback) {
+    if (data is String && data.trim().isNotEmpty) {
+      return _stripJsonQuotes(data.trim());
+    }
+
+    if (data is Map<String, dynamic>) {
+      final message = data['message'];
+
+      if (message != null && message.toString().isNotEmpty) {
+        return message.toString();
+      }
+    }
+
+    return fallback;
   }
 
   @override
@@ -75,6 +112,52 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       throw AppException('Login failed. Please try again.');
+    }
+  }
+
+  @override
+  Future<String> forgotPassword(ForgotPasswordRequestModel request) async {
+    try {
+      final response = await dio.post(
+        ApiConstants.forgotPassword,
+        data: request.toJson(),
+      );
+
+      return _extractMessage(response.data, 'Password reset email sent');
+    } on DioException catch (e, stackTrace) {
+      log('Forgot password API error', error: e, stackTrace: stackTrace);
+
+      throw _handleDioException(e);
+    } catch (e, stackTrace) {
+      log('Unexpected forgot password error', error: e, stackTrace: stackTrace);
+
+      if (e is AppException) {
+        rethrow;
+      }
+
+      throw AppException('Failed to send reset link. Please try again.');
+    }
+  }
+
+  @override
+  Future<void> resetPassword(ResetPasswordRequestModel request) async {
+    try {
+      await dio.post(
+        ApiConstants.resetPassword,
+        data: request.toJson(),
+      );
+    } on DioException catch (e, stackTrace) {
+      log('Reset password API error', error: e, stackTrace: stackTrace);
+
+      throw _handleDioException(e);
+    } catch (e, stackTrace) {
+      log('Unexpected reset password error', error: e, stackTrace: stackTrace);
+
+      if (e is AppException) {
+        rethrow;
+      }
+
+      throw AppException('Failed to reset password. Please try again.');
     }
   }
 
