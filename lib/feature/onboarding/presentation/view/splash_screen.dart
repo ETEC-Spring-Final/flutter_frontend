@@ -18,13 +18,16 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   // ============================================================
-  // CONTROLLERS
+  // ANIMATION CONTROLLERS
   // ============================================================
 
   late final AnimationController _introController;
   late final AnimationController _floatController;
   late final AnimationController _glowController;
   late final AnimationController _rotationController;
+
+  // Text shine
+  late final AnimationController _titleShineController;
 
   // ============================================================
   // ANIMATIONS
@@ -43,19 +46,164 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _glow;
   late final Animation<double> _rotation;
 
+  // ============================================================
+  // INIT
+  // ============================================================
+
   @override
   void initState() {
     super.initState();
 
     _setupAnimations();
 
+    // Intro
     _introController.forward();
 
+    // Floating
     _floatController.repeat(reverse: true);
+
+    // Glow
     _glowController.repeat(reverse: true);
+
+    // Rotation
     _rotationController.repeat();
 
+    // Text shine
+    _titleShineController.repeat();
+
     _checkAuthentication();
+  }
+
+  // ============================================================
+  // SETUP ANIMATIONS
+  // ============================================================
+
+  void _setupAnimations() {
+    // ------------------------------------------------------------
+    // INTRO
+    // ------------------------------------------------------------
+
+    _introController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    // ------------------------------------------------------------
+    // FLOAT
+    // ------------------------------------------------------------
+
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    );
+
+    // ------------------------------------------------------------
+    // GLOW
+    // ------------------------------------------------------------
+
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+
+    // ------------------------------------------------------------
+    // ROTATION
+    // ------------------------------------------------------------
+
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 18),
+    );
+
+    // ------------------------------------------------------------
+    // TITLE SHINE
+    // ------------------------------------------------------------
+
+    _titleShineController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    );
+
+    // ============================================================
+    // LOGO
+    // ============================================================
+
+    _logoScale = Tween<double>(begin: 0.65, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introController,
+        curve: const Interval(0.0, 0.55, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introController,
+        curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
+      ),
+    );
+
+    // ============================================================
+    // TITLE
+    // ============================================================
+
+    _titleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introController,
+        curve: const Interval(0.35, 0.75, curve: Curves.easeOut),
+      ),
+    );
+
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.25), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _introController,
+            curve: const Interval(0.35, 0.75, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    // ============================================================
+    // SUBTITLE
+    // ============================================================
+
+    _subtitleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _introController,
+        curve: const Interval(0.60, 0.90, curve: Curves.easeOut),
+      ),
+    );
+
+    _subtitleSlide =
+        Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _introController,
+            curve: const Interval(0.60, 0.90, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    // ============================================================
+    // FLOATING
+    // ============================================================
+
+    _floatingY = Tween<double>(begin: -6, end: 6).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+
+    // ============================================================
+    // GLOW
+    // ============================================================
+
+    _glow = Tween<double>(begin: 0.55, end: 1.0).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+
+    // ============================================================
+    // ROTATION
+    // ============================================================
+
+    _rotation = Tween<double>(
+      begin: 0.0,
+      end: math.pi * 2,
+    ).animate(_rotationController);
   }
 
   // ============================================================
@@ -71,121 +219,6 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   // ============================================================
-  // ANIMATIONS
-  // ============================================================
-
-  void _setupAnimations() {
-    // ----------------------------------------------------------
-    // INTRO
-    // ----------------------------------------------------------
-
-    _introController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    // ----------------------------------------------------------
-    // LOGO SCALE
-    // ----------------------------------------------------------
-
-    _logoScale = Tween<double>(begin: 0.65, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _introController,
-        curve: const Interval(0.0, 0.55, curve: Curves.easeOutBack),
-      ),
-    );
-
-    // ----------------------------------------------------------
-    // LOGO FADE
-    // ----------------------------------------------------------
-
-    _logoFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _introController,
-        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
-      ),
-    );
-
-    // ----------------------------------------------------------
-    // TITLE
-    // ----------------------------------------------------------
-
-    _titleFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _introController,
-        curve: const Interval(0.35, 0.75, curve: Curves.easeOut),
-      ),
-    );
-
-    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.25), end: Offset.zero)
-        .animate(
-          CurvedAnimation(
-            parent: _introController,
-            curve: const Interval(0.35, 0.8, curve: Curves.easeOutCubic),
-          ),
-        );
-
-    // ----------------------------------------------------------
-    // SUBTITLE
-    // ----------------------------------------------------------
-
-    _subtitleFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _introController,
-        curve: const Interval(0.55, 0.95, curve: Curves.easeOut),
-      ),
-    );
-
-    _subtitleSlide =
-        Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _introController,
-            curve: const Interval(0.55, 0.95, curve: Curves.easeOutCubic),
-          ),
-        );
-
-    // ----------------------------------------------------------
-    // FLOATING CAR
-    // ----------------------------------------------------------
-
-    _floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    );
-
-    _floatingY = Tween<double>(begin: -5, end: 5).animate(
-      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
-    );
-
-    // ----------------------------------------------------------
-    // GLOW
-    // ----------------------------------------------------------
-
-    _glowController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    );
-
-    _glow = Tween<double>(begin: 0.12, end: 0.24).animate(
-      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
-    );
-
-    // ----------------------------------------------------------
-    // SUBTLE ROTATION
-    // ----------------------------------------------------------
-
-    _rotationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 12),
-    );
-
-    _rotation = Tween<double>(
-      begin: 0,
-      end: math.pi * 2,
-    ).animate(_rotationController);
-  }
-
-  // ============================================================
   // DISPOSE
   // ============================================================
 
@@ -195,6 +228,7 @@ class _SplashScreenState extends State<SplashScreen>
     _floatController.dispose();
     _glowController.dispose();
     _rotationController.dispose();
+    _titleShineController.dispose();
 
     super.dispose();
   }
@@ -205,8 +239,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
@@ -220,48 +253,59 @@ class _SplashScreenState extends State<SplashScreen>
       },
       child: Scaffold(
         backgroundColor: colorScheme.primary,
-        body: SafeArea(
-          child: Stack(
-            children: [
-              // ==================================================
-              // BACKGROUND
-              // ==================================================
-              _buildBackground(colorScheme),
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            // ======================================================
+            // BACKGROUND
+            // ======================================================
+            const _SplashBackground(),
 
-              // ==================================================
-              // CENTER CONTENT
-              // ==================================================
-              Center(
+            // ======================================================
+            // ROTATING RINGS
+            // ======================================================
+            AnimatedBuilder(
+              animation: _rotation,
+              builder: (context, child) {
+                return Transform.rotate(angle: _rotation.value, child: child);
+              },
+              child: _buildRotatingRings(colorScheme),
+            ),
+
+            // ======================================================
+            // CONTENT
+            // ======================================================
+            SafeArea(
+              child: Center(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // ------------------------------------------------
+                    SizedBox(height: 115.h),
+                    // ==================================================
                     // LOGO
-                    // ------------------------------------------------
+                    // ==================================================
                     FadeTransition(
                       opacity: _logoFade,
                       child: ScaleTransition(
                         scale: _logoScale,
                         child: AnimatedBuilder(
-                          animation: Listenable.merge([
-                            _floatController,
-                            _glowController,
-                          ]),
+                          animation: _floatController,
                           builder: (context, child) {
                             return Transform.translate(
                               offset: Offset(0, _floatingY.value),
-                              child: _buildLogo(colorScheme),
+                              child: child,
                             );
                           },
+                          child: _buildLogo(colorScheme),
                         ),
                       ),
                     ),
 
-                    SizedBox(height: 32.h),
+                    SizedBox(height: 30.h),
 
-                    // ------------------------------------------------
-                    // APP NAME
-                    // ------------------------------------------------
+                    // ==================================================
+                    // TITLE
+                    // ==================================================
                     FadeTransition(
                       opacity: _titleFade,
                       child: SlideTransition(
@@ -272,9 +316,9 @@ class _SplashScreenState extends State<SplashScreen>
 
                     SizedBox(height: 10.h),
 
-                    // ------------------------------------------------
+                    // ==================================================
                     // SUBTITLE
-                    // ------------------------------------------------
+                    // ==================================================
                     FadeTransition(
                       opacity: _subtitleFade,
                       child: SlideTransition(
@@ -282,119 +326,20 @@ class _SplashScreenState extends State<SplashScreen>
                         child: _buildSubtitle(colorScheme),
                       ),
                     ),
+
+                    SizedBox(height: 200.h),
+
+                    // ==================================================
+                    // LOADING
+                    // ==================================================
+                    _buildLoading(colorScheme),
                   ],
                 ),
               ),
-
-              // ==================================================
-              // BOTTOM LOADING
-              // ==================================================
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 38.h,
-                child: FadeTransition(
-                  opacity: _subtitleFade,
-                  child: _buildLoading(colorScheme),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  // ============================================================
-  // BACKGROUND
-  // ============================================================
-
-  Widget _buildBackground(ColorScheme colorScheme) {
-    return Stack(
-      children: [
-        // --------------------------------------------------------
-        // TOP GLOW
-        // --------------------------------------------------------
-        Positioned(
-          top: -150.h,
-          right: -100.w,
-          child: AnimatedBuilder(
-            animation: _glowController,
-            builder: (context, child) {
-              return Container(
-                width: 330.w,
-                height: 330.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colorScheme.onPrimary.withValues(alpha: _glow.value),
-                ),
-              );
-            },
-          ),
-        ),
-
-        // --------------------------------------------------------
-        // BOTTOM GLOW
-        // --------------------------------------------------------
-        Positioned(
-          bottom: -170.h,
-          left: -130.w,
-          child: Container(
-            width: 360.w,
-            height: 360.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colorScheme.onPrimary.withValues(alpha: 0.08),
-            ),
-          ),
-        ),
-
-        // --------------------------------------------------------
-        // DECORATIVE RING
-        // --------------------------------------------------------
-        Positioned(
-          top: 85.h,
-          right: -75.w,
-          child: AnimatedBuilder(
-            animation: _rotationController,
-            builder: (context, child) {
-              return Transform.rotate(
-                angle: _rotation.value,
-                child: Container(
-                  width: 190.w,
-                  height: 190.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: colorScheme.onPrimary.withValues(alpha: 0.08),
-                      width: 1,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        // --------------------------------------------------------
-        // SECOND RING
-        // --------------------------------------------------------
-        Positioned(
-          bottom: 70.h,
-          left: -90.w,
-          child: Container(
-            width: 170.w,
-            height: 170.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: colorScheme.onPrimary.withValues(alpha: 0.06),
-                width: 1,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -404,49 +349,110 @@ class _SplashScreenState extends State<SplashScreen>
 
   Widget _buildLogo(ColorScheme colorScheme) {
     return Container(
-      width: 128.w,
-      height: 128.w,
+      width: 105.w,
+      height: 105.w,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(38.r),
+        color: colorScheme.onPrimary,
+        borderRadius: BorderRadius.circular(30.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.16),
+            color: Colors.black.withValues(alpha: 0.18),
             blurRadius: 35.r,
             spreadRadius: 2.r,
-            offset: Offset(0, 18.h),
+            offset: Offset(0, 15.h),
           ),
         ],
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Soft inner circle
-          Container(
-            width: 82.w,
-            height: 82.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colorScheme.primary.withValues(alpha: 0.08),
-            ),
-          ),
-
-          // Car icon
-          Icon(
-            Icons.directions_car_rounded,
-            size: 66.sp,
-            color: colorScheme.primary,
-          ),
-        ],
+      child: Center(
+        child: Icon(
+          Icons.directions_car_rounded,
+          size: 58.sp,
+          color: colorScheme.primary,
+        ),
       ),
     );
   }
 
   // ============================================================
   // TITLE
+  //
+  // BASE TITLE + WHITE DIAGONAL SHINE OVERLAY
   // ============================================================
 
   Widget _buildTitle(ColorScheme colorScheme) {
+    return AnimatedBuilder(
+      animation: _titleShineController,
+      builder: (context, child) {
+        final progress = _titleShineController.value;
+
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // ------------------------------------------------------
+            // 1. NORMAL TITLE
+            // ------------------------------------------------------
+            _buildTitleText(colorScheme),
+
+            // ------------------------------------------------------
+            // 2. WHITE SHINE
+            // ------------------------------------------------------
+            ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) {
+                // Start outside the left side.
+                //
+                // Then move all the way to the right.
+                final shinePosition = -1.5 + (progress * 3.0);
+
+                return LinearGradient(
+                  // Diagonal:
+                  //
+                  //      ╲
+                  //       ╲
+                  //        ╲
+                  //
+                  // Top-left -> Bottom-right
+                  begin: Alignment(shinePosition - 0.18, -1.0),
+                  end: Alignment(shinePosition + 0.18, 1.0),
+
+                  colors: [
+                    Colors.transparent,
+                    Colors.transparent,
+
+                    // Soft beginning
+                    Colors.white.withValues(alpha: 0.65),
+
+                    // Bright center
+                    Colors.white,
+
+                    // Soft ending
+                    Colors.white.withValues(alpha: 0.65),
+
+                    Colors.transparent,
+                    Colors.transparent,
+                  ],
+
+                  stops: const [0.0, 0.40, 0.46, 0.50, 0.54, 0.60, 1.0],
+                ).createShader(bounds);
+              },
+
+              // IMPORTANT:
+              //
+              // This text is ONLY the white shine.
+              // The normal colored title remains underneath.
+              child: _buildTitleShineText(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // NORMAL TITLE
+  // ============================================================
+
+  Widget _buildTitleText(ColorScheme colorScheme) {
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
@@ -460,12 +466,66 @@ class _SplashScreenState extends State<SplashScreen>
               letterSpacing: -1.2,
             ),
           ),
+
           TextSpan(
             text: 'Rent',
             style: TextStyle(
-              color: colorScheme.onPrimary.withValues(alpha: 0.72),
+              color: colorScheme.onPrimary,
               fontSize: 34.sp,
               fontWeight: FontWeight.w400,
+              letterSpacing: -1.2,
+            ),
+          ),
+
+          TextSpan(
+            text: ' Premium',
+            style: TextStyle(
+              color: colorScheme.onPrimary.withValues(alpha: 0.75),
+              fontSize: 34.sp,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // WHITE SHINE TEXT
+  // ============================================================
+
+  Widget _buildTitleShineText() {
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: 'Auto ',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 34.sp,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -1.2,
+            ),
+          ),
+
+          TextSpan(
+            text: 'Rent',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 34.sp,
+              fontWeight: FontWeight.w400,
+              letterSpacing: -1.2,
+            ),
+          ),
+
+          TextSpan(
+            text: ' Premium',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 34.sp,
+              fontWeight: FontWeight.w700,
               letterSpacing: -1.2,
             ),
           ),
@@ -479,35 +539,15 @@ class _SplashScreenState extends State<SplashScreen>
   // ============================================================
 
   Widget _buildSubtitle(ColorScheme colorScheme) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 22.w,
-          height: 1.h,
-          color: colorScheme.onPrimary.withValues(alpha: 0.35),
-        ),
-
-        SizedBox(width: 10.w),
-
-        Text(
-          'DRIVE YOUR JOURNEY',
-          style: TextStyle(
-            color: colorScheme.onPrimary.withValues(alpha: 0.68),
-            fontSize: 10.sp,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 2.2,
-          ),
-        ),
-
-        SizedBox(width: 10.w),
-
-        Container(
-          width: 22.w,
-          height: 1.h,
-          color: colorScheme.onPrimary.withValues(alpha: 0.35),
-        ),
-      ],
+    return Text(
+      'DRIVE YOUR JOURNEY',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: colorScheme.onPrimary.withValues(alpha: 0.72),
+        fontSize: 12.sp,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 3.2,
+      ),
     );
   }
 
@@ -522,25 +562,209 @@ class _SplashScreenState extends State<SplashScreen>
           width: 26.w,
           height: 26.w,
           child: CircularProgressIndicator(
-            strokeWidth: 2.w,
+            strokeWidth: 2.2,
             valueColor: AlwaysStoppedAnimation<Color>(
-              colorScheme.onPrimary.withValues(alpha: 0.8),
+              colorScheme.onPrimary.withValues(alpha: 0.85),
             ),
           ),
         ),
 
-        SizedBox(height: 12.h),
+        SizedBox(height: 14.h),
 
         Text(
           'Preparing your journey',
           style: TextStyle(
-            color: colorScheme.onPrimary.withValues(alpha: 0.55),
+            color: colorScheme.onPrimary.withValues(alpha: 0.62),
             fontSize: 11.sp,
             fontWeight: FontWeight.w500,
             letterSpacing: 0.4,
           ),
         ),
       ],
+    );
+  }
+
+  // ============================================================
+  // ROTATING RINGS
+  // ============================================================
+
+  Widget _buildRotatingRings(ColorScheme colorScheme) {
+    return IgnorePointer(
+      child: Center(
+        child: SizedBox(
+          width: 430.w,
+          height: 430.w,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 350.w,
+                height: 350.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: colorScheme.onPrimary.withValues(alpha: 0.055),
+                    width: 1,
+                  ),
+                ),
+              ),
+
+              Container(
+                width: 270.w,
+                height: 270.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: colorScheme.onPrimary.withValues(alpha: 0.045),
+                    width: 1,
+                  ),
+                ),
+              ),
+
+              Container(
+                width: 190.w,
+                height: 190.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: colorScheme.onPrimary.withValues(alpha: 0.035),
+                    width: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ==================================================================
+// SPLASH BACKGROUND
+// ==================================================================
+
+class _SplashBackground extends StatefulWidget {
+  const _SplashBackground();
+
+  @override
+  State<_SplashBackground> createState() => _SplashBackgroundState();
+}
+
+class _SplashBackgroundState extends State<_SplashBackground>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final glow = Curves.easeInOut.transform(_controller.value);
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            // ------------------------------------------------------
+            // MAIN BACKGROUND
+            // ------------------------------------------------------
+            ColoredBox(color: colorScheme.primary),
+
+            // ------------------------------------------------------
+            // TOP LEFT GLOW
+            // ------------------------------------------------------
+            Positioned(
+              top: -170.h,
+              left: -120.w,
+              child: _GlowCircle(
+                size: 330.w,
+                color: colorScheme.onPrimary.withValues(
+                  alpha: 0.07 + (glow * 0.025),
+                ),
+              ),
+            ),
+
+            // ------------------------------------------------------
+            // BOTTOM RIGHT GLOW
+            // ------------------------------------------------------
+            Positioned(
+              right: -150.w,
+              bottom: -180.h,
+              child: _GlowCircle(
+                size: 370.w,
+                color: colorScheme.onPrimary.withValues(
+                  alpha: 0.055 + (glow * 0.025),
+                ),
+              ),
+            ),
+
+            // ------------------------------------------------------
+            // CENTER GLOW
+            // ------------------------------------------------------
+            Positioned(
+              top: MediaQuery.sizeOf(context).height * 0.20,
+              left: MediaQuery.sizeOf(context).width * 0.10,
+              child: _GlowCircle(
+                size: 300.w,
+                color: colorScheme.onPrimary.withValues(
+                  alpha: 0.025 + (glow * 0.015),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ==================================================================
+// GLOW CIRCLE
+// ==================================================================
+
+class _GlowCircle extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _GlowCircle({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+          boxShadow: [
+            BoxShadow(
+              color: color,
+              blurRadius: size * 0.45,
+              spreadRadius: size * 0.08,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
